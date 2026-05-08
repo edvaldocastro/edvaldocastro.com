@@ -25,14 +25,16 @@
       </nav>
     </header>
     <main class="site-main">
-      <article class="article-card">
-  <div class="article-head">
-    <p class="meta-line">Post</p>
-    <h1 class="post-title">[XE SQL 2016] - Track Backup e Restore - Parte 1</h1>
-    <p class="meta-line">01 Oct 2015 <span class="dot">&middot;</span> Backup, Database Administration, Tech, Virtual PASS BR <span class="dot">&middot;</span> Backup, FoRG, Friends of RedGate, Pol&#237;tica de Backup, SQLSERVER2016, Virtual Pass Br, VirtualPass, VirtualPassPT</p>
-  </div>
-  <div class="article-content">
-    <h2>Tracking RESTORE operation</h2>
+      <div class="content-layout single-layout">
+  <main class="content-area">
+    <article class="article-card">
+      <div class="article-head">
+        <p class="meta-line">Post</p>
+        <h1 class="post-title">[XE SQL 2016] - Track Backup e Restore - Parte 1</h1>
+        <p class="meta-line">01 Oct 2015 <span class="dot">&middot;</span> Backup, Database Administration, Tech, Virtual PASS BR <span class="dot">&middot;</span> Backup, FoRG, Friends of RedGate, Pol&#237;tica de Backup, SQLSERVER2016, Virtual Pass Br, VirtualPass, VirtualPassPT</p>
+      </div>
+      <div class="article-content">
+        <h2>Tracking RESTORE operation</h2>
 O SQL Server 2016 já vem dando as caras desde que foi anunciado o primeiro <a href="https://msdn.microsoft.com/en-us/library/dn876712.aspx?f=255&amp;MSPPError=-2147217396" target="_blank">CTP (Community Technical Preview)</a>.
 
 O Program Manager <a href="https://social.msdn.microsoft.com/profile/ajay.msft/" target="_blank">Ajay <span class="fn"><span class="full-name" dir="auto">Jagannathan</span></span></a> publicou no <a href="http://blogs.msdn.com/b/sql_server_team/" target="_blank">blog do oficial do time de engenheiros do SQL Server</a>, uma novidade muito interessante para visualização detalhada de cada passo do que a engine do SQL Server faz durante a execução de operações de Backup e Restore. A partir da release <a href="https://msdn.microsoft.com/en-us/library/dn876712.aspx?f=255&amp;MSPPError=-2147217396#bkmk_2016_ctp2_0" target="_blank">CTP 2.0</a> do SQL Server 2016, existe um <a href="http://blogs.msdn.com/b/sql_server_team/archive/2015/09/22/new-extended-event-to-track-backup-and-restore-progress.aspx#.VgtLzHpVhBd" target="_blank">novo <em>Extended Event</em> (XE)</a> que permite que você saiba exatamente em que fase está a sua operação de backup ou restore.
@@ -283,16 +285,53 @@ Para uma simples conferência do percentual do progresso de atividades de BACKUP
 &nbsp;
 
 &nbsp;
+      </div>
+      <div class="article-footer">
+        <div class="pill-row"><span class="pill">Backup</span><span class="pill">Database Administration</span><span class="pill">Tech</span><span class="pill">Virtual PASS BR</span></div>
+        <div class="pill-row"><span class="pill">Backup</span><span class="pill">FoRG</span><span class="pill">Friends of RedGate</span><span class="pill">Pol&#237;tica de Backup</span><span class="pill">SQLSERVER2016</span><span class="pill">Virtual Pass Br</span><span class="pill">VirtualPass</span><span class="pill">VirtualPassPT</span></div>
+        <div class="post-nav">
+          <div><a href="../xe-sql-2016-track-backup-e-restore-parte-2/">Newer: [XE SQL 2016] - Track Backup e Restore - Parte 2</a></div>
+          <div><a href="../troubleshooting-the-wrong-diskette-is-in-the-drive-insert-volume-serial-number-into-drive/">Older: [Troubleshooting] The wrong diskette is in the drive. Insert (Volume Serial Number: ) into drive.</a></div>
+        </div>
+      </div>
+    </article>
+  </main>
+  <aside class="sidebar-container">
+  <div class="widget-area">
+    <section class="widget">
+  <h2 class="widget-title">About This Archive</h2>
+  <div class="widget-content">
+    <p>Arquivo preservado do antigo WordPress do blog de Edvaldo Castro.</p>
+<p><a href="../../archive/">Ver o arquivo completo</a></p>
   </div>
-  <div class="article-footer">
-    <div class="pill-row"><span class="pill">Backup</span><span class="pill">Database Administration</span><span class="pill">Tech</span><span class="pill">Virtual PASS BR</span></div>
-    <div class="pill-row"><span class="pill">Backup</span><span class="pill">FoRG</span><span class="pill">Friends of RedGate</span><span class="pill">Pol&#237;tica de Backup</span><span class="pill">SQLSERVER2016</span><span class="pill">Virtual Pass Br</span><span class="pill">VirtualPass</span><span class="pill">VirtualPassPT</span></div>
-    <div class="post-nav">
-      <div><a href="../xe-sql-2016-track-backup-e-restore-parte-2/">Newer: [XE SQL 2016] - Track Backup e Restore - Parte 2</a></div>
-      <div><a href="../troubleshooting-the-wrong-diskette-is-in-the-drive-insert-volume-serial-number-into-drive/">Older: [Troubleshooting] The wrong diskette is in the drive. Insert (Volume Serial Number: ) into drive.</a></div>
-    </div>
+</section>
+    <section class="widget">
+  <h2 class="widget-title">Recent Posts</h2>
+  <div class="widget-content">
+    <ul class="widget-list"><li><a href="../sql-bits-2019-takeaways/">SQL Bits 2019 - Takeaways</a><span class="widget-meta">03 Mar 2019</span></li><li><a href="../vlfs_vldbs/">Controle manual de VLFs para VLDBs</a><span class="widget-meta">18 Sep 2018</span></li><li><a href="../backup-full-diario/">Backup Full Di&#225;rio, sua melhor op&#231;&#227;o?</a><span class="widget-meta">31 Jul 2018</span></li><li><a href="../um-ano-irlanda/">Primeiro ano como DBA Expat na Irlanda</a><span class="widget-meta">20 Mar 2018</span></li><li><a href="../plagio-serio-mesmo/">PL&#193;GIO - S&#233;rio mesmo?</a><span class="widget-meta">10 Jan 2018</span></li></ul>
   </div>
-</article>
+</section>
+    <section class="widget">
+  <h2 class="widget-title">Pages</h2>
+  <div class="widget-content">
+    <ul class="widget-list"><li><a href="../../about/">Sobre</a></li><li><a href="../../downloads/">Downloads</a></li><li><a href="../../scripts/">Scripts</a></li><li><a href="../../apresentacoes/">Apresenta&#231;&#245;es</a></li><li><a href="../../sql-server-na-internet/">SQL Server - Free Tools</a></li><li><a href="../../sr-nimbus-technologia/">Sr Nimbus Technologia</a></li><li><a href="../../livros-e-publicacoes/">Livros e Publica&#231;&#245;es</a></li><li><a href="../../arquivo/">Arquivo de Posts</a></li></ul>
+  </div>
+</section>
+    <section class="widget">
+  <h2 class="widget-title">Archives</h2>
+  <div class="widget-content">
+    <ul class="widget-list"><li><a href="../../archive/#year-2019">2019</a><span class="widget-meta">1 posts</span></li><li><a href="../../archive/#year-2018">2018</a><span class="widget-meta">4 posts</span></li><li><a href="../../archive/#year-2017">2017</a><span class="widget-meta">5 posts</span></li><li><a href="../../archive/#year-2016">2016</a><span class="widget-meta">7 posts</span></li><li><a href="../../archive/#year-2015">2015</a><span class="widget-meta">23 posts</span></li><li><a href="../../archive/#year-2014">2014</a><span class="widget-meta">8 posts</span></li><li><a href="../../archive/#year-2013">2013</a><span class="widget-meta">15 posts</span></li><li><a href="../../archive/#year-2012">2012</a><span class="widget-meta">15 posts</span></li><li><a href="../../archive/#year-2011">2011</a><span class="widget-meta">5 posts</span></li></ul>
+  </div>
+</section>
+    <section class="widget">
+  <h2 class="widget-title">Categories</h2>
+  <div class="widget-content">
+    <ul class="widget-list"><li><span>Comunidade e Eventos</span><span class="widget-meta">43</span></li><li><span>Virtual PASS BR</span><span class="widget-meta">42</span></li><li><span>Tech</span><span class="widget-meta">31</span></li><li><span>Database Administration</span><span class="widget-meta">22</span></li><li><span>Backup</span><span class="widget-meta">10</span></li><li><span>Carreira</span><span class="widget-meta">8</span></li><li><span>HADR</span><span class="widget-meta">6</span></li><li><span>OFF-TOPIC</span><span class="widget-meta">4</span></li></ul>
+  </div>
+</section>
+  </div>
+</aside>
+</div>
     </main>
     <footer class="site-footer">
       <p>Conteudo preservado a partir do export WordPress do blog de Edvaldo Castro.</p>

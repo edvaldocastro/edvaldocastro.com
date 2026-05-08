@@ -25,14 +25,16 @@
       </nav>
     </header>
     <main class="site-main">
-      <article class="article-card">
-  <div class="article-head">
-    <p class="meta-line">Post</p>
-    <h1 class="post-title">AntiAffinityClassNames - Separac&#227;o autom&#225;tica de workloads cr&#237;ticos no mesmo cluster</h1>
-    <p class="meta-line">09 Dec 2016 <span class="dot">&middot;</span> Database Administration, HADR, Tech, Virtual PASS BR <span class="dot">&middot;</span> AlwaysOn, bts, CLUSTER, FoRG, Friends of RedGate, MTAC, Pass, sqlserver, wsfc</p>
-  </div>
-  <div class="article-content">
-    <p style="text-align: justify;">Tradicionalmente diretores, presidentes e os "donos" do negócio querem (e estão muito certos nesse ponto) otimizar os investimentos realizados para terem garantia de disponibilidade, segurança, alta performance e outros, evitando que equipamentos fiquem ociosos ou subutilizados. Quando o investimento em questão é realizado em uma solução para alta disponibilidade do SQL Server, uma das opções é a utilização do Windows server Failover Cluster (WSFC), rodando instalações <em>clusterizadas </em>do SQL Server (Failover Cluster Instances).</p>
+      <div class="content-layout single-layout">
+  <main class="content-area">
+    <article class="article-card">
+      <div class="article-head">
+        <p class="meta-line">Post</p>
+        <h1 class="post-title">AntiAffinityClassNames - Separac&#227;o autom&#225;tica de workloads cr&#237;ticos no mesmo cluster</h1>
+        <p class="meta-line">09 Dec 2016 <span class="dot">&middot;</span> Database Administration, HADR, Tech, Virtual PASS BR <span class="dot">&middot;</span> AlwaysOn, bts, CLUSTER, FoRG, Friends of RedGate, MTAC, Pass, sqlserver, wsfc</p>
+      </div>
+      <div class="article-content">
+        <p style="text-align: justify;">Tradicionalmente diretores, presidentes e os "donos" do negócio querem (e estão muito certos nesse ponto) otimizar os investimentos realizados para terem garantia de disponibilidade, segurança, alta performance e outros, evitando que equipamentos fiquem ociosos ou subutilizados. Quando o investimento em questão é realizado em uma solução para alta disponibilidade do SQL Server, uma das opções é a utilização do Windows server Failover Cluster (WSFC), rodando instalações <em>clusterizadas </em>do SQL Server (Failover Cluster Instances).</p>
 <p style="text-align: justify;">Originalmente o SQL Server Failover Cluster Instances, trabalha de forma a agrupar um conjunto de recursos (disco, nome virtual, serviços, MSDTC, etc) e trabalhar de forma "ativa" em um servidor (NODE) por vez, deixando os demais servidores do WSFC em estado "passivo", aguardando por uma falha para que seguindo regras de configurações de propriedades como "<em>preferred owner" </em>e "<em>possible owner" </em>possam assumir automaticamente uma "ROLE" onde o SQL Server FCI passe a estar em execução.</p>
 <p style="text-align: justify;">Uma das formas de se evitar que um ou mais servidores fiquem ociosos simplesmente aguardando a falha do servidor onde o SQL Server está ativo, é realizar a configuração cruzada do cluster, onde uma instância clusterizada (<strong><span style="color: #0000ff;">SQL1</span></strong>) ativa em um<strong><span style="color: #0000ff;"> servidor A</span></strong> tenha o <span style="color: #0000ff;">servidor B</span> como <span style="color: #0000ff;">passivo</span>, e uma outra instância clusterizada (<strong><span style="color: #008000;">SQL2</span></strong>) ativa no <span style="color: #008000;"><strong>Servidor B</strong></span> tenha o <span style="color: #008000;">servidor A</span> como <span style="color: #008000;">passivo</span>.</p>
 
@@ -130,16 +132,53 @@ Até o próximo...
  	<li><a href="https://gallery.technet.microsoft.com/PowerShell-module-for-16242485" target="_blank" rel="noopener">PowerShell module for configuring AntiAffinityClassNames in Failover Clustering</a></li>
 </ul>
 &nbsp;
+      </div>
+      <div class="article-footer">
+        <div class="pill-row"><span class="pill">Database Administration</span><span class="pill">HADR</span><span class="pill">Tech</span><span class="pill">Virtual PASS BR</span></div>
+        <div class="pill-row"><span class="pill">AlwaysOn</span><span class="pill">bts</span><span class="pill">CLUSTER</span><span class="pill">FoRG</span><span class="pill">Friends of RedGate</span><span class="pill">MTAC</span><span class="pill">Pass</span><span class="pill">sqlserver</span><span class="pill">wsfc</span></div>
+        <div class="post-nav">
+          <div><a href="../sql-server-2016-it-just-runs-faster-bob-ward/">Newer: SQL Server 2016 - It just runs faster (Bob Ward)</a></div>
+          <div><a href="../review-e-analise-sql-saturday-573-brasilia/">Older: Review e An&#225;lise - SQL Saturday #573 - Bras&#237;lia</a></div>
+        </div>
+      </div>
+    </article>
+  </main>
+  <aside class="sidebar-container">
+  <div class="widget-area">
+    <section class="widget">
+  <h2 class="widget-title">About This Archive</h2>
+  <div class="widget-content">
+    <p>Arquivo preservado do antigo WordPress do blog de Edvaldo Castro.</p>
+<p><a href="../../archive/">Ver o arquivo completo</a></p>
   </div>
-  <div class="article-footer">
-    <div class="pill-row"><span class="pill">Database Administration</span><span class="pill">HADR</span><span class="pill">Tech</span><span class="pill">Virtual PASS BR</span></div>
-    <div class="pill-row"><span class="pill">AlwaysOn</span><span class="pill">bts</span><span class="pill">CLUSTER</span><span class="pill">FoRG</span><span class="pill">Friends of RedGate</span><span class="pill">MTAC</span><span class="pill">Pass</span><span class="pill">sqlserver</span><span class="pill">wsfc</span></div>
-    <div class="post-nav">
-      <div><a href="../sql-server-2016-it-just-runs-faster-bob-ward/">Newer: SQL Server 2016 - It just runs faster (Bob Ward)</a></div>
-      <div><a href="../review-e-analise-sql-saturday-573-brasilia/">Older: Review e An&#225;lise - SQL Saturday #573 - Bras&#237;lia</a></div>
-    </div>
+</section>
+    <section class="widget">
+  <h2 class="widget-title">Recent Posts</h2>
+  <div class="widget-content">
+    <ul class="widget-list"><li><a href="../sql-bits-2019-takeaways/">SQL Bits 2019 - Takeaways</a><span class="widget-meta">03 Mar 2019</span></li><li><a href="../vlfs_vldbs/">Controle manual de VLFs para VLDBs</a><span class="widget-meta">18 Sep 2018</span></li><li><a href="../backup-full-diario/">Backup Full Di&#225;rio, sua melhor op&#231;&#227;o?</a><span class="widget-meta">31 Jul 2018</span></li><li><a href="../um-ano-irlanda/">Primeiro ano como DBA Expat na Irlanda</a><span class="widget-meta">20 Mar 2018</span></li><li><a href="../plagio-serio-mesmo/">PL&#193;GIO - S&#233;rio mesmo?</a><span class="widget-meta">10 Jan 2018</span></li></ul>
   </div>
-</article>
+</section>
+    <section class="widget">
+  <h2 class="widget-title">Pages</h2>
+  <div class="widget-content">
+    <ul class="widget-list"><li><a href="../../about/">Sobre</a></li><li><a href="../../downloads/">Downloads</a></li><li><a href="../../scripts/">Scripts</a></li><li><a href="../../apresentacoes/">Apresenta&#231;&#245;es</a></li><li><a href="../../sql-server-na-internet/">SQL Server - Free Tools</a></li><li><a href="../../sr-nimbus-technologia/">Sr Nimbus Technologia</a></li><li><a href="../../livros-e-publicacoes/">Livros e Publica&#231;&#245;es</a></li><li><a href="../../arquivo/">Arquivo de Posts</a></li></ul>
+  </div>
+</section>
+    <section class="widget">
+  <h2 class="widget-title">Archives</h2>
+  <div class="widget-content">
+    <ul class="widget-list"><li><a href="../../archive/#year-2019">2019</a><span class="widget-meta">1 posts</span></li><li><a href="../../archive/#year-2018">2018</a><span class="widget-meta">4 posts</span></li><li><a href="../../archive/#year-2017">2017</a><span class="widget-meta">5 posts</span></li><li><a href="../../archive/#year-2016">2016</a><span class="widget-meta">7 posts</span></li><li><a href="../../archive/#year-2015">2015</a><span class="widget-meta">23 posts</span></li><li><a href="../../archive/#year-2014">2014</a><span class="widget-meta">8 posts</span></li><li><a href="../../archive/#year-2013">2013</a><span class="widget-meta">15 posts</span></li><li><a href="../../archive/#year-2012">2012</a><span class="widget-meta">15 posts</span></li><li><a href="../../archive/#year-2011">2011</a><span class="widget-meta">5 posts</span></li></ul>
+  </div>
+</section>
+    <section class="widget">
+  <h2 class="widget-title">Categories</h2>
+  <div class="widget-content">
+    <ul class="widget-list"><li><span>Comunidade e Eventos</span><span class="widget-meta">43</span></li><li><span>Virtual PASS BR</span><span class="widget-meta">42</span></li><li><span>Tech</span><span class="widget-meta">31</span></li><li><span>Database Administration</span><span class="widget-meta">22</span></li><li><span>Backup</span><span class="widget-meta">10</span></li><li><span>Carreira</span><span class="widget-meta">8</span></li><li><span>HADR</span><span class="widget-meta">6</span></li><li><span>OFF-TOPIC</span><span class="widget-meta">4</span></li></ul>
+  </div>
+</section>
+  </div>
+</aside>
+</div>
     </main>
     <footer class="site-footer">
       <p>Conteudo preservado a partir do export WordPress do blog de Edvaldo Castro.</p>
