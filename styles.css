@@ -1045,7 +1045,8 @@ td {
 }
 
 .posts-index .page-header,
-.archive-page .archive-header {
+.archive-page .archive-header,
+.pages-index .page-header {
   margin: 0 -20px 24px;
   padding: 24px 20px 22px;
   background: #e8e5ce;
@@ -1054,7 +1055,8 @@ td {
 }
 
 .posts-index .page-header p,
-.archive-page .archive-header p {
+.archive-page .archive-header p,
+.pages-index .page-header p {
   margin: 0 0 12px;
   max-width: 1040px;
   color: #444444;
@@ -1063,14 +1065,16 @@ td {
 }
 
 .posts-index .page-header .page-title,
-.archive-page .archive-header .archive-title {
+.archive-page .archive-header .archive-title,
+.pages-index .page-header .page-title {
   margin: 0 0 4px;
   font: 300 italic 30px "Source Sans 3", "Source Sans Pro", Helvetica, Arial, sans-serif;
   color: #141412;
 }
 
 .posts-index .page-header .meta-line,
-.archive-page .archive-header .meta-line {
+.archive-page .archive-header .meta-line,
+.pages-index .page-header .meta-line {
   margin-bottom: 8px;
   color: #7d7b6d;
   font-size: 14px;
@@ -1079,12 +1083,17 @@ td {
 }
 
 .posts-index .content-panel,
-.archive-page .content-area {
+.archive-page .content-area,
+.pages-index .content-area {
   border: 0;
   background: transparent;
 }
 
 .posts-index .content-panel {
+  padding-top: 0;
+}
+
+.pages-index .content-panel {
   padding-top: 0;
 }
 
