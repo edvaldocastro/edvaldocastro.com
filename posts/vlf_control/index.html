@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="---------------------------------------------------------------------------------- Atualiza&#231;&#227;o (09/01/2014 ) : No mesmo dia (06/01/2014) em que publiquei este post, o Paul Randal ( Twitter | Blog ) publicou um post ( Imp..." />
+  <title>Controle Autom&#225;tico dos VLFs (Virtual Log Files)</title>
+  <link rel="stylesheet" href="../../styles.css" />
+</head>
+<body class="single-post">
+  <div class="page-shell">
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark">EC</span>
+        <span class="brand-copy">
+          <strong>Edvaldo Castro</strong>
+          <small>Arquivo estatico do antigo WordPress</small>
+        </span>
+      </a>
+      <nav class="site-nav">
+        <a href="../../">Home</a>
+        <a href="../../posts/">Posts</a>
+        <a href="../../pages/">Pages</a>
+        <a href="../../archive/">Arquivo</a>
+      </nav>
+    </header>
+    <main class="site-main">
+      <article class="article-card">
+  <div class="article-head">
+    <p class="meta-line">Post</p>
+    <h1 class="post-title">Controle Autom&#225;tico dos VLFs (Virtual Log Files)</h1>
+    <p class="meta-line">06 Jan 2015 <span class="dot">&middot;</span> Database Administration, Tech, Virtual PASS BR <span class="dot">&middot;</span> FoRG, MTAC, RedGate, SQL SERVER, Virtual Log File, virtual pass, Virtual Pass Br, VirtualPassBr, VirtualPassPT, vlf, VLF Control</p>
+  </div>
+  <div class="article-content">
+    <p style="text-align: center;">----------------------------------------------------------------------------------</p>
+<p style="text-align: justify;"><em><strong>Atualização (09/01/2014 )</strong>: No mesmo dia (06/01/2014) em que publiquei este post, o Paul Randal (<a href="https://twitter.com/PaulRandal" target="_blank" rel="noopener">Twitter </a>| <a href="http://www.sqlskills.com/blogs/paul/" target="_blank" rel="noopener">Blog</a>) publicou um post (<a href="http://www.sqlskills.com/blogs/paul/important-change-vlf-creation-algorithm-sql-server-2014/" target="_blank" rel="noopener">Important change to VLF creation algorithm in SQL Server 2014</a>), que consiste em uma importante mudança na fórmula de criação de novos VLFs.</em></p>
+<em><span style="text-decoration: underline;"><strong>For SQL Server 2014</strong></span>, the algorithm is now:</em>
+<ul>
+ 	<li><em>Is the growth size less than 1/8 the size of the log?</em>
+<ul>
+ 	<li><em><strong>Yes</strong>: create 1 new VLF equal to the growth size</em></li>
+ 	<li><em><strong>No</strong>: use the formula above</em></li>
+</ul>
+</li>
+</ul>
+<p style="text-align: center;">----------------------------------------------------------------------------------</p>
+<p style="text-align: justify;">Existem diversos textos, blogs e postagens sobre VLFs, sua definição, melhores práticas para configuração e manutenção na internet, incluindo alguns que selecionei abaixo, para que possam servir como uma leitura prévia e conceitual sobre o assunto.</p>
+<p style="text-align: justify;">Meu amigo infracitado <a href="http://sqlleroy.com" target="_blank" rel="noopener">Leandro Ribeiro</a>, escreveu dois excelentes posts sobre como identificar e corrigir fragmentação no transaction log.</p>
+<p style="text-align: justify;"><a href="http://www.sqlskills.com/blogs/kimberly/" target="_blank" rel="noopener">Kimberly Tripp</a> (dispensa apresentações), fez também alguns posts que são referências quando o assunto é “Virtual Log Files”.</p>
+<p style="text-align: justify;"><strong>Leandro Ribeiro</strong> (<a href="http://sqlleroy.com" target="_blank" rel="noopener">Blog</a> | <a href="http://twitter.com/sqlleroy" target="_blank" rel="noopener">Twitter</a>)</p>
+
+<ul>
+ 	<li style="text-align: justify;"><a href="http://sqlleroy.com/2012/09/03/fragmentacao-do-transaction-log-parte-i/" target="_blank" rel="noopener">Fragmentação do Transaction Log – Parte I</a></li>
+ 	<li style="text-align: justify;"><a href="http://sqlleroy.com/2012/09/04/fragmentacao-do-transaction-log-parte-ii/" target="_blank" rel="noopener">Fragmentação do Transaction Log – Parte II</a></li>
+</ul>
+<p style="text-align: justify;"><strong>Kimberly L. Tripp</strong> (<a href="http://www.sqlskills.com/blogs/kimberly/" target="_blank" rel="noopener">Blog</a> | <a href="http://twitter.com/KimberlyLTripp" target="_blank" rel="noopener">Twitter</a>)</p>
+
+<ul>
+ 	<li style="text-align: justify;"><a href="http://www.sqlskills.com/blogs/kimberly/8-steps-to-better-transaction-log-throughput/" target="_blank" rel="noopener">8 Steps to better Transaction Log Throughput</a></li>
+ 	<li style="text-align: justify;"><a href="http://www.sqlskills.com/blogs/kimberly/transaction-log-vlfs-too-many-or-too-few/" target="_blank" rel="noopener">Transaction Log VLFs – too many or too few?</a></li>
+</ul>
+<p style="text-align: justify;"><strong>Greg Larsen</strong> (<a href="https://www.simple-talk.com/author/greg-larsen/" target="_blank" rel="noopener">Perfil Simple Talk</a>)</p>
+
+<ul>
+ 	<li style="text-align: justify;"><a href="https://www.simple-talk.com/sql/database-administration/sql-server-transaction-log-fragmentation-a-primer/" target="_blank" rel="noopener">SQL Server Transaction Log Fragmentation: a Primer</a></li>
+</ul>
+<p style="text-align: justify;">Devido à qualidade e riqueza de detalhes dos posts supracitados, partiremos direto ao objetivo deste.</p>
+<p style="text-align: justify;">Existem diversas abordagens diferentes quando há a intenção de controle da fragmentação, quantidade e tamanho dos VLFs. Neste artigo, será tratado a padronização pelo tamanho de cada VLFs individualmente, deixando que o SQL Server, cresça o arquivo de log de transações até o tamanho necessário para utilização, sem que haja a necessidade do efeito elástico (shrink e auto growth frequentes).</p>
+<p style="text-align: justify;">Por exemplo, se houver uma padronização por quantidades de VLFs, dois bancos de dados distintos com necessidades diferentes de sizing do Log de Transações, terão tamanhos variados por VLF.</p>
+<p style="text-align: justify;">O tamanho de um VLF não é configurado diretamente, mas existe uma tabela de crescimento, que indiretamente define o tamanho e a quantidade dos VLFs.</p>
+<p style="text-align: justify;"><a href="../../assets/uploads/2015/01/TAM-POR-VLF4.jpg" rel="attachment wp-att-1937"><img class="aligncenter size-full wp-image-1937" src="../../assets/uploads/2015/01/TAM-POR-VLF4.jpg" alt="TAM-POR-VLF4" width="526" height="190" /></a></p>
+<p style="text-align: justify;">De acordo com a tabela acima, podemos simular a relação crescimento X Tamanho dos VLFs:</p>
+
+<h1 style="text-align: justify;">Controle automático dos VLFs</h1>
+&nbsp;
+<p style="text-align: justify;">Deste ponto em diante, Será apresentado a Solução em Si, e o método para implantação da mesma.</p>
+<p style="text-align: justify;"><em><span style="color: #ff0000;">Disclaimer:</span></em></p>
+<p style="text-align: justify;"><span style="color: #ff0000;">Os passos e scripts a seguir foram desenvolvidos para automatizar a configuração e controle dos Virtual Log Files, e podem causar algum tipo de bloqueio ou indisponibilidade temporária do SQL Server. Antes de implantar ou utilizar partes ou todo o conteúdo aqui disponibilizado, sugiro a leitura e entendimento do que cada passo realiza. Implante primeiro em um ambiente de testes controlado, e caso veja benefícios, faça em seu ambiente de produção, <strong>POR SUA CONTA E RISCO</strong>.</span></p>
+
+<h1 style="text-align: justify;">1º Passo – Setup do ambiente</h1>
+&nbsp;
+<p style="text-align: justify;"><a href="https://github.com/edvaldocastro/Useful_SQLServer_Scripts/blob/master/01-AutomaticVLFControl-Setup3.sql">Clique aqui</a>  para fazer o download deste script (download completo ao final do artigo)</p>
+<p style="text-align: justify;">Existe um comando no SQL Server que retorna informações sobre o Log de Transações, o <strong><em>DBCC LOGINFO. </em></strong>Este DBCC retorna informações como, quantidade de VLFs, tamanho destes VLFs, LSN, etc. Com base nestas informações, trataremos o ambiente atual e a criação dos padrões que posteriormente servirão de base para as verificações periódicas automáticas.</p>
+<p style="text-align: justify;">Estou considerando “Tamanho Ideal”, o tamanho atual do arquivo físico do Log de transações. Para que isto seja algo fidedigno, sugiro deixar o Log de todos os bancos crescer o tanto quanto for necessário, afim de que este atinja seu maior tamanho, e este será o tamanho considerado “ideal”, ou o máximo que esta base já precisou em uma rotina.</p>
+<p style="text-align: justify;">Neste ponto, o Script cria uma tabela chamada “ControlaVLF” na base de dados de sistema “master” com os dados da instância e de todos os bancos de dados de usuários contidos nesta instância.</p>
+<p style="text-align: justify;">O tamanho padrão definido para cada VLF individualmente foi de <strong>256 MB</strong> (lembrando que alterações podem ser realizadas no script para adequar às necessidades de cada ambiente).</p>
+<p style="text-align: justify;">Execute o script uma primeira vez, para a criação da <em>stored procedure </em>“sp_SetupVLFControl” e em seguida execute o comando para execução da <em>stored procedure </em>(uma única vez):</p>
+<p style="text-align: justify;"><span style="color: #0000ff;">EXECUTE master</span>..sp_SetupVLFControl</p>
+
+<h1 style="text-align: justify;"></h1>
+<h1 style="text-align: justify;">2º Passo – Ajustes iniciais</h1>
+&nbsp;
+<p style="text-align: justify;"><a href="https://github.com/edvaldocastro/Useful_SQLServer_Scripts/blob/master/02-AutomaticVLFControl-InitialConfig3.sql">Clique aqui</a> para fazer o download deste script (download completo ao final do artigo)</p>
+<p style="text-align: justify;">O segundo passo é a alteração inicial da instância onde o procedimento está sendo realizado. Este passo deve ser realizado preferencialmente em um horário em que não há atividade intensa na base de dados, pois o processo de <em>SHRINK </em>e <em>GROWTH </em>do arquivo pode causar bloqueios temporários na base.</p>
+<p style="text-align: justify;">Neste <em>script</em> é criado a <em>stored procedure </em>“sp_InitialSetupVLFControl” cuja execução realiza um <em>LOOP </em>em todos bancos de dados de usuário que estão online. Em cada um dos bancos de dados de usuário são realizadas as seguintes tarefas:</p>
+
+<ul style="text-align: justify;">
+ 	<li>Verificação do <em>Recovery Model </em>do banco de dados</li>
+ 	<li>Realização de Backup de Log (em caso de <em>Recovery Model Full)</em></li>
+ 	<li><em>Shrink </em>do arquivo de T-Log para com a opção “<em>EMPTY FILE</em>”</li>
+ 	<li>Crescimento do arquivo em tamanhos pré-definidos (de acordo com a tabela dos VLFs)</li>
+</ul>
+<p style="text-align: justify;">Ao final, todos os bancos de dados de usuário terão o mesmo tamanho de VLF com quantidades diferentes, devido ao fato de que o Tamanho Ideal (indicado na tabela master..ControlaVLF) de cada banco é diferente.</p>
+<p style="text-align: justify;">Execute o script uma primeira vez, para a criação da <em>stored procedure </em>“sp_InitialSetupVLFControl” e em seguida execute o comando para execução da <em>stored procedure (</em>uma única vez<em>)</em>:</p>
+<p style="text-align: justify;"><span style="color: #0000ff;">EXECUTE master</span>.. sp_InitialSetupVLFControl</p>
+
+<h1 style="text-align: justify;">3º Passo – Verificação <em>OnDemand</em></h1>
+&nbsp;
+<p style="text-align: justify;"><a href="https://github.com/edvaldocastro/Useful_SQLServer_Scripts/blob/master/03-AutomaticVLFControl-OnDemandCheck3.sql">Clique aqui</a>  para fazer o download deste script (download completo ao final do artigo)</p>
+<p style="text-align: justify;">Após realizados os passos 1 (Setup do ambiente) e 2 (Ajuste inicial) o passo final é a configuração de uma rotina (automatizada ou não) para a manutenção do padrão pré-estabelecido de tamanho dos VLFs.</p>
+<p style="text-align: justify;">O <em>script </em>cria uma <em>stored procedure que </em>realiza uma validação em todos os bancos de dados de usuários e execução das seguintes tarefas:</p>
+
+<ul style="text-align: justify;">
+ 	<li>Verificação se o tamanho atual do arquivo de log é maior que o tamanho ideal</li>
+ 	<li>Caso a condição seja verdadeira:
+<ul>
+ 	<li>Verificação do <em>Recovery Model</em> do banco</li>
+ 	<li>Backup de Log (em caso de <em>Recovery Model Full)</em></li>
+</ul>
+</li>
+ 	<li><em>Shrink </em>do arquivo do T-log somente ATÉ O TAMANHO IDEAL.</li>
+ 	<li>Incremento do campo <em>ShrinkCounter </em>e atualização do campo <em>LastShrinkDate </em>na tabela master..ControlaVLF</li>
+</ul>
+<p style="text-align: justify;">Execute o script uma primeira vez, para a criação da <em>stored procedure </em>“sp_OnDemandCheck” e em seguida execute o comando para execução da <em>stored procedure (sempre que quiser realizar a verificação)</em>:</p>
+<p style="text-align: justify;"><span style="color: #0000ff;">EXECUTE master</span>.. sp_OnDemandCheck</p>
+<p style="text-align: justify;">Um ponto importante que pode ser observado neste terceiro passo, é o último item onde há a atualização dos campos <em>ShrinkCounter </em>e <em>LastShrinkDate, </em>permitindo assim a verificação periódica da quantidade de vezes em que um arquivo de T-Log de uma base de dados sofreu o processo de shrink e em seguida readequando o tamanho ideal deste arquivo.</p>
+
+<h1 style="text-align: justify;">Resumo Implantação:</h1>
+&nbsp;
+<ol style="text-align: justify;">
+ 	<li><a href="https://github.com/edvaldocastro/Useful_SQLServer_Scripts/raw/master/AutomaticVLFControl3.zip">Faça o download de todos os scripts</a> (caso não os tenha baixado individualmente)</li>
+</ol>
+<ol style="text-align: justify;" start="2">
+ 	<li>Leia e entenda o que cada um dos scripts faz, (Caso tenha alguma dúvida, por favor deixe um comentário no post)</li>
+</ol>
+<ol style="text-align: justify;" start="3">
+ 	<li>Execute o script do Passo 1: 01-Setup.sql
+<ol>
+ 	<li>Execute a <em>stored procedure </em>criada,<em> através do comando:</em>
+<ol>
+ 	<li><span style="color: #0000ff;">EXECUTE master</span>..sp_SetupVLFControl</li>
+</ol>
+</li>
+</ol>
+</li>
+</ol>
+<ol style="text-align: justify;" start="4">
+ 	<li>Execute o script do Passo 2: 02- 02-InitialConfig.sql
+<ol>
+ 	<li>Execute a <em>stored procedure </em>criada,<em> através do comando:</em>
+<ol>
+ 	<li><span style="color: #0000ff;">EXECUTE master</span>..sp_InitialSetupVLFControl</li>
+</ol>
+</li>
+</ol>
+</li>
+</ol>
+<ol style="text-align: justify;" start="5">
+ 	<li>Execute o script do Passo 3: 03-OnDemandCheck.sql
+<ol>
+ 	<li>Crie um Job no SQL Server Agent com o seguinte comando, a ser executando na periodicidade desejada (Uma vez por semana aos domingos, por exemplo):
+<ol>
+ 	<li><span style="color: #0000ff;">EXECUTE master</span>.. sp_OnDemandCheck</li>
+</ol>
+</li>
+</ol>
+</li>
+</ol>
+<p style="text-align: justify;">Para consultas aos dados, basta acessar a tabela master..ControlaVLF.</p>
+<p style="text-align: justify;">Caso perceba que algum banco está com o campo ShrinkCounter muito alto, considere alterar o tamanho do valor ideal, para que a frequência de ShrinkFile reduza ou desapareça.</p>
+<p style="text-align: justify;">Qualquer dúvida, fique à vontade para comentar aqui mesmo no post.</p>
+<p style="text-align: justify;">Obrigado pela leitura.</p>
+&nbsp;
+
+Edvaldo Castro
+  </div>
+  <div class="article-footer">
+    <div class="pill-row"><span class="pill">Database Administration</span><span class="pill">Tech</span><span class="pill">Virtual PASS BR</span></div>
+    <div class="pill-row"><span class="pill">FoRG</span><span class="pill">MTAC</span><span class="pill">RedGate</span><span class="pill">SQL SERVER</span><span class="pill">Virtual Log File</span><span class="pill">virtual pass</span><span class="pill">Virtual Pass Br</span><span class="pill">VirtualPassBr</span><span class="pill">VirtualPassPT</span><span class="pill">vlf</span><span class="pill">VLF Control</span></div>
+    <div class="post-nav">
+      <div><a href="../guia-art-tecnico/">Newer: Artigos t&#233;cnicos: O guia definitivo (ou n&#227;o)</a></div>
+      <div><a href="../error-netfx3/">Older: [Troubleshooting] - Erro ao habilitar .Net Framework 3.5 no Windows Server 2012 R2</a></div>
+    </div>
+  </div>
+</article>
+    </main>
+    <footer class="site-footer">
+      <p>Conteudo preservado a partir do export WordPress do blog de Edvaldo Castro.</p>
+      <p>Este site foi gerado como um arquivo estatico para consulta publica.</p>
+    </footer>
+  </div>
+</body>
+</html>

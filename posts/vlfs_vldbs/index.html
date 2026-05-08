@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Existem pontos de aten&#231;&#227;o e controle que s&#227;o extremamente importantes para a boa administra&#231;&#227;o de um ambiente de banco de dados, nesse caso especificamente em SQL Server. Para uma boa introdu&#231;&#227;o e at&#233; mesmo aprofundament..." />
+  <title>Controle manual de VLFs para VLDBs</title>
+  <link rel="stylesheet" href="../../styles.css" />
+</head>
+<body class="single-post">
+  <div class="page-shell">
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark">EC</span>
+        <span class="brand-copy">
+          <strong>Edvaldo Castro</strong>
+          <small>Arquivo estatico do antigo WordPress</small>
+        </span>
+      </a>
+      <nav class="site-nav">
+        <a href="../../">Home</a>
+        <a href="../../posts/">Posts</a>
+        <a href="../../pages/">Pages</a>
+        <a href="../../archive/">Arquivo</a>
+      </nav>
+    </header>
+    <main class="site-main">
+      <article class="article-card">
+  <div class="article-head">
+    <p class="meta-line">Post</p>
+    <h1 class="post-title">Controle manual de VLFs para VLDBs</h1>
+    <p class="meta-line">18 Sep 2018 <span class="dot">&middot;</span> Database Administration, SQL Server <span class="dot">&middot;</span> fragmenta&#231;&#227;o vlf, MTAC, performance, SQL SERVER, tlog, transaction log, virtual log files, vlf</p>
+  </div>
+  <div class="article-content">
+    <!-- wp:paragraph -->
+<p><p style="text-align: justify;">Existem pontos de atenção e controle que são extremamente importantes para a boa administração de um ambiente de banco de dados, nesse caso especificamente em SQL Server.</p></p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p><p style="text-align: justify;">Para uma boa introdução e até mesmo aprofundamento do tema relacionado a VLFs (Virtual Log Files), por favor veja abaixo alguns links interessantes:</p></p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list -->
+<ul><li><a href="../..//vlf_control/" target="_blank" rel="noopener noreferrer">Controle Automático dos VLFs (Virtual Log Files)</a></li><li><a href="https://sqlleroy.com/2012/09/03/fragmentacao-do-transaction-log-parte-i/" target="_blank" rel="noopener noreferrer">Fragmentação do Transaction Log – Parte I</a></li><li><a href="https://sqlleroy.com/2012/09/04/fragmentacao-do-transaction-log-parte-ii/" target="_blank" rel="noopener noreferrer">Fragmentação do Transaction Log – Parte II</a></li><li><a href="https://www.sqlskills.com/blogs/kimberly/8-steps-to-better-transaction-log-throughput/" target="_blank" rel="noopener noreferrer">8 Steps to better Transaction Log throughput</a></li><li><a href="https://www.sqlskills.com/blogs/kimberly/transaction-log-vlfs-too-many-or-too-few/" target="_blank" rel="noopener noreferrer">Transaction Log VLFs – too many or too few?</a></li></ul>
+<!-- /wp:list -->
+
+<!-- wp:paragraph -->
+<p><p style="text-align: justify;">Independente do tamanho do banco de dados, sendo ele um VLDB (Very Large Database) ou não, a fragmentação do log de transações pode causar impactos consideráveis à performance do banco de dados com relação a operações que envolvem&nbsp; escrita ou leitura no log de transações (TransactionLog.ldf), como por exemplo:</p></p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list -->
+<ul><li><a href="https://docs.microsoft.com/en-us/sql/database-engine/database-mirroring/database-mirroring-sql-server" target="_blank" rel="noopener noreferrer">Database Mirroring</a></li><li><a href="https://docs.microsoft.com/en-us/sql/relational-databases/replication/sql-server-replication" target="_blank" rel="noopener noreferrer">Replicação</a></li><li><a href="https://docs.microsoft.com/en-us/sql/database-engine/availability-groups/windows/overview-of-always-on-availability-groups-sql-server" target="_blank" rel="noopener noreferrer">AlwaysOn Availability Groups</a></li><li><a href="https://docs.microsoft.com/en-us/sql/relational-databases/backup-restore/transaction-log-backups-sql-server" target="_blank" rel="noopener noreferrer">Transaction Log Backups</a></li><li>etc</li></ul>
+<!-- /wp:list -->
+
+<!-- wp:paragraph -->
+<p><p style="text-align: justify;">Por padrão, quando um novo banco de dados é criado no SQL Server, são criados dois arquivos físicos, o arquivo de Dados, que convencionou-se ser nomeado com a extensão ".mdf" e o arquivo do Log de Transações, que convencionalmente recebe a extensão ".ldf". O arquivo do log de transações é internamente (e logicamente) dividido em VLFs, que são automaticamente criados quando há um crescimento (independente se manual ou automático) do arquivo físico.</p> <p style="text-align: justify;">Abaixo uma breve ilustração da divisão lógica de um <em>Transaction Log file</em>.</p></p>
+<!-- /wp:paragraph -->
+
+<!-- wp:image {"align":"center"} -->
+<div class="wp-block-image" style="text-align: center;">
+<figure class="aligncenter"><img class="aligncenter" src="https://sqlleroydotcom.files.wordpress.com/2012/09/log.gif?w=640" alt="" width="505" height="147" />
+<figcaption><span style="font-size: 8pt;"><em>fonte: https://sqlleroy.com/2012/09/03/fragmentacao-do-transaction-log-parte-i/</em></span></figcaption>
+</figure>
+</div>
+<!-- /wp:image -->
+
+<!-- wp:heading {"level":3} -->
+<h3> </h3>
+<h3>Fragmentação</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p><p style="text-align: justify;">Existem diversos tipos de fragmentação de um arquivo em disco do Windows, aqui tratar-se-á especificamente da fragmentação interna do arquivo de log.</p></p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p><p style="text-align: justify;">Não existe um número mágico que possa ser usado como um <em>threshold</em> para dizer se o arquivo está ou não fragmentado, visto que depende muito das caracteristicas de carga e utilização do banco de dados nesse dado ambiente.</p></p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p><p style="text-align: justify;">Em linhas gerais quantos menos VLFs, melhor para não se ter problemas relacionados a esse ponto.&nbsp;</p></p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p><p style="text-align: justify;">Existem literaturas que citam números por volta de 250 a 500 VLFs como bons números para quantidades de VLFs em um banco de dados, particularmente, dependendo do cenário e de como o banco de dados é utilizado (alto ou baixo número de pequenas transações), acredito serem aceitáveis valores abaixo de 1000 VLFs por banco, para VLDBs.</p></p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 id="mce_19">VLDBs</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p><p style="text-align: justify;">Para bancos de dados muito grandes (acima de 1TB de dados), também cotidianamente citados como VLDBs (Very Large Database), consequentemente o arquivo de log de transações (.ldf) tende a ser igualmente grande, caso esse seja muito transacional, e também para suprir manutenções como por exemplo, rebuild de indices, que geram entradas no log de transações.</p></p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p><p style="text-align: justify;">Nesses casos (na verdade, para bancos menores também) o ideal é que o arquivo de log seja pensado e planejado de modo que acomode todas as rotinas de manutenção, operação e backup de log sem que o mesmo fique sendo submetido a operações corriqueiras de crescimento (automático ou manual) e&nbsp;<em>shrink, estando assim sempre em seu tamanho ideal e normal.</em></p></p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p></p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3><br>Exemplos de dimensionamento do Transaction Log File&nbsp; para VLDBs</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p><p style="text-align: justify;">Abaixo alguns exemplos de como podem ser dimensionados arquivos de log de transações com tamanhos pré-alocados de 1TB e também 2TB.</p></p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":4} -->
+<h4>Legenda (Colunas)</h4>
+<!-- /wp:heading -->
+
+<!-- wp:list -->
+<ul><li style="text-align: justify;"><strong>Growth(GB)</strong>&nbsp;- Tamanho do crescimento do arquivo de log (TamAtual).</li><li style="text-align: justify;"><strong>Qty_Per_Grow</strong> - Quantidade de VLFs criados a cada crescimento do arquivo.&nbsp;</li><li style="text-align: justify;"><strong>VLF Size (GB)</strong> - Tamanho de cada VLF criado com o crescimento anterior.</li><li style="text-align: justify;"><strong>Qty_total</strong> - Quantidade total de VLFs criados no final das operações descritas nessa linha para se alcançar o tamanho específico (nesse caso 1TB ou 2 TB).</li><li style="text-align: justify;"><strong>How_Many_Growths</strong> - Quantidade de operações de crescimento necessárias para se atingir os valores especificados.&nbsp;</li><li style="text-align: justify;"><strong>AVG_Time_To_Grow</strong> - Tempo médio de cada crescimento do arquivo de log, baseado no&nbsp;<em>growth size.</em></li></ul>
+<!-- /wp:list -->
+
+<!-- wp:paragraph -->
+<p>&nbsp;</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:image {"id":2433} -->
+<figure class="wp-block-image"><img class="aligncenter wp-image-2442 size-full" src="../../assets/uploads/2018/09/1TB-1.jpg" alt="" width="983" height="390" />
+<figcaption>Tabela de valores possíveis para configurações de arquivo de log de 1 TB<br /><br /><br /></figcaption>
+</figure>
+<!-- /wp:image -->
+
+<!-- wp:image {"id":2434} -->
+<figure class="wp-block-image" style="text-align: justify;"><img class="aligncenter wp-image-2443 size-full" src="../../assets/uploads/2018/09/2TB-1.jpg" alt="" width="984" height="391" />
+<figcaption>Tabela de valores possíveis para configurações de arquivo de log de 2 TB<br /><br /><br /></figcaption>
+</figure>
+<!-- /wp:image -->
+
+<!-- wp:paragraph -->
+<p><p style="text-align: justify;">Um possível grande problema quando da execução da manutenção acima, é que quaisquer operações de manipulação de arquivos do banco de dados, causam um lock que impede novas transações de serem executadas, um&nbsp;<em>workaround&nbsp;</em>bem simples para isso, é você criar um segundo arquivo de log de transações trabalhar seu arquivo conforme desejar, e em seguida excluir esse segundo arquivo <strong>(Créditos aqui para meu amigo <span style="color: #0000ff;">Ariel Fernandez</span>, que deu essa brilhante ideia)</strong>, tudo com operações de ALTER DATABASE, que não necessariamente vão causar maiores impactos em seu ambiente.&nbsp;</p></p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p><p style="text-align: justify;">Obviamente, na medida do possível é sempre recomendado que manutenções desse tipo sejam realizadas em janelas específicas fora dos horários de maior utilização do banco de dados.</p>
+<p>&nbsp;</p></p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2>Conclusão:</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p><p style="text-align: justify;">Eu me arriscaria a dizer que o assunto VLF além de ser negligenciado é também desconhecido da grande maioria dos DBAs. Com o potencial de problemas que pode causar é necessário que seja dada a devida atenção ao controle de quantidade de&nbsp; VLFs e fragmentação dos Virtual Log Files em seu banco de dados, evitando-se assim maiores problemas de performance decorrentes desse elemento.</p></p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p></p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p><p style="text-align: justify;">Como está seu ambiente? Dever de casa cumprido? VLFs com quantidade baixa e tamanhos adequados ?&nbsp; Comenta ae...&nbsp;</p></p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p></p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p><p>&nbsp;</p>
+<p>Abraço,</p>
+<p>Edvaldo Castro</p></p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>&nbsp;</p>
+<!-- /wp:paragraph -->
+  </div>
+  <div class="article-footer">
+    <div class="pill-row"><span class="pill">Database Administration</span><span class="pill">SQL Server</span></div>
+    <div class="pill-row"><span class="pill">fragmenta&#231;&#227;o vlf</span><span class="pill">MTAC</span><span class="pill">performance</span><span class="pill">SQL SERVER</span><span class="pill">tlog</span><span class="pill">transaction log</span><span class="pill">virtual log files</span><span class="pill">vlf</span></div>
+    <div class="post-nav">
+      <div><a href="../sql-bits-2019-takeaways/">Newer: SQL Bits 2019 - Takeaways</a></div>
+      <div><a href="../backup-full-diario/">Older: Backup Full Di&#225;rio, sua melhor op&#231;&#227;o?</a></div>
+    </div>
+  </div>
+</article>
+    </main>
+    <footer class="site-footer">
+      <p>Conteudo preservado a partir do export WordPress do blog de Edvaldo Castro.</p>
+      <p>Este site foi gerado como um arquivo estatico para consulta publica.</p>
+    </footer>
+  </div>
+</body>
+</html>

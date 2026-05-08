@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="&#201; muito comum entre membros da comunidade t&#233;cnica a ocorr&#234;ncia de discuss&#245;es t&#233;cnicas e troca de informa&#231;&#245;es e conhecimentos, basicamente este &#233; o real prop&#243;sito de uma comunidade, trocar experi&#234;ncias, conhecimento e inf..." />
+  <title>[AlwaysOn AG] Configurando o AlwaysOn AG com m&#250;ltiplas inst&#226;ncias</title>
+  <link rel="stylesheet" href="../../styles.css" />
+</head>
+<body class="single-post">
+  <div class="page-shell">
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark">EC</span>
+        <span class="brand-copy">
+          <strong>Edvaldo Castro</strong>
+          <small>Arquivo estatico do antigo WordPress</small>
+        </span>
+      </a>
+      <nav class="site-nav">
+        <a href="../../">Home</a>
+        <a href="../../posts/">Posts</a>
+        <a href="../../pages/">Pages</a>
+        <a href="../../archive/">Arquivo</a>
+      </nav>
+    </header>
+    <main class="site-main">
+      <article class="article-card">
+  <div class="article-head">
+    <p class="meta-line">Post</p>
+    <h1 class="post-title">[AlwaysOn AG] Configurando o AlwaysOn AG com m&#250;ltiplas inst&#226;ncias</h1>
+    <p class="meta-line">06 Jan 2016 <span class="dot">&middot;</span> HADR, Tech, Virtual PASS BR <span class="dot">&middot;</span> AlwaysOn, Availability Groups, Comunidade, hadr, high availability, MTAC, Virtual Pass PT, VirtualPassBr</p>
+  </div>
+  <div class="article-content">
+    <p style="text-align: justify;">É muito comum entre membros da comunidade técnica a ocorrência de discussões técnicas e troca de informações e conhecimentos, basicamente este é o real propósito de uma comunidade, trocar experiências, conhecimento e informações.</p>
+<p style="text-align: justify;">Estávamos Fabrício Lima (<a href="http://www.fabriciolima.net/" target="_blank">Site</a> | <a href="https://twitter.com/Fabriciodba" target="_blank">Twitter</a>) e Eu (<a href="../../" target="_blank">Site</a> | <a href="https://twitter.com/edvaldocastro02" target="_blank">Twitter</a>) em uma discussão muito interessante sobre o AlwaysOn Availability Groups (AG), discutindo algumas possibilidades e limitações para um cenário bastante específico que será descrito no decorrer deste blog post. Em resumo, queríamos ter a certeza da possibilidade (ou não) da configuração e perfeito funcionamento de um ambiente onde duas instâncias SQL Server com versões diferentes (2012 e 2014), instaladas no mesmo servidor fariam parte de dois AGs diferentes, tendo suas réplicas secundárias em outras duas instâncias instaladas em outro servidor, ambos obviamente no mesmo cluster.</p>
+<p style="text-align: justify;">O teste e o resultado estão detalhados a seguir:</p>
+
+<h2 style="text-align: justify;">O ambiente:<a href="../../assets/uploads/2015/12/00.jpg" rel="attachment wp-att-1890">
+</a></h2>
+&nbsp;
+<ul style="text-align: justify;">
+	<li>Domain Controller
+<ul>
+	<li>Servidor Windows Server 2012 R2 - (WS2012-DC)</li>
+</ul>
+</li>
+</ul>
+<ul style="text-align: justify;">
+	<li>CLUSTERSQL-01 (<span style="color: #003300;">Node01</span>)
+<ul>
+	<li>Servidor Windows Server 2012 R2 - (<span style="color: #003300;">WS2012R2-01</span>)
+<ul>
+	<li>SQL Server 2012</li>
+	<li>SQL Server 2014</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<ul style="text-align: justify;">
+	<li>CLUSTERSQL-01 (<span style="color: #0000ff;">Node02</span>)
+<ul>
+	<li>Servidor Windows Server 2012R2 - (<span style="color: #0000ff;">WS2012R2-02</span>)
+<ul>
+	<li>SQL Server 2012</li>
+	<li>SQL Server 2014</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p style="text-align: justify;"><a href="../../assets/uploads/2015/12/00-1.jpg" rel="attachment wp-att-1895"><img class="aligncenter size-full wp-image-1895" src="../../assets/uploads/2015/12/00-1.jpg" alt="00" width="831" height="266" /></a></p>
+
+<h2 style="text-align: justify;">Cenário desejado:</h2>
+&nbsp;
+<p style="text-align: justify;">O cenário final desejado seria conforme resumido na introdução deste artigo dois Availability Groups (AGs), sendo:</p>
+
+<ul style="text-align: justify;">
+	<li><span style="color: #003300;">Node01</span>
+<ul>
+	<li><span style="color: #003300;">WS2012R2-01</span>
+<ul>
+	<li>SQL Server 2012 "<span style="color: #003300;">SQL2012-01</span>" - Stand alone- <span style="color: #ff0000;">AG_2012</span> (Primary)</li>
+	<li>SQL Server 2014 "<span style="color: #003300;">SQL2014-01</span>" - Stand alone - <span style="color: #ff0000;">AG_2014</span> (Primary)</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<ul style="text-align: justify;">
+	<li><span style="color: #0000ff;">Node02</span>
+<ul>
+	<li><span style="color: #0000ff;">WS2012R2-02</span>
+<ul>
+	<li>SQL Server 2012 "<span style="color: #0000ff;">SQL2012-02</span>"- Stand alone- <span style="color: #ff0000;">AG_2012</span> (Primary)</li>
+	<li>SQL Server 2014 "<span style="color: #0000ff;">SQL2014-02</span>"- Stand alone - <span style="color: #ff0000;">AG_2014</span> (Primary)</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p style="text-align: justify;"><a href="../../assets/uploads/2015/12/01-1.jpg" rel="attachment wp-att-1896"><img class="aligncenter size-full wp-image-1896" src="../../assets/uploads/2015/12/01-1.jpg" alt="01" width="1113" height="318" /></a></p>
+
+<ul style="text-align: justify;">
+	<li>Um Availability Group chamado <span style="color: #ff0000;">AG_2012</span>, configurado na instância <span style="color: #003300;">SQL2012-01</span>, que está instalado no servidor <span style="color: #003300;">WS2012R2-01</span> de forma Stand Alone, tendo como réplica secundária a instância <span style="color: #0000ff;">SQL2012-02</span> que está instalada de forma Stand Alone no servidor <span style="color: #0000ff;">WS2012R2-02.</span></li>
+</ul>
+<ul style="text-align: justify;">
+	<li>Um Availability Group chamado <span style="color: #ff0000;">AG_2014</span>, configurado na instância <span style="color: #003300;">SQL2014-01</span>, que está instalado no servidor <span style="color: #003300;">WS2012R2-01</span> de forma Stand Alone, tendo como réplica secundária a instância <span style="color: #0000ff;">SQL2014-02</span> que está instalada de forma Stand Alone no servidor <span style="color: #0000ff;">WS2012R2-02.</span></li>
+</ul>
+<p style="text-align: justify;"><a href="../../assets/uploads/2015/12/done_4.jpg" rel="attachment wp-att-1901"><img class="aligncenter size-full wp-image-1901" src="../../assets/uploads/2015/12/done_4.jpg" alt="done_4" width="1344" height="607" /></a></p>
+
+<h2 style="text-align: justify;">Problema(s) Encontrado(s):</h2>
+&nbsp;
+<ul style="text-align: justify;">
+	<li>
+<h4>Problema 1:</h4>
+<ul>
+	<li>O erro abaixo foi propositalmente provocado para mostrar uma premissa para a criação de um Availability Group. Os arquivos de dados (.MDF) e log de transações (.LDF) devem obrigatoriamente estar no mesmo diretório, ou seja seus metadados devem ser os mesmos em todas as réplicas.</li>
+	<li>Se durante a criação do Availability Grou (AG) for escolhida a opção de backup para um compartilhamento e restore pelo próprio wizard, o caminho do banco de origem (réplica onde se está criando o AG) deve existir nas réplicas secundárias, caso contrário o erro abaixo será exibido.</li>
+	<li>Para correção deste erro, basta corrigir / criar o caminho dos arquivos do banco de dados na origem.</li>
+</ul>
+</li>
+</ul>
+<p style="text-align: justify;"><a href="../../assets/uploads/2016/01/05_file_location.jpg" rel="attachment wp-att-1911"><img class="size-full wp-image-1911 aligncenter" src="../../assets/uploads/2016/01/05_file_location.jpg" alt="05_file_location" width="755" height="308" /></a></p>
+
+<ul style="text-align: justify;">
+	<li>
+<h4>Problema 2:</h4>
+<ul>
+	<li style="text-align: justify;">O segundo problema encontrado, que também foi o motivador deste blog post, é relacionado à possibilidade de Múltiplos AGs para Múltiplas instâncias, conforme previamente demonstrado no cenário desejado.</li>
+	<li style="text-align: justify;">O problema deu-se pelo fato de já existir um endpoint do tipo "Mirror endpoint", que é utilizado pelo AlwaysOn Availability Group, entre os servidores <span style="color: #003300;">WS2012R2-01</span> e <span style="color: #0000ff;">WS2012R2-02</span> respondendo pela porta default que é a 5022.</li>
+	<li style="text-align: justify;">Durante a criação do segundo AG com mesma origem e mesmo destino, o erro abaixo foi reportado, informando que o endpoint em questão já estava sendo utilizado por outro processo (no caso, o <span style="color: #ff0000;">AG_2012</span>).</li>
+	<li><a href="../../assets/uploads/2016/01/06_Endpoint_problema.jpg" rel="attachment wp-att-1912"><img class="aligncenter size-full wp-image-1912" src="../../assets/uploads/2016/01/06_Endpoint_problema.jpg" alt="06_Endpoint_problema" width="760" height="412" /></a></li>
+	<li style="text-align: justify;">Para correção imediata do problema, foi necessário voltar alguns passos e alterar a porta do que o novo endpoint utilizará, permitindo assim que existam 2 caminhos (endpoints) distintos para ambos os AGs (um para cada)</li>
+	<li><a href="../../assets/uploads/2016/01/07_Endpoint_solucao.jpg" rel="attachment wp-att-1913"><img class="aligncenter size-full wp-image-1913" src="../../assets/uploads/2016/01/07_Endpoint_solucao.jpg" alt="07_Endpoint_solucao" width="1062" height="150" /></a></li>
+</ul>
+</li>
+</ul>
+<h2 style="text-align: justify;"></h2>
+<h2 style="text-align: justify;">Conclusão:</h2>
+&nbsp;
+<p style="text-align: justify;">Com base nos requisitos que motivaram o início dos testes, e após a realização dos mesmos, pudemos confirmar que <em><strong>é possível criar </strong></em>em um mesmo servidor, <em><strong>múltiplas instâncias</strong></em> com versões diferentes (ou não) do SQL Server com <em><strong>Múltiplos AlwaysOn Availability Groups</strong></em> configurados, replicando para outro servidor com situação semelhante.</p>
+<p style="text-align: justify;">Como na maioria dos cenários onde não há certeza plena do comportamento de uma situação ou configuração específica, é sempre muito prudente fazer testes para validar e se ter certeza de tal comportamento.</p>
+<p style="text-align: justify;">Aproveito para deixar a recomendação do blog do Fabrício Lima, que esteve juntamente comigo, pensando e realizando estes testes, é um blog com excelente conteúdo técnico e ótimas dicas.</p>
+
+<ul>
+	<li style="text-align: justify;">Fabrício Lima (<a href="http://www.fabriciolima.net/" target="_blank">Site</a> | <a href="https://twitter.com/Fabriciodba" target="_blank">Twitter</a>)</li>
+</ul>
+<p style="text-align: justify;">Grande Abraço,</p>
+<p style="text-align: justify;">Edvaldo Castro</p>
+<p style="text-align: justify;">../../</p>
+<p style="text-align: justify;">http://facebook.com/edvaldocastro</p>
+<p style="text-align: justify;">http://twitter.com/edvaldocastro02</p>
+  </div>
+  <div class="article-footer">
+    <div class="pill-row"><span class="pill">HADR</span><span class="pill">Tech</span><span class="pill">Virtual PASS BR</span></div>
+    <div class="pill-row"><span class="pill">AlwaysOn</span><span class="pill">Availability Groups</span><span class="pill">Comunidade</span><span class="pill">hadr</span><span class="pill">high availability</span><span class="pill">MTAC</span><span class="pill">Virtual Pass PT</span><span class="pill">VirtualPassBr</span></div>
+    <div class="post-nav">
+      <div><a href="../sqlserverdf-alwayson-availability-groups-handson/">Newer: [SQLServerDF] - AlwaysOn Availability Groups - HandsOn</a></div>
+      <div><a href="../retrospectiva-2015-edvaldocastro-com/">Older: Retrospectiva 2015 @ EdvaldoCastro.com</a></div>
+    </div>
+  </div>
+</article>
+    </main>
+    <footer class="site-footer">
+      <p>Conteudo preservado a partir do export WordPress do blog de Edvaldo Castro.</p>
+      <p>Este site foi gerado como um arquivo estatico para consulta publica.</p>
+    </footer>
+  </div>
+</body>
+</html>

@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Fonte: http://blogs.msdn.com/b/clustering/archive/2012/05/01/10299698.aspx &quot;HA&quot; Alta Disponibilidade Aplica&#231;&#245;es cr&#237;ticas (ou n&#227;o) geralmente necessitam estar dispon&#237;veis para os usu&#225;rios o m&#225;ximo de tempo em que estes ne..." />
+  <title>[HADR] - Windows Server Failover Clustering - Overview para DBAs</title>
+  <link rel="stylesheet" href="../../styles.css" />
+</head>
+<body class="single-post">
+  <div class="page-shell">
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark">EC</span>
+        <span class="brand-copy">
+          <strong>Edvaldo Castro</strong>
+          <small>Arquivo estatico do antigo WordPress</small>
+        </span>
+      </a>
+      <nav class="site-nav">
+        <a href="../../">Home</a>
+        <a href="../../posts/">Posts</a>
+        <a href="../../pages/">Pages</a>
+        <a href="../../archive/">Arquivo</a>
+      </nav>
+    </header>
+    <main class="site-main">
+      <article class="article-card">
+  <div class="article-head">
+    <p class="meta-line">Post</p>
+    <h1 class="post-title">[HADR] - Windows Server Failover Clustering - Overview para DBAs</h1>
+    <p class="meta-line">17 Aug 2015 <span class="dot">&middot;</span> HADR, Tech, Virtual PASS BR <span class="dot">&middot;</span> alta disponibilidade, AlwaysOn, CLUSTER, failover clustering, Friends of RedGate, hadr, high availability, MTAC, sqlserverdf, Virtual Pass Br, Virtual Pass PT, VirtualPassBr, VirtualPassPT, wsfc</p>
+  </div>
+  <div class="article-content">
+    <p>
+<img src="../../assets/uploads/2015/08/FailoverClusterManager-1024x783.png" alt="FailoverClusterManager" width="600" height="459" class="aligncenter size-large wp-image-1662" />Fonte: <a href="http://blogs.msdn.com/b/clustering/archive/2012/05/01/10299698.aspx" target="_blank">http://blogs.msdn.com/b/clustering/archive/2012/05/01/10299698.aspx</a>
+<p>
+<h2> "HA" Alta Disponibilidade </h2>
+<p>
+Aplicações críticas (ou não) geralmente necessitam estar disponíveis para os usuários o máximo de tempo em que estes necessitarem utilizar tais aplicações. 
+O termo "HA" do inglês <em>High Availability</em> ou traduzido em "Alta Disponibilidade" referencia-se à demanda por tal disponibilidade e às soluções oferecidas para suprir esta necessidade.
+A tabela abaixo representa a estimativa do percentual de disponibilidade baseado no tempo de downtime por ano.
+
+<a href="../../assets/uploads/2015/08/Disponibilidade_thumb1.png"><img src="../../assets/uploads/2015/08/Disponibilidade_thumb1.png" alt="Disponibilidade_thumb[1]" width="513" height="140" class="aligncenter size-full wp-image-1616" /></a>fonte: <a href="http://redes-e-servidores.blogspot.com.br/2011/02/alta-disponibilidade-medicao-i.html?_sm_au_=iVVQn0jJJkfqJ8rR" target="_blank">http://redes-e-servidores.blogspot.com.br/2011/02/alta-disponibilidade-medicao-i.html?_sm_au_=iVVQn0jJJkfqJ8rR</a>
+<p>
+<p>
+
+<h2>Windows Server Failover Clustering (WSFC)</h2>
+<p>
+<p>
+Uma das opções que a Microsoft oferece para provimento de <em>HA</em> em vários de seus produtos (incluindo o SQL Server, que será o ponto focal dos artigos da categoria [HADR]) é o <a href="https://technet.microsoft.com/pt-br/library/Hh831579.aspx" target="_blank">WSFC (Windows Server Failover Clustering)</a>. Para beneficiar-se dos recursos do WSFC, a aplicação necessita ser <i>Cluster Aware</i>, ou seja, capaz de trabalhar em conjunto com o Windows para utilizar-se das features de Alta Disponibilidade disponíveis.
+Um ponto muito importante para usufruto de todas os benefícios do WSFC, é o bom entendimento da finalidade e funcionamento do WSFC. 
+
+<p>
+<p>
+
+<h2>Pré requisitos</h2>
+<p>
+<p>
+Para que seja realizado o <em>deploy</em> simples de um WSFC para receber quaisquer aplicações suportadas, são necessários (ou recomendados) alguns itens, listados a seguir:
+
+ <ul>
+  <li>2 ou mais servidores com Windows Server (mesma versão) - (Requerido);</li>
+  <li>Todos os <em>nodes</em> do cluster no mesmo Domínio - (Requerido);</li>
+  <li>Quórum (Disco ou FileShare) para atuar como <em>Witness</em> onde se aplica - (Recomendado);</li>
+  <li>Multiplas Interfaces de rede para redes privada (<em>Heartbeat</em>) e pública - (rede corporativa) (Recomendado);</li>
+  <li>Storage compartilhadas - Quando a aplicação exigir (Requerido);</li>
+</ul>
+
+<p>
+<p>
+
+<h2>Aplicações "<em>Cluster Aware"</h2>
+<p>
+<p>
+Conforme já citado anteriormente, uma aplicação precisa ser <em>Cluster Aware</em>, ou seja, ser capaz de tirar vantagens das funcionalidades e benefícios do WSFC, para que a mesma possa ser instalada desta forma. Abaixo, alguns exemplos de aplicações e serviços que pode ser instalados em um WSFC:
+<p>
+<p>
+ <ul>
+  <li>SQL Server (Database Engine);</li>
+  <li>SQL Server (Analysis Services - SSAS);</li>
+  <li>Exchange Server;</li>
+  <li>DHCP Server;</li>
+  <li>MSDTC (Microsoft Distributed Transaction Coordinator);</li>
+  <li>File Server;</li>
+  <li>MSMQ (Microsoft Message Queue);</li>
+  <li>Etc</li>
+</ul>
+<p>
+<p>
+
+<h2>Concluindo</h2>
+<p>
+<p>
+A disponibilidade de uma aplicação crítica é tão importante quanto a recuperabilidade da mesma, uma vez que a falha de uma aplicação em momentos críticos para o negócio, podem acarretar em perdas financeiras e grandes prejuízos para o negócio.
+A ideia deste post é apenas um <em>overview</em> sobre o tema "Alta Disponibilidade" bem como um breve descritivo do serviço "WSFC (Windows Server Failover Clustering)".
+Em outras postagens neste mesmo blog, é pretendido a criação de artigos com maiores detalhes sobre Alta Disponbilidade, Disaster Recovery, WSFC e AlwaysOn.
+
+<p>
+<p>
+<p>
+<h2>REFERÊNCIAS:</h2>
+<p>
+<p>
+<ul>
+        <li><strong>Visão geral de Clustering de Failover</strong></li>
+	<li><a href="https://technet.microsoft.com/pt-br/library/Hh831579.aspx" target="_blank">https://technet.microsoft.com/pt-br/library/Hh831579.aspx</a></li>
+<p>
+
+        <li><strong>Cluster-Aware Applications</strong></li>
+	<li><a href="https://technet.microsoft.com/pt-br/library/Cc737366%28v=WS.10%29.aspx" target="_blank">https://technet.microsoft.com/pt-br/library/Cc737366%28v=WS.10%29.aspx</a></li>
+<p>
+        <li><strong>Criar um cluster de failover</strong></li>
+	<li><a href="https://technet.microsoft.com/pt-br/library/Dn505754.aspx" target="_blank">https://technet.microsoft.com/pt-br/library/Dn505754.aspx</a></li>
+<p>
+
+</ul>
+<p><p><p><p><p>
+
+Abraços,
+<p>
+<p>
+
+Edvaldo Castro 
+SQL Server - Data Platform Consultant 
+MTAC – Microsoft Technical Audience Contributor 
+  
+../..// - (61) 9636 - 0246 
+http://www.twitter.com/edvaldocastro02 
+http://facebook.com/edvaldocastro 
+
+
+
+  </div>
+  <div class="article-footer">
+    <div class="pill-row"><span class="pill">HADR</span><span class="pill">Tech</span><span class="pill">Virtual PASS BR</span></div>
+    <div class="pill-row"><span class="pill">alta disponibilidade</span><span class="pill">AlwaysOn</span><span class="pill">CLUSTER</span><span class="pill">failover clustering</span><span class="pill">Friends of RedGate</span><span class="pill">hadr</span><span class="pill">high availability</span><span class="pill">MTAC</span><span class="pill">sqlserverdf</span><span class="pill">Virtual Pass Br</span><span class="pill">Virtual Pass PT</span><span class="pill">VirtualPassBr</span><span class="pill">VirtualPassPT</span><span class="pill">wsfc</span></div>
+    <div class="post-nav">
+      <div><a href="../troubleshooting-the-wrong-diskette-is-in-the-drive-insert-volume-serial-number-into-drive/">Newer: [Troubleshooting] The wrong diskette is in the drive. Insert (Volume Serial Number: ) into drive.</a></div>
+      <div><a href="../sql-saturday-424-sao-paulo/">Older: SQL Saturday 424 - S&#227;o Paulo</a></div>
+    </div>
+  </div>
+</article>
+    </main>
+    <footer class="site-footer">
+      <p>Conteudo preservado a partir do export WordPress do blog de Edvaldo Castro.</p>
+      <p>Este site foi gerado como um arquivo estatico para consulta publica.</p>
+    </footer>
+  </div>
+</body>
+</html>

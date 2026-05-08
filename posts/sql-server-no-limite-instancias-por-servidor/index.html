@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Em tempos de atividade mais frequentes aqui no blog, escrevi dois posts bem interessantes (de acordo com o feedback de quem leu) relacionados aos limites do SQL Server (sim, eles existem). [SQL Server No Limite] – Arquiv..." />
+  <title>[SQL Server No Limite] - Inst&#226;ncias por servidor</title>
+  <link rel="stylesheet" href="../../styles.css" />
+</head>
+<body class="single-post">
+  <div class="page-shell">
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark">EC</span>
+        <span class="brand-copy">
+          <strong>Edvaldo Castro</strong>
+          <small>Arquivo estatico do antigo WordPress</small>
+        </span>
+      </a>
+      <nav class="site-nav">
+        <a href="../../">Home</a>
+        <a href="../../posts/">Posts</a>
+        <a href="../../pages/">Pages</a>
+        <a href="../../archive/">Arquivo</a>
+      </nav>
+    </header>
+    <main class="site-main">
+      <article class="article-card">
+  <div class="article-head">
+    <p class="meta-line">Post</p>
+    <h1 class="post-title">[SQL Server No Limite] - Inst&#226;ncias por servidor</h1>
+    <p class="meta-line">13 Oct 2017 <span class="dot">&middot;</span> NOLIMITE, Tech, Virtual PASS BR <span class="dot">&middot;</span> challenge, FoRG, Friends of RedGate, limite, MTAC, nolimite, sql, SQL SERVER, sqlserver, Virtual Pass Br, Virtual Pass PT, VirtualPass, VirtualPassPT</p>
+  </div>
+  <div class="article-content">
+    Em tempos de atividade mais frequentes aqui no blog, escrevi dois posts bem interessantes (de acordo com o feedback de quem leu) relacionados aos limites do SQL Server (sim, eles existem).
+<ul>
+ 	<li><a href="../..//sql-server-no-limite-arquivos-por-banco-de-dados-2/" target="_blank" rel="noopener">[SQL Server No Limite] – Arquivos por banco de dados</a></li>
+ 	<li><a href="../..//sql-server-no-limite-bancos-de-dados-por-instancia/" target="_blank" rel="noopener">[SQL Server No Limite] – Bancos de dados por instância</a></li>
+</ul>
+Já não estava pensando em escrever nada sobre o assunto (que diga-se de passagem, acho bem interessante), e eis que em um dos grupos que participo, surge a seguinte sugestão:
+<p style="text-align: center;"><img class="alignnone size-medium" src="../..//publico/Blog/limites.PNG" width="748" height="512" /></p>
+E minha resposta foi:
+
+<img class="alignnone size-medium aligncenter" src="../..//publico/Blog/limites2.png" width="374" height="304" />
+
+Vamos direto ao que interessa.
+
+De acordo com o documento oficial da microsoft, "<a href="https://technet.microsoft.com/en-us/library/ms143432(v=sql.110).aspx" target="_blank" rel="noopener">Maximum Capacity Specifications for SQL Server</a>" o número máximo de instâncias que podem ser instaladas em um único servidor Stand Alone é 50.
+
+<img class="alignnone size-medium aligncenter" src="../..//publico/Blog/limites3.png" width="807" height="253" />
+
+Vamos ver o que acontece quando atingirmos esse limite:
+<h3><strong>O ambiente de Teste</strong>:</h3>
+<ul>
+ 	<li>Hypervisor: Hyper-V (Windows 10)</li>
+ 	<li>S.O.: Windows Server 2016
+<ul>
+ 	<li>12GB de memória RAM</li>
+</ul>
+</li>
+ 	<li>SBGD: SQL Server 2016 Developer Edition</li>
+</ul>
+<h3>Downloads:</h3>
+<ul>
+ 	<li><del>ConfigurationFile.ini - Todos os Arquivos de Configuração utilizados.</del>
+<ul>
+ 	<li>Para esse caso específico, resolvi não utilizar arquivo de resposta, e adicionei todos os parâmetros que estariam no arquivo de resposta, à chamada da instalação.</li>
+</ul>
+</li>
+ 	<li><a href="../..//publico/Blog/INSTALL.cmd.txt" target="_blank" rel="noopener">Batch cmd utilizado para chamada dos arquivos.</a></li>
+ 	<li>
+
+[caption id="" align="aligncenter" width="1283"]<img class="size-medium" src="../..//publico/Blog/ScriptInstall.png" width="1283" height="636" /> Imagem do script de instalação das 50 primeiras instâncias[/caption]</li>
+</ul>
+<h3>O Teste:</h3>
+Foram instaladas 50 instâncias nomeadas do SQL Server em uma sequência, pelos arquivos acima, as duas últimas instalações foram realizadas de forma manual, com a finalidade de capturarmos os erros no momento que aconteceram.
+<h4>Passo 1 (automação):</h4>
+<ul>
+ 	<li><span style="text-decoration: underline;">Criação do arquivo <span style="color: #000000;"><strong>Install.cmd </strong></span></span>
+<ul>
+ 	<li>Para a criação do arquivo de batch de instalação, primeiro executei normalmente os passos da instalação normal do SQL Server, até o ponto do último botão de instalar, o qual obviamente não foi clicado.</li>
+ 	<li>Copiei o caminho do arquivo de resposta <strong><span style="color: #339966;"><span style="color: #008000;">ConfigurationFile.ini</span></span></strong><span style="color: #000000;"> e abri o mesmo, passando os principais parâmetros do arquivo, direto na chamada do arquivo <strong>Install.cmd</strong> (apenas para a instância SQL01)</span></li>
+ 	<li>Após o êxito no teste da instância SQL01, copiei o colei essa mesma linha de comando outras 49 vezes, para que chegasse à instalação de 49 instâncias (1 já tinha sido instalada)</li>
+</ul>
+</li>
+</ul>
+<ul>
+ 	<li>E<span style="text-decoration: underline;">xecução do arquivo <span style="color: #000000; text-decoration: underline;"><strong>Install.cmd</strong></span><span style="color: #0000ff; text-decoration: underline;"><strong> </strong></span></span>
+<ul>
+ 	<li>o tempo para cada instância ficou entre 2 e 3 minutos, logo todas as instâncias demoraram pouco mais de duas horas para a instalação não assistida.</li>
+</ul>
+</li>
+</ul>
+<ul>
+ 	<li><span style="text-decoration: underline;">Erro de projeto</span>
+<ul>
+ 	<li>Um ponto falho nos testes foi não ter-me atentado ao fato de que 50 instâncias rodando simultaneamente em uma VM em meu notebook pessoal, provavelmente não seria a VM mais performática que eu já criei, com isso, tive um pequeno problema de performance, que foi solucionado parando os serviços das instâncias logo após a criação das mesmas com o <em><a href="https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.management/set-service?view=powershell-5.1" target="_blank" rel="noopener"><span style="color: #0000ff;">commandlet Stop-Service</span></a> </em>do Powershell.</li>
+</ul>
+</li>
+</ul>
+<ul>
+ 	<li><span style="text-decoration: underline;">Evidência</span>
+<ul>
+ 	<li>Uma imagem como evidência da instalação das 50 instâncias.</li>
+</ul>
+</li>
+</ul>
+[caption id="" align="aligncenter" width="683"]<img class="size-medium" src="../..//publico/Blog/50_Instancias.png" width="683" height="682" /> 50 Instâncias instaladas via CMD.[/caption]
+<h4>Passo 2 (instalação da última instância):</h4>
+[caption id="" align="aligncenter" width="809"]<a href="../..//publico/Blog/Instancia51.PNG"><img class="size-medium" src="../..//publico/Blog/Instancia51.PNG" width="809" height="609" /></a> Instância de número 51[/caption]
+<ul>
+ 	<li>Nesse ponto, a instalação foi feita da maneira convencional, com a Interface gráfica, com a finalidade da captura de um possível erro que pudesse porventura ser exibido em uma caixa de diálogo. Assista ao rápido vídeo (O vídeo não contém áudio) abaixo de parte do processo, antes de continuar.</li>
+</ul>
+<p style="text-align: center;"><iframe src="https://www.youtube.com/embed/UIQtDgE9msA" width="854" height="480" frameborder="0" allowfullscreen="allowfullscreen"></iframe></p>
+
+<h4>Passo 3 (tentativa de instalação de uma instância Default):</h4>
+<ul>
+ 	<li>Quem trabalha rotineiramente com SQL Server possivelmente sabe que é possível se ter zero ou 1 instância Default por servidor, dado o resultado dos testes acima (demonstrado no vídeo), tentei realizar a instalação de uma instância Default, já que o servidor estava com 50 instâncias nomeadas. Também não obtive êxito.</li>
+</ul>
+<h4>Resultados:</h4>
+<ul>
+ 	<li>Realmente há uma limitação técnica para a quantidade de instalações de instâncias do SQL Server por servidor, e esse número é limitado a 50, conforme informação disponível nos documentos oficiais.</li>
+ 	<li>Ao tentar a instalação da 51ª instância, não importando se a mesma é uma instância Default ou Nomeada, não é exibida nenhuma mensagem de erro, a instalação apenas nunca se completa (Meu notebook passou a noite ligado com a mesma mensagem de espera vista no vídeo).</li>
+ 	<li><strong>Overall summary:</strong>
+Final result: Failed: see details below
+Exit code (Decimal): -2146233079
+Exit facility code: 19
+Exit error code: 5385
+<strong>Exit message</strong>: <span style="color: #ff0000;">SQL Server 2016 cannot add any more instances. To continue installing this instance, you must uninstall an existing instance.</span>
+Start time: 2017-10-12 19:29:57
+End time: 2017-10-12 19:30:57
+Requested action: Install</li>
+ 	<li>Para capturar o erro, foi preciso ir até o Setup Bootstrap, (<span style="color: #0000ff;">C:\Program Files\Microsoft SQL Server\130\Setup Bootstrap\Log\</span>)e verificar o arquivo de log, confira na imagem abaixo.</li>
+ 	<li></li>
+</ul>
+[caption id="" align="aligncenter" width="1011"]<img class="size-medium" src="../..//publico/Blog/SetupBootstrap.png" width="1011" height="522" /> C:\Program Files\Microsoft SQL Server\130\Setup Bootstrap\Log\Summary.txt[/caption]
+<h3>Conclusão:</h3>
+É de certa forma óbvio e esperado o resultado desses testes de algo que está documentado com um determinado limite, porém há o fator da curiosidade se realmente alguém já alcançou a façanha de ter um erro proveniente desses limites.
+
+Acredito que não, pois apesar de existir um limite, esse é absurdamente alto, e qualquer DBA em um estado normal de consciência, jamais criaria um ambiente real para utilização com 50 instâncias de SQL Server.
+
+A ideia dos testes de Limite é mais pagar pra ver, chegar ao limite, ver na prática a limitação, etc...
+
+Esse post especificamente nasceu da ideia em um grupo de whatsapp, e está aí, comprovamos que a documentação diz a verdade... o limite é 50 INSTÂNCIAS POR SERVIDOR.
+
+&nbsp;
+
+Grande abraço,
+
+&nbsp;
+
+Edvaldo Castro
+
+&nbsp;
+
+&nbsp;
+  </div>
+  <div class="article-footer">
+    <div class="pill-row"><span class="pill">NOLIMITE</span><span class="pill">Tech</span><span class="pill">Virtual PASS BR</span></div>
+    <div class="pill-row"><span class="pill">challenge</span><span class="pill">FoRG</span><span class="pill">Friends of RedGate</span><span class="pill">limite</span><span class="pill">MTAC</span><span class="pill">nolimite</span><span class="pill">sql</span><span class="pill">SQL SERVER</span><span class="pill">sqlserver</span><span class="pill">Virtual Pass Br</span><span class="pill">Virtual Pass PT</span><span class="pill">VirtualPass</span><span class="pill">VirtualPassPT</span></div>
+    <div class="post-nav">
+      <div><a href="../github/">Newer: GITHUB - Alguns scripts novos para compartilhar.</a></div>
+      <div><a href="../redgate-sql-prompt-um-parceiro-da-produtividade/">Older: [REDGATE] SQL Prompt, um parceiro da produtividade</a></div>
+    </div>
+  </div>
+</article>
+    </main>
+    <footer class="site-footer">
+      <p>Conteudo preservado a partir do export WordPress do blog de Edvaldo Castro.</p>
+      <p>Este site foi gerado como um arquivo estatico para consulta publica.</p>
+    </footer>
+  </div>
+</body>
+</html>

@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="******************************************************************************* Data : quarta-feira, 05 de dezembro de 2012 Horario : 20:30 Dura&#231;&#227;o (prevista) : 1 Hora Link para Inscri&#231;&#227;o : Inscreva-se AQUI Link do grupo..." />
+  <title>WebCast SQL Server – Tudo sobre Backup</title>
+  <link rel="stylesheet" href="../../styles.css" />
+</head>
+<body class="single-post">
+  <div class="page-shell">
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark">EC</span>
+        <span class="brand-copy">
+          <strong>Edvaldo Castro</strong>
+          <small>Arquivo estatico do antigo WordPress</small>
+        </span>
+      </a>
+      <nav class="site-nav">
+        <a href="../../">Home</a>
+        <a href="../../posts/">Posts</a>
+        <a href="../../pages/">Pages</a>
+        <a href="../../archive/">Arquivo</a>
+      </nav>
+    </header>
+    <main class="site-main">
+      <article class="article-card">
+  <div class="article-head">
+    <p class="meta-line">Post</p>
+    <h1 class="post-title">WebCast SQL Server – Tudo sobre Backup</h1>
+    <p class="meta-line">05 Nov 2012 <span class="dot">&middot;</span> Comunidade e Eventos</p>
+  </div>
+  <div class="article-content">
+    <p style="text-align:center;"><img style="text-align:justify;" alt="" src="../../assets/uploads/2012/11/110612_0904_webcastsqls13.png" /></p>
+<p style="text-align:center;">*******************************************************************************</p>
+<p style="text-align:justify;"><span style="text-decoration:underline;"><strong>Data</strong></span>: quarta-feira, 05 de dezembro de 2012</p>
+<strong><span style="text-decoration:underline;">Horario</span></strong>: 20:30
+
+<span style="text-decoration:underline;"><strong>Duração (prevista)</strong></span>: 1 Hora
+
+<span style="text-decoration:underline;"><strong>Link para Inscrição</strong></span>: Inscreva-se <a href="https://msevents.microsoft.com/CUI/EventDetail.aspx?EventID=1032533431&amp;Culture=pt-BR&amp;community=0">AQUI</a>
+
+<strong><span style="text-decoration:underline;">Link do grupo SQL Server RS</span></strong>: <a href="http://sqlserverrs.com.br/">http://sqlserverrs.com.br/</a>
+<p style="text-align:center;">*******************************************************************************</p>
+<p style="text-align:justify;">Tive a honra de ser convidado a fazer uma apresentação para um dos grandes grupos de usuários de SQL Server no Brasil, filiados ao <a href="http://www.sqlpass.org/">PASS (Professional Association for SQL Server)</a>.</p>
+<p style="text-align:justify;">Através do membro administrador do grupo, Marcus Bittencourt (<a href="http://isqlserver.wordpress.com/" target="_blank">Blog </a>| <a href="https://twitter.com/mvbitt" target="_blank">Twitter</a>), recebi o convite com muito prazer e não hesitei em aceita-lo, afinal, grandes nomes do SQL Server no Brasil já passaram por este grupo, com apresentações fantásticas.</p>
+<p style="text-align:justify;">O grupo <a href="http://sqlserverrs.com.br/sqlserverrs/">SQL Server RS</a> está fisicamente no Rio Grande do Sul, onde realizam suas reuniões presenciais periodicamente, além dos webcasts com amplo alcance, podendo ter participação irrestrita de todo e qualquer profissional que estiver interessando em trocar experiências e aprender novidades e até mesmos conceitos importantes sobre o SQL Server.</p>
+<p style="text-align:justify;">O foco da apresentação será 100% sobre BACKUP no SQL Server, onde tentaremos falar conceitualmente da importância do backup, e outros quesitos que o envolvem além, de muita, muita demonstração prática de tudo o que é possível e imaginável com as opções de BACKUP e RESTORE do SQL Server...</p>
+<p style="text-align:justify;">Para aqueles que quiserem ler um pouco mais, escrevi alguns posts (listados abaixo), sobre BACKUP:</p>
+
+<ul style="text-align:justify;">
+	<li><a href="http://wp.me/s1kKYF-backup01">BACKUP - Você está fazendo corretamente?</a></li>
+	<li><a href="http://wp.me/p1kKYF-3B">Política de backup - Implante esta ideia.</a></li>
+	<li><a href="http://wp.me/p1kKYF-4D">Full, Diferencial e T-Log - Salve seus dados</a></li>
+	<li><a href="http://wp.me/s1kKYF-restore">Restore - A fase crítica do processo</a></li>
+	<li><a href="http://wp.me/p1kKYF-6z">Recovery Model - Trate-o com carinho</a></li>
+</ul>
+<p style="text-align:justify;">Além de outros itens, a pré-agenda da apresentação será a seguinte (podendo sofrer alterações):</p>
+
+<ul style="text-align:justify;">
+	<li>Teorias e Conceitos (Backup, Política de Backup, Política de Restore, Páginas, T-Log, etc)</li>
+	<li>
+<div>Recovery Model</div>
+<ul>
+	<li>Simple (Circular)</li>
+	<li>Full (Archive)</li>
+	<li>Bulk-Logged</li>
+</ul>
+</li>
+	<li>
+<div>Metadados de Backup</div>
+<ul>
+	<li>BackupFile</li>
+	<li>BackupFileGroup</li>
+	<li>BackupMediaFamily</li>
+	<li>BackupMediaSet</li>
+	<li>BackupSet</li>
+</ul>
+</li>
+	<li>
+<div>Backup Básico</div>
+<ul>
+	<li>Full</li>
+	<li>Differential</li>
+	<li>Transaction Log</li>
+</ul>
+</li>
+	<li>
+<div>Backup Avançado</div>
+<ul>
+	<li>Tail Log (Demos mdf corrompido).</li>
+	<li>Partial</li>
+	<li>Filegroup (Primary Imprescindível, &gt; possibilidade &lt;&gt; administração, Evitar uso)</li>
+</ul>
+</li>
+	<li>
+<div>Opções adicionais</div>
+<ul>
+	<li>Copy_Only</li>
+	<li>Compression</li>
+	<li>Standby</li>
+	<li>Stopat</li>
+	<li>Media Set</li>
+	<li>Mirror</li>
+	<li>Verificação de Erros</li>
+	<li>E muito mais</li>
+</ul>
+</li>
+</ul>
+<p style="text-align:justify;">Inicialmente o tempo previsto é de 1 hora de apresentação, mas se a receptividade estiver boa, e todos estiverem de acordo, podemos estender um pouco mais e discutir sobre backup até o entendimento de todos os presentes e interessados...</p>
+<p style="text-align:justify;">Desde já, fica o convite para que se inscrevam e divulguem este webcast que será o 8º encontro do Grupo SQL Server RS.</p>
+<p style="text-align:justify;"><span style="font-size:16pt;"><strong><em>Relembrando, Dados da apresentação:
+</em></strong></span></p>
+<strong>Data</strong>: quarta-feira, 05 de dezembro de 2012
+
+<strong>Horario</strong>: 20:30
+
+<strong>Duração (prevista)</strong>: 1 Hora
+
+<strong>Link para Inscrição</strong>: Inscreva-se <a href="https://msevents.microsoft.com/CUI/EventDetail.aspx?EventID=1032533431&amp;Culture=pt-BR&amp;community=0">AQUI</a>
+
+<strong>Link do grupo SQL Server RS</strong>: <a href="http://sqlserverrs.com.br/">http://sqlserverrs.com.br/</a>
+<p style="text-align:justify;">Muito obrigado a todos, e a gente se encontra (virtualmente) no dia 28 de novembro...</p>
+<p style="text-align:justify;">Forte Abraço,</p>
+<p style="text-align:justify;">Edvaldo Castro</p>
+<p style="text-align:justify;">Administrador de Banco de Dados</p>
+<p style="text-align:justify;">MCTS | MCITP | MCT | CCSQLA | TOEIC</p>
+  </div>
+  <div class="article-footer">
+    <div class="pill-row"><span class="pill">Comunidade e Eventos</span></div>
+    
+    <div class="post-nav">
+      <div><a href="../webcast-sql-server-tudo-sobre-backup-2/">Newer: Webcast - SQL Server - Tudo sobre backup</a></div>
+      <div><a href="../dbaporacidente/">Older: DBA por acidente X Command Line</a></div>
+    </div>
+  </div>
+</article>
+    </main>
+    <footer class="site-footer">
+      <p>Conteudo preservado a partir do export WordPress do blog de Edvaldo Castro.</p>
+      <p>Este site foi gerado como um arquivo estatico para consulta publica.</p>
+    </footer>
+  </div>
+</body>
+</html>

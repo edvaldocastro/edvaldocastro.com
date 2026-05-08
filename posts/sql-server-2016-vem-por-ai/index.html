@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Chicago, 4 de Abril de 2016 Entre os dias 4 e 8 de Abril de 2015 acontece(u) em Chicago, IL - USA o Microsoft Ignite , um grande evento realizado pela Microsoft, onde s&#227;o anunciados grandes lan&#231;amentos e novidades. Uma d..." />
+  <title>SQL Server 2016 vem por a&#237;...</title>
+  <link rel="stylesheet" href="../../styles.css" />
+</head>
+<body class="single-post">
+  <div class="page-shell">
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark">EC</span>
+        <span class="brand-copy">
+          <strong>Edvaldo Castro</strong>
+          <small>Arquivo estatico do antigo WordPress</small>
+        </span>
+      </a>
+      <nav class="site-nav">
+        <a href="../../">Home</a>
+        <a href="../../posts/">Posts</a>
+        <a href="../../pages/">Pages</a>
+        <a href="../../archive/">Arquivo</a>
+      </nav>
+    </header>
+    <main class="site-main">
+      <article class="article-card">
+  <div class="article-head">
+    <p class="meta-line">Post</p>
+    <h1 class="post-title">SQL Server 2016 vem por a&#237;...</h1>
+    <p class="meta-line">05 May 2015 <span class="dot">&middot;</span> Comunidade e Eventos, Virtual PASS BR <span class="dot">&middot;</span> Comunidade, ignite, MTAC, Pass, sqlfriends, sqlserver, SQLSERVER2016, virtual pass, Virtual Pass Br, VirtualPass</p>
+  </div>
+  <div class="article-content">
+    <p style="text-align: justify;">Chicago, 4 de Abril de 2016</p>
+<p style="text-align: justify;">Entre os dias 4 e 8 de Abril de 2015 acontece(u) em Chicago, IL - USA o <a href="http://ignite.microsoft.com/" target="_blank">Microsoft Ignite</a>, um grande evento realizado pela Microsoft, onde são anunciados grandes lançamentos e novidades.</p>
+<p style="text-align: justify;">Uma das principais novidades, que pode ser de nosso interesse (Profissionais de dados), foi o anúncio da liberação da versão preview pública do SQL Server 2016, previsto para o verão (meados de Junho).</p>
+<p style="text-align: justify;">Foram muitas as novidades anunciadas para o produto, todas com um breve descritivo no <a href="http://t.co/G5OEQwKHTE" target="_blank">Data Sheet</a> do mesmo.</p>
+<p style="text-align: justify;">Dentre as principais novidades anunciadas, destaco abaixo as que mais me agradaram, e que ao meu ver, vão suprir <em>gaps </em>que ainda existem.</p>
+
+<ul style="text-align: justify;">
+	<li><strong>AlwaysOn com suporte ao MSDTC</strong> (Microsoft Distributed Transaction Coordinator)
+<ul>
+	<li>Pessoalmente, já deixei de implementar grandes projetos de AlwaysOn, por conta desta "deficiência". Transações distribuídas em alguns ambientes são inevitáveis e este era até aqui, uma grande barreira ao uso do SQL Server AlwaysOn Availability Groups.  Bem vindo MSDTC.</li>
+	<li></li>
+</ul>
+</li>
+	<li><strong>AlwaysOn com até 3 réplicas síncronas e failover automático</strong>
+<ul>
+	<li>Particularmente, não vejo esta como uma das maiores novidades, ao meu ver, a disponibilidade de réplicas com failover automático disponível até o SQL Server 2014 já supre a demanda da maioria dos ambientes, mas disponibilidade nunca é demais, então. Bem vinda 3ª réplica síncrona com failover automático.</li>
+	<li></li>
+</ul>
+</li>
+	<li><strong>AlwaysOn com load balancing por <i>round-robing </i>para réplicas secundárias</strong>
+<ul>
+	<li>Excepcional, agora além de poder direcionar as aplicações de leitura (relatórios) para as réplicas secundárias, será possível um balanceamento automático de carga para estas réplicas, otimizando ainda mais o processamento destas aplicações de relatório, que geralmente consomem muito recurso.</li>
+	<li></li>
+</ul>
+</li>
+	<li><strong>Backup híbridos mais rápidos</strong>
+<ul>
+	<li>Backup é um dos pontos de grande interesse pessoal que tenho com relação ao SQL Server, cenários híbridos de Backup e Disaster Recovery foram melhorados (ainda não tenho detalhes), e isto só vem a agregar para a continuidade do negócio....</li>
+	<li></li>
+</ul>
+</li>
+	<li><strong>Stretch Database</strong>
+<ul>
+	<li>Outra grande novidade com cenários híbridos, esta <em>feature </em>permitirá aumento na escalabilidade, deixando de forma dinâmica dados históricos na nuvem enquanto os dados "quentes" permanecem no <em>on-premisses...</em></li>
+	<li></li>
+</ul>
+</li>
+	<li><strong>e muito mais</strong>...</li>
+</ul>
+<p style="text-align: justify;">Você pode ler a matéria completa, no <a href="http://blogs.technet.com/b/dataplatforminsider/archive/2015/05/04/sql-server-2016-public-preview-coming-this-summer.aspx" target="_blank">blog oficial do SQL Server</a>, onde são lançadas oficialmente as notas relativas à plataforma de dados da Microsoft.</p>
+<p style="text-align: justify;">Existe também a possibilidade de ser informado por e-mail quando for liberada a primeira versão preview para download, para isto, basta cadastrar-se neste link:</p>
+<p class="Titleline " style="text-align: justify;"><a href="http://www.microsoft.com/en-us/server-cloud/products/sql-server-2016/" target="_blank">Get an early look at the next Microsoft data platform</a></p>
+<p style="text-align: justify;">Sem mais, é hora de arregaçar as mangas, e continuar estudando as novidades que vem por aí, e acima de tudo e mais importante de tudo:</p>
+
+<blockquote>"Master the Basics" (desconheço o autor)</blockquote>
+<p style="text-align: justify;">Ainda hoje (05/05/2015) estava conversando justamente sobre isso ("<em>Master the basis</em>") com <a href="http://luticm.blogspot.com.br/" target="_blank">Luciano Moreira [Luti]</a> e como este importante item infelizmente tem sido deixado de lado ultimamente por muitos profissionais do nosso meio...</p>
+<p style="text-align: justify;">Aguardemos novidades e fiquemos na expectativa do verão Norte Americano...</p>
+<p style="text-align: justify;">Abraços e até a próxima.</p>
+<p style="text-align: justify;">Edvaldo Castro</p>
+  </div>
+  <div class="article-footer">
+    <div class="pill-row"><span class="pill">Comunidade e Eventos</span><span class="pill">Virtual PASS BR</span></div>
+    <div class="pill-row"><span class="pill">Comunidade</span><span class="pill">ignite</span><span class="pill">MTAC</span><span class="pill">Pass</span><span class="pill">sqlfriends</span><span class="pill">sqlserver</span><span class="pill">SQLSERVER2016</span><span class="pill">virtual pass</span><span class="pill">Virtual Pass Br</span><span class="pill">VirtualPass</span></div>
+    <div class="post-nav">
+      <div><a href="../sql-server-2016-ctp2-e-hora-de-estudar-ficadica/">Newer: SQL Server 2016 CTP2 - &#201; hora de estudar #FicaDica</a></div>
+      <div><a href="../global-azure-bootcamp-2015-brasilia-material-das-palestras/">Older: Global Azure BootCamp 2015 - Bras&#237;lia - Material das palestras</a></div>
+    </div>
+  </div>
+</article>
+    </main>
+    <footer class="site-footer">
+      <p>Conteudo preservado a partir do export WordPress do blog de Edvaldo Castro.</p>
+      <p>Este site foi gerado como um arquivo estatico para consulta publica.</p>
+    </footer>
+  </div>
+</body>
+</html>

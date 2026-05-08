@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Ap&#243;s uma breve postagem sobre a cria&#231;&#227;o de um Server Side Trace, ou simplesmente SQL Trace, como tamb&#233;m pode ser encontrado em outros blogs e at&#233; mesmo na documenta&#231;&#227;o oficial do SQL Server, tamb&#233;m faz-se necess&#225;rio expl..." />
+  <title>SQL Server - Server Side Trace - Opera&#231;&#227;o</title>
+  <link rel="stylesheet" href="../../styles.css" />
+</head>
+<body class="single-post">
+  <div class="page-shell">
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark">EC</span>
+        <span class="brand-copy">
+          <strong>Edvaldo Castro</strong>
+          <small>Arquivo estatico do antigo WordPress</small>
+        </span>
+      </a>
+      <nav class="site-nav">
+        <a href="../../">Home</a>
+        <a href="../../posts/">Posts</a>
+        <a href="../../pages/">Pages</a>
+        <a href="../../archive/">Arquivo</a>
+      </nav>
+    </header>
+    <main class="site-main">
+      <article class="article-card">
+  <div class="article-head">
+    <p class="meta-line">Post</p>
+    <h1 class="post-title">SQL Server - Server Side Trace - Opera&#231;&#227;o</h1>
+    <p class="meta-line">10 May 2013 <span class="dot">&middot;</span> Database Administration, Tech, Virtual PASS BR <span class="dot">&middot;</span> Server Side Trace, SQL SERVER, SQL Server DF, SQL Trace, sqlserver, Trace, virtual pass, Virtual Pass Br</p>
+  </div>
+  <div class="article-content">
+    <p style="text-align:justify;">Após uma breve postagem sobre a criação de um Server Side Trace, ou simplesmente SQL Trace, como também pode ser encontrado em outros blogs e até mesmo na documentação oficial do SQL Server, também faz-se necessário explicar um pouco sobre a operação com este tipo de trace, visto que sem o auxílio do SQL Server Profiler, quais atividades de início, parada e exclusão das definições do seu trace, deverão ser realizadas via linha de comando, seja ela T-SQL ou através do SQLCMD via prompt.</p>
+<p style="text-align:justify;">Antes de qualquer coisa, é preciso criar as definições do seu trace, conforme explicado no post: "<a href="../..//2013/03/22/sql-server-trace-server-side/" target="_blank">SQL Server - Server Side Trace</a>".</p>
+<p style="text-align:justify;">Após a criação, seguindo o script do post supracitado, seu trace já estará executando e capturando os eventos definidos no mesmo, logo abaixo, segue uma breve definição dos principais comandos T-SQL para operação com traces deste tipo (SQL Trace / Server Side).</p>
+<p style="text-align:justify;">1 - Exibição dos traces criados na instância, juntamente com os principais campos. Existem outros campos que não estão sendo exibidos nesta consulta.</p>
+<span style="color:#0000ff;">select</span>
+<span style="color:#339966;">id  <span style="color:#008000;">-- Id de todos os traces criados na instância (ID = 1, sempre pertence ao Default Trace do SQL Server)</span></span>
+,<span style="color:#0000ff;">status <span style="color:#008000;">-- Status dos traces, sendo .</span></span>
+,<span style="color:#0000ff;">path  <span style="color:#008000;">-- Caminho do arquivo gerado pela execução do trace.</span></span>
+,<span style="color:#339966;">max_size  <span style="color:#008000;">--  Tamanho máximo que cada arquivo pode atingir antes que um novo arquivo de trace seja criado.</span></span>
+,<span style="color:#339966;">max_files <span style="color:#008000;">-- Número máximo de arquivos de trace que podem ser criados antes que o primeiro arquivo seja sobrescrito.</span></span>
+,<span style="color:#339966;">start_time <span style="color:#008000;">-- hora de início do trace</span></span>
+<span style="color:#0000ff;">from</span> <span style="color:#008000;">sys.traces</span>
+
+<a href="../../assets/uploads/2013/05/13.jpg"><img class="size-full wp-image-693 alignleft" style="border:1px solid black;" alt="1" src="../../assets/uploads/2013/05/13.jpg" width="614" height="206" /></a>
+
+2 - Uma pequena procedure para alteração do status do trace, sendo que existem três status possívels ( 0 - Para a execução do Trace, 1 - Inicia a execução do trace, 2 - Exclui a definição do trace da isntância).
+
+<span style="color:#0000ff;">exec</span> <span style="color:#800000;">sp_trace_setstatus</span> 1,0  <span style="color:#008000;">-- Onde "1" é o id do trace e "0" é o status desejado.</span>
+
+<a href="../../assets/uploads/2013/05/23.jpg"><img class="alignleft size-full wp-image-696" style="border:1px solid black;" alt="2" src="../../assets/uploads/2013/05/23.jpg" width="614" height="171" /></a>
+
+Obs: O Default Trace, apenas pode ter seu status alterado utilizando-se a <span style="color:#800000;">SP_CONFIGURE. <span style="color:#000000;">Uma tentativa de alteração do status do mesmo, via</span> sp_trace_setstatus <span style="color:#000000;">resultará no erro acima.</span></span>
+
+3 - Já foi possível identificar o trace, alterar seu status, e agora é a vez de literalmente ler o arquivo do trace... Para isto, basta utilizar uma função muito útil, conforme descrito abaixo.
+
+<span style="color:#0000ff;">select</span> * <span style="color:#0000ff;">from</span> ::<span style="color:#008000;">fn_trace_gettable</span> (<span style="color:#ff0000;">'c:tempExemploTrace.trc'</span>,2) <span style="color:#008000;">-- Os parâmetros para esta função são: o caminho do arquivo de trace e o número de arquivos a serem lidos, a partir do que foi passado.</span>
+
+<a href="../../assets/uploads/2013/05/33.jpg"><img class="alignleft size-full wp-image-699" style="border:1px solid black;" alt="3" src="../../assets/uploads/2013/05/33.jpg" width="614" height="160" /></a>
+
+Com as funções e procedures citadas, já é possível fazer uma administração e operação completa dos traces Server Side com definições criadas na instâncias. Adicionalmente existem algumas outras opções que podem também ser muito úteis conforme as descritas abaixo:
+<ul>
+	<li><span style="color:#0000ff;">select</span> * <span style="color:#0000ff;">from</span> <span style="color:#008000;">fn_trace_getinfo</span> (0)<span style="color:#008000;"> -- Fornece informações detalhadas sobre a propriedade de cada um dos traces. Recebe como parâmetro, o id do trace sendo (id = 0), o parâmetro para todos os traces da instância.</span></li>
+</ul>
+<ul>
+	<li><span style="color:#0000ff;">select</span> * <span style="color:#0000ff;">from</span> <span style="color:#008000;">sys.trace_columns -- Exibe informações sobre as colunas possíveis de serem capturadas em um trace.</span></li>
+	<li><span style="color:#0000ff;">select</span> * <span style="color:#0000ff;">from</span> <span style="color:#008000;">sys.trace_categories</span> <span style="color:#008000;">-- Exibe informações sobre as categorias de traces disponíveis no SQL Server.</span></li>
+</ul>
+Existe muito mais a ser explorado no mundo do Server Side trace, como por exemplo o parâmetro "<em><strong><span style="text-decoration:underline;">Blocked Process Report</span></strong></em>", que pode ser configurado a nível de instância, capturado via Server Side Trace e servir para consultas, levantamentos e evidências posteriores sobre bloqueios com tempo superior ao definido.
+
+Mas este já é assunto para um outro post...
+
+Até a próxima....
+
+enjoy it...
+
+Edvaldo Castro
+MCITP | MCTS | MCT | MTA | MTAC | CCSQLA | TOEIC
+
+@edvaldocastro02
+
+
+  </div>
+  <div class="article-footer">
+    <div class="pill-row"><span class="pill">Database Administration</span><span class="pill">Tech</span><span class="pill">Virtual PASS BR</span></div>
+    <div class="pill-row"><span class="pill">Server Side Trace</span><span class="pill">SQL SERVER</span><span class="pill">SQL Server DF</span><span class="pill">SQL Trace</span><span class="pill">sqlserver</span><span class="pill">Trace</span><span class="pill">virtual pass</span><span class="pill">Virtual Pass Br</span></div>
+    <div class="post-nav">
+      <div><a href="../sqlsat245/">Newer: SQL Saturday #245 - Rio de Janeiro</a></div>
+      <div><a href="../end_cara_novos/">Older: Endere&#231;o novo e cara nova...</a></div>
+    </div>
+  </div>
+</article>
+    </main>
+    <footer class="site-footer">
+      <p>Conteudo preservado a partir do export WordPress do blog de Edvaldo Castro.</p>
+      <p>Este site foi gerado como um arquivo estatico para consulta publica.</p>
+    </footer>
+  </div>
+</body>
+</html>

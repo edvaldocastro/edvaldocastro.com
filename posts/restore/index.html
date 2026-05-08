@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="No dia 11/02 publiquei um artigo falando dos tipos mais b&#225;sicos de backup no SQL Server. Dando continuidade tentarei abordar neste post um pouco sobre o processo de restore, especificamente dos tipos de backup (Full, Dif..." />
+  <title>Restore - A fase cr&#237;tica do processo</title>
+  <link rel="stylesheet" href="../../styles.css" />
+</head>
+<body class="single-post">
+  <div class="page-shell">
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark">EC</span>
+        <span class="brand-copy">
+          <strong>Edvaldo Castro</strong>
+          <small>Arquivo estatico do antigo WordPress</small>
+        </span>
+      </a>
+      <nav class="site-nav">
+        <a href="../../">Home</a>
+        <a href="../../posts/">Posts</a>
+        <a href="../../pages/">Pages</a>
+        <a href="../../archive/">Arquivo</a>
+      </nav>
+    </header>
+    <main class="site-main">
+      <article class="article-card">
+  <div class="article-head">
+    <p class="meta-line">Post</p>
+    <h1 class="post-title">Restore - A fase cr&#237;tica do processo</h1>
+    <p class="meta-line">17 Feb 2012 <span class="dot">&middot;</span> Backup, Tech, Virtual PASS BR <span class="dot">&middot;</span> Backup, banco de dados, diferencial, differential backup, full, log, Pol&#237;tica de Backup, Seguran&#231;a, SQL SERVER, transaction log, Virtual Pass Br</p>
+  </div>
+  <div class="article-content">
+    <p style="text-align:justify;">No dia 11/02 publiquei um <a href="http://edvaldocastro.wordpress.com/2012/02/11/bkps-full-diff-log/" target="_blank">artigo</a> falando dos tipos mais básicos de backup no SQL Server. Dando continuidade tentarei abordar neste post um pouco sobre o processo de restore, especificamente dos tipos de backup (Full, Differential e Transaction Log) discutidos no post anterior.</p>
+<p style="text-align:justify;">Existe um cara super pessimista, ou excessivamente realista chamado <a href="http://pt.wikipedia.org/wiki/Lei_de_Murphy" target="_blank">Edward Murphy</a>, que criou diversas leis, dentre as quais separei duas que podem ser aplicadas ao nosso contexto:</p>
+
+<ul style="text-align:justify;">
+	<li>"Se alguma coisa pode dar errado, dará. E mais, dará errado da pior maneira, no pior momento e de modo que cause o maior dano possível".</li>
+	<li>"A informação mais necessária é sempre a menos disponível".</li>
+</ul>
+<p style="text-align:justify;">Olhando por este ponto, cabe ao DBA ou responsável pelas operações de backup / restore, comprovar que tais leis podem ser aplicadas em qualquer lugar, exceto naquele local e naquele momento. É necessário com testes de restore (citados nos<a href="http://edvaldocastro.wordpress.com/2012/01/19/politicabkp/"> primeiros posts</a> da série) garantir que seus backups poderão ser restaurados. De posse desta garantia, partamos para o "How to" deste processo.</p>
+<p style="text-align:justify;">Como criei e citei exemplos dos tipos de backups básicos para um processo funcional, aqui neste post também exemplificarei apenas estes três tipos, uma referência detalhada sobre restore no SQL Server, pode ser consultada na <a href="http://msdn.microsoft.com/en-us/library/ms186858.aspx">página oficial</a> do site do MSDN.</p>
+<p style="text-align:justify;">As possibilidades de restore e geração de backups estão diretamente ligadas ao "Recovery Model" em que o banco de dados está configurado, porém este recovery model será apenas citado neste post e já fica como compromisso para um post futuro, mais informações sobre, podem ser consultadas aqui: <a href="http://msdn.microsoft.com/en-us/library/ms189275.aspx">Recovery Model Overview</a>.</p>
+<p style="text-align:justify;">Os restores possíveis de acordo com nossos backups previamente realizados são:</p>
+
+<ul style="text-align:justify;">
+	<li>Restore Completo do banco (Backup Full)</li>
+	<li>Restore Parcial ou diferencial (Backup Full + Backup Differential)</li>
+	<li>Restore do Log de Transações (Backup Full + Backup Differential + Backups dos Logs)</li>
+	<li>Restore ao ponto da falha, ou "Point in Time" (Backup Full + Backup Differential + Backups dos Logs)</li>
+	<li>Restore de uma ou mais página de dados (Assunto para um outro post)</li>
+</ul>
+<p style="text-align:justify;"><span style="text-decoration:underline;"><strong>Restore Completo do banco (Backup Full)</strong></span></p>
+<p style="text-align:justify;">É aqui onde tudo começa, pois os demais tipos de backup (Differential e Log) dependem do Full para serem restaurados. Este tipo de restore possibilita a restauaração completa da base no momento da finalização do processo de backup. O arquivo de backup, geralmente (mas não obrigatoriamente) possui a extensão ".bak", este arquivo contém todas as páginas de dados (incluindo metadados), usuários, configurações e também a porção ativa do log das transações que estavam ativas no momento do backup.</p>
+<p style="text-align:justify;">O primeiro passo para restauração de um backup full, é saber o nome e o caminho dos arquivos lógicos (Dados e Log ) do seu banco de dados, para isto deve-se executar seguinte comando, que vai apenas "listar" os arquivos contidos no backup, e seus respectivos caminhos:</p>
+<p style="text-align:justify;"><span style="color:#0000ff;">RESTORE FILELISTONLY</span></p>
+<p style="text-align:justify;"><span style="color:#0000ff;"> </span><span style="color:#0000ff;">FROM DISK</span> = <span style="color:#ff0000;">N'C:tempBackups_SQLSERVERBKP_DB_BACKUP_EXEMPLO_FULL.BAK'</span></p>
+<p style="text-align:justify;"><a href="../../assets/uploads/2012/02/filelistonly13.png"><img class="alignnone size-full wp-image-327" title="filelistonly" alt="" src="../../assets/uploads/2012/02/filelistonly13.png" height="135" width="645" /></a></p>
+<p style="text-align:justify;">Como se pode observar os arquivos de dados e log foram criados no caminho padrão do SQL Server, pois durante a criação do banco não foram especificados os diretórios onde estes arquivos seriam armazenados e na instalação do SQL Server, também não foi alterados o caminho padrão para arquivos de bancos de dados dos usuários, neste caso, será necessário "MOVER" os arquivos de dados e log para o diretório desejado, este cenário se aplica muito quando há backup do banco em um servidor e restore em outro servidor.</p>
+<p style="text-align:justify;">Para restaurar um backup full e mover os arquivos o script de restore deve contar a opção "MOVE", conforme demonstrado abaixo.</p>
+<p style="text-align:justify;"><span style="color:#0000ff;">RESTORE DATABASE</span> [DB_BACKUP_EXEMPLO]
+<span style="color:#0000ff;">FROM DISK</span> =<span style="color:#ff0000;"> N'C:tempBackups_SQLSERVERBKP_DB_BACKUP_EXEMPLO_FULL.BAK'</span>
+<span style="color:#0000ff;">WITH FILE</span> = 1
+,<span style="color:#0000ff;">MOVE</span><span style="color:#ff0000;"> 'DB_BACKUP_EXEMPLO'</span>
+<span style="color:#0000ff;">TO</span> <span style="color:#ff0000;">'C:tempMSSQLDadosDB_BACKUP_EXEMPLO.mdf'</span>
+,<span style="color:#0000ff;">MOVE</span><span style="color:#ff0000;"> 'DB_BACKUP_EXEMPLO_log'</span>
+<span style="color:#0000ff;">TO</span> <span style="color:#ff0000;">'C:tempMSSQLLogDB_BACKUP_EXEMPLO_Log.ldf'</span>
+,<span style="color:#0000ff;">NORECOVERY</span>
+,<span style="color:#ff00ff;">REPLACE</span>
+,<span style="color:#339966;">STATS</span> = 5</p>
+<p style="text-align:justify;">Opções no script:</p>
+
+<ul style="text-align:justify;">
+	<li><span style="color:#0000ff;">NORECOVERY</span> - Esta opção foi utilizada, pois teremos que restaurar outros backups (Diferencial e Log), caso o único backup a ser restaurado fosse o Full, esta opção deveria ser omitida ou usada a opção RECOVERY.</li>
+	<li><span style="color:#ff00ff;">REPLACE</span> - Deve se utilizar esta opção sempre quando o banco de dados for substituído pelo backup, neste caso faremos com que o restore substitua o arquivo de banco que está atualmente na instância, caso não seja este o cenário, esta opção pode ser simplesmente omitida.</li>
+	<li><span style="color:#339966;">STATS</span> - Opção para exibir na console do SQL Server o progresso do processo, caso não deseje a exibição, basta omitir esta opção.</li>
+</ul>
+<div style="text-align:justify;"></div>
+<p style="text-align:justify;"><span style="text-decoration:underline;"><strong>Restore Parcial ou diferencial (Backup Full + Backup Differential)</strong></span></p>
+<p style="text-align:justify;">O restore de um backup Differential, sempre deve ser precedido de um restore Full, caso contrário o SQL Server indicará um erro, informando não ser possível restaurar o banco de dados, pois não houve restauração prévia de um backup Full. Igualmente ao backup full, este arquivo contem as páginas de dados alteradas desde o último backup Full, juntamente com a porção ativa do Log de transações durante a geração deste backup.</p>
+<p style="text-align:justify;">Segue demonstração de restore de um backup Differential seguindo a sequência após restauração do backup full.</p>
+<p style="text-align:justify;">Observação: Neste ponto, não é mais necessário utilizar a opção MOVE para os arquivos, uma vez que o diretório de armazenamento já foi informado durante o restore do backup Full.</p>
+<p style="text-align:justify;"><span style="color:#0000ff;">RESTORE DATABASE</span> [DB_BACKUP_EXEMPLO]
+<span style="color:#0000ff;">FROM DISK</span> =<span style="color:#ff0000;"> N'C:tempBackups_SQLSERVERBKP_DB_BACKUP_EXEMPLO_DIFF.BAK'</span>
+<span style="color:#0000ff;">WITH NORECOVERY</span>
+,<span style="color:#339966;">STATS</span> = 3</p>
+<p style="text-align:justify;">Opções no script:</p>
+
+<ul style="text-align:justify;">
+	<li><span style="color:#0000ff;">NORECOVERY</span> - Esta opção foi utilizada, pois teremos que restaurar outros backups (Log), a sequência de restore terminasse aqui, deveria-se utilizar a opção RECOVERY.</li>
+	<li><span style="color:#339966;">STATS </span>- Opção para exibir na console do SQL Server o progresso do processo, caso não deseje a exibição, basta omitir esta opção.</li>
+</ul>
+<div style="text-align:justify;"></div>
+<p style="text-align:justify;"><span style="text-decoration:underline;"><strong>Restore do Log de Transações (Backup Full + Backup Differential + Backups dos Logs)</strong></span></p>
+<p style="text-align:justify;">Este é o mais fascinantes dos backups no SQL Server, é pelo backup do Log de Transações que é possível restores ao ponto da falha ou em pontos específicos. A dependência é que haja um backup Full precedente aos backups de logs, e que TODOS os arquivos de backups de log sejam restaurados na sequência desde o Full até o momento em que se deseja restaurar a base. A sequência lógica é restaurar o Backup Full, em seguida o Backup Differential e então todos os Backups de Log na sequência. Caso haja perda, corrupção ou indisponibilidade de um backup Differential, ainda assim é possível realizar o restore, utilizando-se da mesma sequência, porém ignorando-se o Backup Differrential ausente e restaurando o Full, depois TODOS os Backups de Log.</p>
+<p style="text-align:justify;">Segue exemplo de Restore de um backup de Log:</p>
+<p style="text-align:justify;"><span style="color:#0000ff;">RESTORE</span> <span style="color:#ff00ff;">LOG</span> [DB_BACKUP_EXEMPLO]
+<span style="color:#0000ff;">FROM DISK</span> = <span style="color:#ff0000;">N'C:tempBackups_SQLSERVERBKP_DB_BACKUP_EXEMPLO_LOG.BAK'</span>
+<span style="color:#0000ff;">WITH NORECOVERY</span></p>
+<p style="text-align:justify;">Opções no script:</p>
+
+<ul style="text-align:justify;">
+	<li><span style="color:#0000ff;">NORECOVERY</span> - Neste caso, pode-se utilizar diretamente a opção RECOVERY, pois finalizou-se o processo de restore, ou então colocar o banco em modo operacional em seguida, conforme será feito no exemplo.</li>
+	<li><span style="color:#339966;">STATS</span> - Opção para exibir na console do SQL Server o progresso do processo, caso não deseje a exibição, basta omitir esta opção.</li>
+</ul>
+<p style="text-align:justify;">Após a sequência de restores das bases de dados, caso não tenha sido execuado o RECOVERY na última instrução de restore, este pode ser executado a parte, pela execução do seguinte script:</p>
+<p style="text-align:justify;"><span style="color:#0000ff;">RESTORE DATABASE</span> [DB_BACKUP_EXEMPLO] <span style="color:#0000ff;">WITH RECOVERY</span></p>
+<p style="text-align:justify;"><strong>Restore ao ponto da falha, ou "Point in Time" (Backup Full + Backup Differential + Backups dos Logs)</strong></p>
+<p style="text-align:justify;">Executado exatamente igual ao restore do log, porém é informado a opção STOPAT na cláusula de restore, que informa onde o restore deve literalmente "PARAR".</p>
+<p style="text-align:justify;">Exemplo de um script para restore Point in Time:</p>
+<p style="text-align:justify;"><span style="color:#0000ff;">RESTORE</span> <span style="color:#ff00ff;">LOG</span> [DB_BACKUP_EXEMPLO]
+<span style="color:#0000ff;">FROM DISK</span> = <span style="color:#ff0000;">N'C:tempBackups_SQLSERVERBKP_DB_BACKUP_EXEMPLO_LOG.BAK'</span>
+<span style="color:#0000ff;">WITH NORECOVERY</span>
+,<span style="color:#0000ff;">STOPAT</span> =<span style="color:#ff0000;">'2012-02-17 22:02:20.000'</span></p>
+
+<ul style="text-align:justify;">
+	<li><span style="color:#0000ff;">NORECOVERY</span> - Neste caso, pode-se utilizar diretamente a opção RECOVERY, pois finalizou-se o processo de restore, ou então colocar o banco em modo operacional em seguida, conforme será feito no exemplo.</li>
+	<li><span style="color:#0000ff;">STOPAT</span> = <span style="color:#ff0000;">'2012-02-17 22:02:20.000'</span>  - Esta opção, permite restaurar o banco a um ponto específico no tempo que seja menor do que o momento da execução do backup.</li>
+	<li>STATS - Opção para exibir na console do SQL Server o progresso do processo, caso não deseje a exibição, basta omitir esta opção.</li>
+</ul>
+<p style="text-align:justify;">Após a sequência de restores das bases de dados, caso não tenha sido executado o RECOVERY na última instrução de restore, este pode ser executado a parte, pela execução do seguinte script:</p>
+<p style="text-align:justify;"><span style="color:#0000ff;">RESTORE DATABASE</span> [DB_BACKUP_EXEMPLO]<span style="color:#0000ff;"> WITH RECOVERY</span></p>
+<p style="text-align:justify;">Finalizo mais um post, com a típica frase:  Consegui a façanha de chegar até o final? Por favor, deixe um comentário, crítica, dúvida ou elogio, para que possa servir de incentivo e melhorar sempre a qualidade dos conteúdos aqui disponibilizados...</p>
+<p style="text-align:justify;">Muito Obrigado...</p>
+<p style="text-align:justify;">Grande Abraço,</p>
+<p style="text-align:justify;">--
+Att.:</p>
+<p style="text-align:justify;">Edvaldo Castro</p>
+<p style="text-align:justify;"><span style="color:#999999;">Administrador de Banco de Dados</span></p>
+<p style="text-align:justify;">@edvaldocastro02</p>
+  </div>
+  <div class="article-footer">
+    <div class="pill-row"><span class="pill">Backup</span><span class="pill">Tech</span><span class="pill">Virtual PASS BR</span></div>
+    <div class="pill-row"><span class="pill">Backup</span><span class="pill">banco de dados</span><span class="pill">diferencial</span><span class="pill">differential backup</span><span class="pill">full</span><span class="pill">log</span><span class="pill">Pol&#237;tica de Backup</span><span class="pill">Seguran&#231;a</span><span class="pill">SQL SERVER</span><span class="pill">transaction log</span><span class="pill">Virtual Pass Br</span></div>
+    <div class="post-nav">
+      <div><a href="../sqlsat127/">Newer: SQL Saturday 127 - Rio de Janeiro</a></div>
+      <div><a href="../bkps-full-diff-log/">Older: Full, Diferencial e T-Log - Salve seus dados</a></div>
+    </div>
+  </div>
+</article>
+    </main>
+    <footer class="site-footer">
+      <p>Conteudo preservado a partir do export WordPress do blog de Edvaldo Castro.</p>
+      <p>Este site foi gerado como um arquivo estatico para consulta publica.</p>
+    </footer>
+  </div>
+</body>
+</html>

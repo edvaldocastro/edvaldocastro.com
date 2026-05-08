@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Existem diversas procedures &quot;n&#227;o documentadas&quot; no SQL SERVER que nos d&#227;o uma super ajuda em diversas tarefas cotidianas, tanto para a administra&#231;&#227;o de uma inst&#226;ncia, quanto para desenvolvimento em geral. A vantagem da ut..." />
+  <title>Utilizando e personalizando o uso da &quot;sp_msforeachdb&quot;.</title>
+  <link rel="stylesheet" href="../../styles.css" />
+</head>
+<body class="single-post">
+  <div class="page-shell">
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark">EC</span>
+        <span class="brand-copy">
+          <strong>Edvaldo Castro</strong>
+          <small>Arquivo estatico do antigo WordPress</small>
+        </span>
+      </a>
+      <nav class="site-nav">
+        <a href="../../">Home</a>
+        <a href="../../posts/">Posts</a>
+        <a href="../../pages/">Pages</a>
+        <a href="../../archive/">Arquivo</a>
+      </nav>
+    </header>
+    <main class="site-main">
+      <article class="article-card">
+  <div class="article-head">
+    <p class="meta-line">Post</p>
+    <h1 class="post-title">Utilizando e personalizando o uso da &quot;sp_msforeachdb&quot;.</h1>
+    <p class="meta-line">17 Jun 2011 <span class="dot">&middot;</span> Database Administration, Tech</p>
+  </div>
+  <div class="article-content">
+    <span style="color:#888888;">Existem diversas procedures "não documentadas" no SQL SERVER que nos dão uma super ajuda em diversas tarefas cotidianas, tanto para a administração de uma instância, quanto para desenvolvimento em geral. A vantagem da utilização destas procedures não documentadas, é que elas nos permitem ganhos de produtividade em atividades que necessitam ser executadas em diversos objetos dentro da instância, entre eles: Databases (sp_msforeachDB), Tables (sp_msforeachTable) e outros.</span>
+
+<span style="color:#888888;">
+Abaixo, temos uma explicação bastante objetiva do uso da procedure não documentada "sp_msforeachDB", que é utilizada para executar um script em todos os databases de uma instância.</span>
+
+<span style="color:#888888;">A sintaxe básica:</span>
+
+<span style="color:#0000ff;">exec</span> <span style="color:#993300;">sp_msforeachdb</span> <span style="color:#000000;">@command1 = N</span><span style="color:#ff0000;">'&lt;command&gt;;'<span style="color:#888888;">,</span></span>
+
+<span style="color:#000000;">                                 @command2 = N</span><span style="color:#ff0000;">'&lt;command&gt;'<span style="color:#808080;">,</span></span>
+
+<span style="color:#000000;">                                 @command3 = N</span><span style="color:#ff0000;">'&lt;command&gt;'</span>
+
+ou então, opcionamente pode-se utilizar da seguinte maneira:
+
+<span style="color:#0000ff;">exec </span><span style="color:#993300;">sp_msforeachdb</span> <span style="color:#000000;">@command1 = N</span><span style="color:#ff0000;">'&lt;command&gt;;&lt;command&gt;;&lt;command&gt;;'</span>
+
+Esta procedure também aceita alguns parâmetros a serem passados para execução. Destes o único parâmetro obrigatório é o "@command1", os demais são todos opcionais.
+<ul>
+	<li><strong>@command1</strong> = Primeiro comando a ser executado pela procedure.</li>
+	<li><strong>@command2</strong> = Segundo comando a ser executado pela procedure.</li>
+	<li><strong>@command3</strong> = Terceiro comando a ser executado pela procedure.</li>
+	<li><strong>@replacechar</strong> = Caractere  ser utilizado para indicar qual database está sedo utilizado em cada ciclo de execução. A omissão deste parâmetro implica que será utilizado o caractere default "?".</li>
+	<li><strong>@precommand</strong> = Comando a se executado antes da execução do primeiro comando declarado.</li>
+	<li><strong>@poscommand</strong> = Comando a se executado após a execução do último comando declarado.</li>
+</ul>
+<strong><span style="text-decoration:underline;">Exemplos práticos da utilização desta poderosa procedure.</span></strong>
+
+<span style="text-decoration:underline;">Exemplo</span> 1: Você precisa verificar o nome lógico, diretório de armazenamento e tamanho dos arquivos de dados e log do database "master" da sua instância, para isto, basta executar o comando abaixo na instância do SQL SERVER.
+
+<span style="color:#0000ff;">use</span> <span style="color:#000000;">[master];</span>
+<span style="color:#0000ff;">select</span> <span style="color:#ff00ff;">db_name</span>() <span style="color:#0000ff;">as</span> <span style="color:#000000;">DBNAME</span>;
+<span style="color:#0000ff;">exec</span> <span style="color:#993300;">sp_helpfile</span>;
+
+<a href="../../assets/uploads/2011/06/13.jpg"><img class="aligncenter size-full wp-image-85" title="1" src="../../assets/uploads/2011/06/13.jpg" alt="" width="645" height="192" /></a>
+
+Agora, uma outra situação, é a necessidade desta mesma verificação em todos os datafiles e logfiles de todos os databases de uma instânca, neste caso, pode-se utilizar o mesmo script utilizado anteriormente, com algumas pequenas adaptações, para rápida execução desta tarefa. O novo script com a utilização da sp_msforeachdb, ficaria conforme exemplo abaixo:
+
+<span style="color:#0000ff;">exec</span> <span style="color:#993300;">sp_msforeachdb</span> <span style="color:#000000;">@command1 = N</span><span style="color:#ff0000;"><span style="color:#000000;">'</span>    use ? </span>
+<span style="color:#ff0000;">                                                               select ''?'' as DBNAME </span>
+<span style="color:#ff0000;">                                                               exec sp_helpfile'</span>
+
+<a href="../../assets/uploads/2011/06/23.jpg"><img class="aligncenter size-full wp-image-86" title="2" src="../../assets/uploads/2011/06/23.jpg" alt="" width="645" height="412" /></a>
+
+<span style="text-decoration:underline;">Exemplo</span> 2: Você precisa executar um verificação e listar os usuários que estão associados à database role "db_owner" em um determinado database. Basta executar o script a seguir:
+
+<span style="color:#0000ff;">use</span> <span style="color:#000000;">[Teste_Monitoring]</span>;
+<span style="color:#0000ff;">select</span> <span style="color:#ff00ff;">db_name</span>() <span style="color:#0000ff;">as</span> <span style="color:#000000;">DBNAME</span>
+<span style="color:#0000ff;">exec</span> <span style="color:#993300;">sp_helprolemember</span> <span style="color:#ff0000;">'db_owner'</span>
+
+<a href="../../assets/uploads/2011/06/33.jpg"><img class="size-full wp-image-88 alignnone" title="3" src="../../assets/uploads/2011/06/33.jpg" alt="" width="533" height="259" /></a>
+
+Para execução a mesma atividade, em todos os databases da instância, basta "colar" o script para um único database dentro do parametro da procedure <span style="color:#993300;">sp_msforeachdb</span> e fazer as e devidas adaptações com apóstrofos e caracteres de indicação do database a ser utilizado, neste caso o "<span style="color:#ff0000;">?</span>"
+<span style="color:#0000ff;">exec</span> <span style="color:#993300;">sp_msforeachdb</span> <span style="color:#000000;">@command1= N</span><span style="color:#ff0000;">'    use [?] </span>
+<span style="color:#ff0000;">                                                              select ''?'' as DBNAME </span>
+<span style="color:#ff0000;">                                                              exec sp_helprolemember ''db_owner'''</span>
+
+<a href="../../assets/uploads/2011/06/43.jpg"><img class="alignnone size-full wp-image-89" title="4" src="../../assets/uploads/2011/06/43.jpg" alt="" width="645" height="569" /></a>
+
+Resumido, para qualquer necessidade em que precisa-se executar um script em todos os databases de uma instância, é importante e bastante útil primeiro criar o script para um único database e em seguida adaptar este script para a procedure não documentada <span style="color:#993300;">sp_msforeachdb</span>.
+
+Espero que o post seja útil. Dúvidas, elogios, crítcas e sugestões esteja à vontade para comentar ou entrar em contato através dos dados na seção "Sobre Edvaldo Castro" do Blog.
+  </div>
+  <div class="article-footer">
+    <div class="pill-row"><span class="pill">Database Administration</span><span class="pill">Tech</span></div>
+    
+    <div class="post-nav">
+      <div><a href="../filestream/">Newer: FILESTREAM de um jeito pr&#225;tico e objetivo</a></div>
+      <div><a href="../alterar-diretorio-de-armazenamento-do-arquivo-de-dados-mdf-ndf/">Older: Alterando diret&#243;rio de armazenamento do arquivo de dados (.mdf / .ndf)</a></div>
+    </div>
+  </div>
+</article>
+    </main>
+    <footer class="site-footer">
+      <p>Conteudo preservado a partir do export WordPress do blog de Edvaldo Castro.</p>
+      <p>Este site foi gerado como um arquivo estatico para consulta publica.</p>
+    </footer>
+  </div>
+</body>
+</html>

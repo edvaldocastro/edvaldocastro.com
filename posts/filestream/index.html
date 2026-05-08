@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Antes de come&#231;ar a falar do FILESTREAM propriamente dito, quero falar um pouco sobre a import&#226;ncia de se participar das &quot; Comunidades Virtuais &quot;, segundo o Wikip&#233;dia, resumidamente este termo define-se pelo estabelecimen..." />
+  <title>FILESTREAM de um jeito pr&#225;tico e objetivo</title>
+  <link rel="stylesheet" href="../../styles.css" />
+</head>
+<body class="single-post">
+  <div class="page-shell">
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark">EC</span>
+        <span class="brand-copy">
+          <strong>Edvaldo Castro</strong>
+          <small>Arquivo estatico do antigo WordPress</small>
+        </span>
+      </a>
+      <nav class="site-nav">
+        <a href="../../">Home</a>
+        <a href="../../posts/">Posts</a>
+        <a href="../../pages/">Pages</a>
+        <a href="../../archive/">Arquivo</a>
+      </nav>
+    </header>
+    <main class="site-main">
+      <article class="article-card">
+  <div class="article-head">
+    <p class="meta-line">Post</p>
+    <h1 class="post-title">FILESTREAM de um jeito pr&#225;tico e objetivo</h1>
+    <p class="meta-line">22 Aug 2011 <span class="dot">&middot;</span> Database Administration, Tech <span class="dot">&middot;</span> FileStream SQLSERVER Armazenamento</p>
+  </div>
+  <div class="article-content">
+    Antes de começar a falar do FILESTREAM propriamente dito, quero falar um pouco sobre a importância de se participar das "<a href="http://pt.wikipedia.org/wiki/Comunidade_virtual">Comunidades Virtuais</a>", segundo o Wikipédia, resumidamente este termo define-se pelo estabelecimento de relações num espaço virtual por indivíduos com interesses em comum. Nestes espaços virtuais, o conhecimento é compartilhado e você sempre encontra pessoas que abraçam sua causa e vão com você até a solução final, é onde literalmente aplica-se a famosa frase: "No man is an island" (<a href="http://pt.wikipedia.org/wiki/John_Donne">John Donne</a>). Então participe ativamente contribuindo e questionando sempre nas comunidades virtuais, independente do assunto relacionado,
+
+Sem mais delongas, e partindo para o que realmente interessa, recentemente fui questionado sobre a melhor maneira de se armazenar arquivos de tipos diversos (.doc, .pdf, .xls, .jpg, etc etc) dentro do SQL SERVER, para que pudesse haver gerenciamento de segurança e backup dos arquivos sendo administrados pelo SGDB. Para que não ficassem dúvidas sobre as melhores práticas de implantação de mais esta extraordiniária funcionalidade do SQL SERVER, recorri à comunidade para discutir alguns pontos e sanar algumas dúvidas. Prontamente atendido pelo amigo de profissão "Marcos Freccia (<a href="http://marcosfreccia.wordpress.com/">Blog  </a>-  <a href="http://twitter.com/#%21/SqlFreccia">Twitter</a>)", dentre vários outros.
+
+Definição: Segundo a <a href="http://technet.microsoft.com/en-us/library/bb933993.aspx">página do Technet</a>, o FILESTREAM integra o SQL SERVER com o sistema de arquivos NTFS armazenando objetos do tipo (BLOB) com o tipo varbinary(max) utilizando-se da do sistema de arquivos NTFS para este armazenamento. É possível através de T-SQL realizar a inserção, exclusão, atualização e consulta e backup destes dados.
+
+Neste post, faremos uma implementação Básica e funcional do FileStream para que sejam armazenados os arquivos e atendidos os requisitos supracitados.
+
+<span style="text-decoration:underline;"><strong>Na prática:</strong></span>
+
+Antes de tudo é necessário habilitar o FILESTREAM na instância em que será utilizado o recurso. para isto, abra uma nova Query, e execute o seguinte comando:
+
+<span style="color:#008000;">--Altera para exibição das configurações avançadas, e aplica estas alterações...</span>
+<span style="color:#0000ff;">exec</span> <span style="color:#993300;">sp_configure</span> <span style="color:#ff0000;">'show advanced options'</span>,1
+<span style="color:#0000ff;">go</span>
+<span style="color:#0000ff;">reconfigure</span>
+
+<span style="color:#008000;">--Altera o nível de acesso do filestream, de 0 para 2, para que este possa ser usado...</span>
+<span style="color:#0000ff;">exec</span> <span style="color:#993300;">sp_configure</span> <span style="color:#ff0000;">'filestream access level'</span>,2
+<span style="color:#0000ff;">go</span>
+<span style="color:#0000ff;">reconfigure</span>
+
+<span style="color:#008000;">--Retorna a configuração avançadas ao seu estado default, e aplica estas alterações...</span>
+<span style="color:#0000ff;">exec </span><span style="color:#993300;">sp_configure</span> <span style="color:#ff0000;">'show advanced options'</span>,0
+<span style="color:#0000ff;">go</span>
+<span style="color:#0000ff;">reconfigure</span>
+
+<a href="../../assets/uploads/2011/08/filestream113.jpg"><img class="alignnone size-full wp-image-153" title="filestream1" src="../../assets/uploads/2011/08/filestream113.jpg" alt="" width="645" height="282" /></a>
+
+O segundo passo, é habilitar o FILESTREAM no serviço do SQL SERVER. Para isto acesse:
+
+Iniciar &gt; Todos os Programas &gt; Microsoft SQL Server 2008 &gt; Configuration Tools &gt; <em><strong>SQL Server Configuration Manager</strong></em>
+
+Habilite as opções de utilização do FILESTREAM e dê um nome ao compartilhamento (Windows Share Name), ou mantenha o que for sugerido (recomendado).
+
+<a href="../../assets/uploads/2011/08/filestream23.jpg"><img class="size-full wp-image-135 alignnone" title="filestream2" src="../../assets/uploads/2011/08/filestream23.jpg" alt="" width="405" height="466" /></a>
+
+Após as configurações realizadas no nível de instância, é necessário configurar a base de dados que será utilizada para o FILESTREAM. É possível também utilizar uma base já pré-existente na instância e até mesmo tabelas, bastando para isso, realizar algumas alterações tanto na base, como na tabela.
+<ul>
+	<li>A base que será utilizada para o FILESTREAM, OBRIGATORIAMENTE deve ter um Filegroup específico para este fim.</li>
+	<li>A tabela que será utilizada parao FILESTREAM, deverá ter uma estrutura mínima semelhante á definida na tabela de exemplo apresentada logo abaixo.</li>
+</ul>
+Para criação do banco de dados, será executado o script abaixo, que fará a criação desta base já com os devidos filegroups e definiões necerrárias para o FILESTREAM.
+
+<span style="color:#0000ff;">USE</span> [master]
+<span style="color:#0000ff;">GO</span>
+<span style="color:#0000ff;">CREATE DATABASE</span> [FILESTREAMDBNOVO]
+<span style="color:#0000ff;">        ON PRIMARY</span> (
+NAME = <span style="color:#ff0000;">N'FILESTREAMDB'</span>
+,<span style="color:#0000ff;">FILENAME</span> = <span style="color:#ff0000;">N'D:MSSQL2008FILESTREAMFILESTREAMDBNOVO.mdf'</span>)
+,FILEGROUP [FILESTREAMGROUP] <span style="color:#0000ff;">CONTAINS FILESTREAM  DEFAULT</span> (
+NAME = <span style="color:#ff0000;">N'FS'</span>
+,<span style="color:#0000ff;">FILENAME</span> = <span style="color:#ff0000;">N'D:MSSQL2008FILESTREAMDBNOVO_2.FS'</span>)
+<span style="color:#ff00ff;">      LOG </span><span style="color:#0000ff;">ON</span> (
+NAME = <span style="color:#ff0000;">N'FILESTREAMDB_log'</span>
+,<span style="color:#0000ff;">FILENAME</span> = <span style="color:#ff0000;">N'D:MSSQL2008FILESTREAMFILESTREAMDBNOVO_1.LDF'</span>)
+<span style="color:#0000ff;">GO</span>
+
+<a href="../../assets/uploads/2011/08/filestream33.jpg"><img class="size-full wp-image-138 alignnone" title="filestream3" src="../../assets/uploads/2011/08/filestream33.jpg" alt="" width="639" height="361" /></a>
+
+Após a criação da base de dados, será feito a criação de duas tabelas, que estão relacionadas para exemplificar o uso desta funcionalidade do SQL SERVER. A primeira tabela (FSDESC) contém todos os dados de identificação do tipo de arquivo que for inserido. A segunda tabela (FSDATA), contém os dados referentes aos arquivos que foram armazenados. Abaixo, os scripts de criação destas tabelas.
+
+<span style="color:#0000ff;">USE</span> [FILESTREAMDBNOVO]
+<span style="color:#0000ff;">GO</span>
+<span style="color:#0000ff;">CREATE TABLE</span> FSDESC (
+IDFSDESC <span style="color:#0000ff;">INT IDENTITY</span> NOT NULL,
+DESCRICAO <span style="color:#0000ff;">VARCHAR</span>(50) NOT NULL
+)
+<span style="color:#0000ff;">GO</span>
+<span style="color:#0000ff;"> ALTER TABLE</span> FSDESC <span style="color:#0000ff;">ADD CONSTRAINT</span> PK_FSDESC <span style="color:#0000ff;">PRIMARY KEY</span> (IDFSDESC)
+<span style="color:#0000ff;">GO</span>
+
+<span style="color:#0000ff;">USE</span> [FILESTREAMDBNOVO]
+<span style="color:#0000ff;">GO</span>
+<span style="color:#0000ff;">CREATE TABLE</span> FSDATA (
+IDFSDATA <span style="color:#0000ff;">INT IDENTITY</span> NOT NULL,
+IDDESC <span style="color:#0000ff;">INT</span> NOT NULL,
+IDGUID <span style="color:#0000ff;">UNIQUEIDENTIFIER</span> <span style="color:#0000ff;">ROWGUIDCOL</span> <span style="color:#0000ff;">UNIQUE</span> NOT NULL,
+FSDATA <span style="color:#0000ff;">VARBINARY</span>(<span style="color:#ff00ff;">MAX</span>) <span style="color:#0000ff;">FILESTREAM</span> NULL
+)
+<span style="color:#0000ff;">ALTER TABLE</span> FSDATA <span style="color:#0000ff;">ADD CONSTRAINT</span> PK_IDFSDATA <span style="color:#0000ff;">PRIMARY KEY</span> (IDFSDATA)
+<span style="color:#0000ff;">GO</span>
+<span style="color:#0000ff;">ALTER TABLE</span> FSDATA <span style="color:#0000ff;">ADD CONSTRAINT</span> FK_DESC_DATA <span style="color:#0000ff;">FOREIGN KEY</span> (IDDESC) <span style="color:#0000ff;">REFERENCES</span> FSDESC(IDFSDESC)
+
+<a href="../../assets/uploads/2011/08/filestream43.jpg"><img class="size-full wp-image-139 alignnone" title="filestream4" src="../../assets/uploads/2011/08/filestream43.jpg" alt="" width="645" height="350" /></a>
+
+Feito a criação da base de dados e das respectivas tabelas, será realizado a inserção de dados nas tabelas, sendo primeiramente alimentada a tabela FSDESC com descrições de 3 tipos diferentes de arquivos, apenas para exemplificar:
+
+<span style="color:#0000ff;">INSERT INTO</span> FSDESC (DESCRICAO)
+<span style="color:#0000ff;">VALUES</span>(<span style="color:#ff0000;">'IMAGEM .JPG'</span>),(<span style="color:#ff0000;">'E-BOOK .PDF'</span>),(<span style="color:#ff0000;">'OFFICE .DOC'</span>)
+<span style="color:#0000ff;">GO</span>
+
+Após a inserção destes dados, será feito a inserção na tabela dos dados do FILESTREAM, vale ressaltar, que os dados não estarão fisicamente armazenados dentro do SQL SERVER, mas em um diretório NTFS específico do FILESTREAM, que foi previamente definido.
+
+<span style="color:#0000ff;">INSERT INTO</span> FSDATA (IDDESC,IDGUID,FSDATA)
+<span style="color:#0000ff;">SELECT</span> 1,<span style="color:#ff00ff;">NEWID</span>(),*
+<span style="color:#0000ff;">FROM</span> <span style="color:#0000ff;">OPENROWSET</span> (<span style="color:#0000ff;">BULK</span> <span style="color:#ff0000;">N'C:TEMPDesert.jpg'</span>,<span style="color:#0000ff;">SINGLE_BLOB</span>) <span style="color:#0000ff;">AS</span> Document
+<span style="color:#0000ff;">GO</span>
+<span style="color:#0000ff;">INSERT INTO</span> FSDATA (IDDESC,IDGUID,FSDATA)
+<span style="color:#0000ff;">SELECT</span> 3,<span style="color:#ff00ff;">NEWID</span>(),*
+<span style="color:#0000ff;">FROM OPENROWSET</span> (<span style="color:#0000ff;">BULK</span> <span style="color:#ff0000;">N'C:TEMPdocumentoWord.doc'</span>,<span style="color:#0000ff;">SINGLE_BLOB</span>) <span style="color:#0000ff;">AS</span> Document
+<span style="color:#0000ff;">GO</span>
+<span style="color:#0000ff;"> INSERT INTO</span> FSDATA (IDDESC,IDGUID,FSDATA)
+<span style="color:#0000ff;">SELECT</span> 2,<span style="color:#ff00ff;">NEWID</span>(),*
+<span style="color:#0000ff;">FROM OPENROWSET</span> (<span style="color:#0000ff;">BULK</span> <span style="color:#ff0000;">N'C:TEMPMS_Learning_Transcript.pdf'</span>,<span style="color:#0000ff;">SINGLE_BLOB</span>) <span style="color:#0000ff;">AS</span> Document
+
+<a href="../../assets/uploads/2011/08/filestream53.jpg"><img class="alignnone size-full wp-image-145" title="filestream5" src="../../assets/uploads/2011/08/filestream53.jpg" alt="" width="645" height="302" /></a>
+
+Tendo sido inseridos os registros, é possível fazer um select unindo as duas tabelas, para exibição dos registrosque estão armazenados já utilizando o FILESTREAM.
+
+<span style="color:#339966;">--Select para exibir os arquivos inseridos...</span>
+<span style="color:#0000ff;">SELECT</span> A.DESCRICAO, B.IDFSDATA,B.IDGUID, B.FSDATA
+<span style="color:#0000ff;">FROM</span> FSDATA B
+<span style="color:#999999;">INNER JOIN</span> FSDESC A
+<span style="color:#0000ff;">ON</span> A.IDFSDESC = B.IDDESC
+
+<a href="../../assets/uploads/2011/08/filestream63.jpg"><img class="alignnone size-full wp-image-146" title="filestream6" src="../../assets/uploads/2011/08/filestream63.jpg" alt="" width="645" height="204" /></a>
+
+Para validação de que os arquivos não ficam fisicamente armazenados dentro da Engine do SQL SERVER, podemos observar o tamanho da tabela supracitada.
+
+<a href="../../assets/uploads/2011/08/filestream73.jpg"><img class="alignnone size-full wp-image-147" title="filestream7" src="../../assets/uploads/2011/08/filestream73.jpg" alt="" width="485" height="141" /></a>
+
+E compará-la ao espaço ocupado pelos arquivos fisicamente em seus locais de origem.
+
+<a href="../../assets/uploads/2011/08/filestream83.jpg"><img class="alignnone size-full wp-image-148" title="filestream8" src="../../assets/uploads/2011/08/filestream83.jpg" alt="" width="610" height="115" /></a>
+
+Uma das principais vantagens em se utilizar o FILESTREAM, é a capacidade de gerenciamento sobre o arquivo. Backup, segurança de acesso e muito mais pode ser gerenciado internamente por dentro do SQL SERVER.
+
+Outras fontes:
+<ul>
+	<li>http://marcosfreccia.wordpress.com/2011/08/12/filestream/</li>
+	<li>http://technet.microsoft.com/en-us/library/bb933993.aspx</li>
+</ul>
+Abraços e até a próxima...
+  </div>
+  <div class="article-footer">
+    <div class="pill-row"><span class="pill">Database Administration</span><span class="pill">Tech</span></div>
+    <div class="pill-row"><span class="pill">FileStream SQLSERVER Armazenamento</span></div>
+    <div class="post-nav">
+      <div><a href="../sqlsat100minhaagenda/">Newer: SQL SATURDAY 100  -  Minha Agenda</a></div>
+      <div><a href="../sp_msforeachdb/">Older: Utilizando e personalizando o uso da &quot;sp_msforeachdb&quot;.</a></div>
+    </div>
+  </div>
+</article>
+    </main>
+    <footer class="site-footer">
+      <p>Conteudo preservado a partir do export WordPress do blog de Edvaldo Castro.</p>
+      <p>Este site foi gerado como um arquivo estatico para consulta publica.</p>
+    </footer>
+  </div>
+</body>
+</html>

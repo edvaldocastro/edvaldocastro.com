@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="&quot;&#201; um limite, n&#227;o uma meta&quot; Assim como no artigo anterior ([SQL Server No Limite] – Bancos de dados por inst&#226;ncia), quero demonstrar a import&#226;ncia de se conhecer os limites daquilo que trabalhamos (e at&#233; mesmo outros asp..." />
+  <title>[SQL Server No Limite] - Arquivos por banco de dados</title>
+  <link rel="stylesheet" href="../../styles.css" />
+</head>
+<body class="single-post">
+  <div class="page-shell">
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark">EC</span>
+        <span class="brand-copy">
+          <strong>Edvaldo Castro</strong>
+          <small>Arquivo estatico do antigo WordPress</small>
+        </span>
+      </a>
+      <nav class="site-nav">
+        <a href="../../">Home</a>
+        <a href="../../posts/">Posts</a>
+        <a href="../../pages/">Pages</a>
+        <a href="../../archive/">Arquivo</a>
+      </nav>
+    </header>
+    <main class="site-main">
+      <article class="article-card">
+  <div class="article-head">
+    <p class="meta-line">Post</p>
+    <h1 class="post-title">[SQL Server No Limite] - Arquivos por banco de dados</h1>
+    <p class="meta-line">08 Jun 2015 <span class="dot">&middot;</span> Database Administration, NOLIMITE, Virtual PASS BR <span class="dot">&middot;</span> arquivos por banco, file, FoRG, MTAC, nolimite, SQL SERVER, sqlfriends, sqlserver, virtual pass, Virtual Pass Br</p>
+  </div>
+  <div class="article-content">
+    "É um limite, não uma meta"
+
+Assim como no artigo anterior ([SQL Server No Limite] – Bancos de dados por instância), quero demonstrar a importância de se conhecer os limites daquilo que trabalhamos (e até mesmo outros aspectos) para que se possa fazer um <em>sizing</em> mais próximo daquilo que se busca com relação à performance e estabilidade de uma (ou mais) instância(s) do SQL Server.
+
+Neste artigo, a intenção é validar e mostrar os prós e contras da criação de muitos arquivos no SQL Server, até atingirmos o LIMITE, que de acordo com o documento oficial "<a href="https://msdn.microsoft.com/en-us/library/ms143432.aspx" target="_blank" rel="noopener noreferrer">Maximum Capacity Specifications for SQL Server</a>" é de 32.767 por banco de dados.
+<h2>O erro.</h2>
+Conforme previamente mencionado, o limite de arquivos por banco de dados em uma instância do SQL Server é de 32.767. Caso seja submetido um comando ou mesmo uma alteração gráfica para adicionar um novo arquivo a este banco, a mensagem de erro abaixo é exibida:
+
+<a href="../../assets/uploads/2015/06/nolimite_files_000.jpg"><img class="aligncenter size-full wp-image-1498" src="../../assets/uploads/2015/06/nolimite_files_000.jpg" alt="nolimite_files_000" width="502" height="59" /></a>
+<h2>Simulando o erro.</h2>
+Para simular o erro, foram criados alguns scripts e executado em um ambiente controlado, de teste.
+
+<span style="color: #ff0000;">NÃO FAÇA NENHUM TESTE EM SEU AMBIENTE DE PRODUÇÃO!</span>
+
+<a href="../../assets/uploads/2015/06/Exemplo_NoLimite_Arquivos_Por_BD.sql_.txt" target="_blank" rel="noopener noreferrer">Clique aqui, para baixar o script completo</a>
+<h3>Criação do banco de dados NOLIMITE</h3>
+&nbsp;
+
+<a href="../../assets/uploads/2015/06/nolimite_files_00.jpg"><img class="aligncenter size-full wp-image-1509" src="../../assets/uploads/2015/06/nolimite_files_00.jpg" alt="nolimite_files_00" width="836" height="316" /></a>Para a reprodução do erro, foi criado um banco de dados normalmente, com o menor tamanho de arquivo de dados possível, conforme imagem acima.
+<h3>Geração de script, e inclusão de 32766 arquivos</h3>
+<a href="../../assets/uploads/2015/06/nolimite_files_11.jpg"><img class="aligncenter size-full wp-image-1537" src="../../assets/uploads/2015/06/nolimite_files_11.jpg" alt="nolimite_files_11" width="1034" height="291" /></a>
+
+Após a criação do banco de dados, foi gerado um script que faz a inclusão de 32766 arquivos ao banco, depois será acrescentado um único arquivo com a finalidade de validar o momento em que o erro acontece.
+<h3>O momento do erro.</h3>
+&nbsp;
+
+<a href="../../assets/uploads/2015/06/nolimite_files_2.jpg"><img class="aligncenter size-full wp-image-1511" src="../../assets/uploads/2015/06/nolimite_files_2.jpg" alt="nolimite_files_2" width="991" height="259" /></a>
+Ao se tentar incluir mais um arquivo no banco, o erro acima é exibido, informando que o limite (que já é bem generoso) foi atingido, impossibilitando a conclusão da operação.
+<h2>Prós e Contras.</h2>
+Assim como no artigo anterior, <a href="http://[SQL Server No Limite] - Bancos de dados por instância" target="_blank" rel="noopener noreferrer">[SQL Server No Limite] - Bancos de dados por instância</a>, vou tentar fazer uma análise de prós e contras da utilização de uma quantidade elevada de arquivos, com resultados baseados em testes. É preciso lembrar, que isto é apenas a expressão de minha opinião e em nenhum momento, uma verdade absoluta.
+<h3>Prós</h3>
+Sincera e particularmente, não consigo encontrar nenhum benefício na criação de uma grande quantidade de arquivos para um único banco de dados. Não é prudente afirmar que nunca deve ser feito desta maneira, mas em minha opinião, os contras são muito maiores do que os prós e não compensam o <em>Overhead</em> administrativo que possivelmente sera enfrentando com tal arquitetura.
+<h3>Contras</h3>
+&nbsp;
+<h4>Maior tempo para operações de <em>online</em> e <em>offline</em></h4>
+<a href="../../assets/uploads/2015/06/nolimite_files_3.jpg"><img class="aligncenter size-full wp-image-1508" src="../../assets/uploads/2015/06/nolimite_files_3.jpg" alt="nolimite_files_3" width="720" height="285" /></a>SET OFFLINE em um banco vazio (sem tabelas de usuário) com 2 arquivos.
+<a href="../../assets/uploads/2015/06/nolimite_files_4.jpg"><img class="aligncenter size-full wp-image-1507" src="../../assets/uploads/2015/06/nolimite_files_4.jpg" alt="nolimite_files_4" width="850" height="360" /></a>SET OFFLINE em um banco vazio (sem tabelas de usuário) com 32767 arquivos.
+
+É possível observar que uma simples operação de colocar o banco em <em>OFFLINE</em> demorou 110ms em um banco "normal" com 2 arquivos contra 243472ms em um banco com 32767 arquivos.
+
+<a href="../../assets/uploads/2015/06/nolimite_files_5.jpg"><img class="aligncenter size-full wp-image-1506" src="../../assets/uploads/2015/06/nolimite_files_5.jpg" alt="nolimite_files_5" width="851" height="368" /></a>SET ONLINE em um banco vazio (sem tabelas de usuário) com 2 arquivos.
+
+<a href="../../assets/uploads/2015/06/nolimite_files_6.jpg"><img class="aligncenter size-full wp-image-1505" src="../../assets/uploads/2015/06/nolimite_files_6.jpg" alt="nolimite_files_6" width="851" height="379" /></a>SET ONLINE em um banco vazio (sem tabelas de usuário) com 32767 arquivos.
+
+Uma operação de colocar o banco em <em>ONLINE</em> demorou 48ms em um banco "normal" com 2 arquivos contra 210351ms em um banco com 32767 arquivos.
+<h4>Uso de memória (Buffer descriptors)</h4>
+A utilização de memória é consideravelmente maior em uma base de dados com muitos arquivos, isto porque para cada arquivo, o SQL Server cria algumas páginas de controle que necessariamente são carregadas para a memória, como por exemplo:
+<a href="../../assets/uploads/2015/06/nolimite_files_9.jpg"><img class="aligncenter size-full wp-image-1502" src="../../assets/uploads/2015/06/nolimite_files_9.jpg" alt="nolimite_files_9" width="871" height="470" /></a>
+<ul>
+ 	<li style="list-style-type: none">
+<ul>
+ 	<li>BOOT_PAGE - 1 página</li>
+</ul>
+</li>
+</ul>
+- Página usada para startup do banco (1 por banco de dados).
+<ul>
+ 	<li style="list-style-type: none">
+<ul>
+ 	<li>DATA_PAGE 5052 páginas</li>
+</ul>
+</li>
+</ul>
+- Páginas de dados usadas para efetivamente armazenar os dados.
+<ul>
+ 	<li style="list-style-type: none">
+<ul>
+ 	<li>DIFF_MAP_PAGE - 32668 páginas</li>
+</ul>
+</li>
+</ul>
+- Página de controle usada para mapear as alterações desde o último backup full.
+<ul>
+ 	<li style="list-style-type: none">
+<ul>
+ 	<li>ML_MAP_PAGE - 32668 páginas</li>
+</ul>
+</li>
+</ul>
+- Página de controle para mapear as alterações minimamente logadas.
+<ul>
+ 	<li style="list-style-type: none">
+<ul>
+ 	<li>PFS_PAGE - 32766 páginas</li>
+</ul>
+</li>
+</ul>
+- Página de controle usada para mapear o espaço livre nas demais páginas.
+<ul>
+ 	<li style="list-style-type: none">
+<ul>
+ 	<li>SGAM_PAGE - 32670 páginas</li>
+</ul>
+</li>
+</ul>
+- Página de controle para alocação de <em>extents</em> mistos.
+
+No caso acima, um banco de dados vazio ocupou cerca de 2GB de espaço em memória apenas para carregar páginas de controle do SQL Server. Em um cenário hipotético com 30 bases com estas características (quantidade de arquivos), o SQL Server precisaria de aproximadamente 60GB de memória apenas para trabalhar com as páginas de controle.
+
+&nbsp;
+<h2>Conclusão</h2>
+Conforme já mencionei antes neste artigo, trata-se apenas de minha opinião e pode haver algum ambiente específico que necessite de bancos de dados com dezenas e até centenas de arquivos, mas acredito que quanto maior a quantidade de arquivos em um único banco de dados, maior vai ser o esforço administrativo necessário para administração deste ambiente, além disso, existem outras variáveis como criação de backup, restores (movimentação lógica de centenas de arquivos no restore), dentre outras.
+
+Muito obrigado pela leitura.
+
+&nbsp;
+<h2>Referências</h2>
+&nbsp;
+<ul>
+ 	<li style="list-style-type: none">
+<ul>
+ 	<li>Maximum Capacity Specifications for SQL Server</li>
+</ul>
+</li>
+</ul>
+<a href="https://msdn.microsoft.com/en-us/library/ms143432.aspx" target="_blank" rel="noopener noreferrer">https://msdn.microsoft.com/en-us/library/ms143432.aspx</a>
+<ul>
+ 	<li style="list-style-type: none">
+<ul>
+ 	<li style="list-style-type: none;"></li>
+ 	<li>SQL Server: Understanding GAM and SGAM Pages</li>
+</ul>
+</li>
+</ul>
+<a href="http://www.practicalsqldba.com/2012/09/sql-server-understanding-gam-and-sgam.html" target="_blank" rel="noopener noreferrer">http://www.practicalsqldba.com/2012/09/sql-server-understanding-gam-and-sgam.html</a>
+  </div>
+  <div class="article-footer">
+    <div class="pill-row"><span class="pill">Database Administration</span><span class="pill">NOLIMITE</span><span class="pill">Virtual PASS BR</span></div>
+    <div class="pill-row"><span class="pill">arquivos por banco</span><span class="pill">file</span><span class="pill">FoRG</span><span class="pill">MTAC</span><span class="pill">nolimite</span><span class="pill">SQL SERVER</span><span class="pill">sqlfriends</span><span class="pill">sqlserver</span><span class="pill">virtual pass</span><span class="pill">Virtual Pass Br</span></div>
+    <div class="post-nav">
+      <div><a href="../alwayson-fci-vs-alwayson-ag-relacoes-custo-x-beneficio-x-necessidade/">Newer: AlwaysOn FCI VS AlwaysOn AG - Rela&#231;&#245;es: Custo X Benef&#237;cio X Necessidade</a></div>
+      <div><a href="../sql-server-2016-ctp2-e-hora-de-estudar-ficadica/">Older: SQL Server 2016 CTP2 - &#201; hora de estudar #FicaDica</a></div>
+    </div>
+  </div>
+</article>
+    </main>
+    <footer class="site-footer">
+      <p>Conteudo preservado a partir do export WordPress do blog de Edvaldo Castro.</p>
+      <p>Este site foi gerado como um arquivo estatico para consulta publica.</p>
+    </footer>
+  </div>
+</body>
+</html>

@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="(function(i,s,o,g,r,a,m){i[&#39;GoogleAnalyticsObject&#39;]=r;i[r]=i[r]||function(){ (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o), m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.in..." />
+  <title>READ COMMITTED SNAPSHOT ISOLATION – Aprecie com modera&#231;&#227;o</title>
+  <link rel="stylesheet" href="../../styles.css" />
+</head>
+<body class="single-post">
+  <div class="page-shell">
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark">EC</span>
+        <span class="brand-copy">
+          <strong>Edvaldo Castro</strong>
+          <small>Arquivo estatico do antigo WordPress</small>
+        </span>
+      </a>
+      <nav class="site-nav">
+        <a href="../../">Home</a>
+        <a href="../../posts/">Posts</a>
+        <a href="../../pages/">Pages</a>
+        <a href="../../archive/">Arquivo</a>
+      </nav>
+    </header>
+    <main class="site-main">
+      <article class="article-card">
+  <div class="article-head">
+    <p class="meta-line">Post</p>
+    <h1 class="post-title">READ COMMITTED SNAPSHOT ISOLATION – Aprecie com modera&#231;&#227;o</h1>
+    <p class="meta-line">27 Jul 2013 <span class="dot">&middot;</span> Database Administration, Tech, Virtual PASS BR <span class="dot">&middot;</span> isolation level, rcsi, read committed snapshot, read committed snapshot isolation, SQL SERVER, Virtual Pass Br, Virtual Pass PT</p>
+  </div>
+  <div class="article-content">
+    <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-28806596-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+<p style="text-align: justify;"><span style="color: #333333; font-family: Arial; font-size: 10pt;">"Não existe almoço grátis"...
+</span></p>
+<p style="text-align: justify;"><span style="color: #333333; font-family: Arial; font-size: 10pt;">"Muito cuidado com as armadilhas do RCSI"...
+</span></p>
+<p style="text-align: justify;"><span style="color: #333333; font-family: Arial; font-size: 10pt;">O início proposital deste post é para demonstrar alguns dos benefícios e também os pontos de atenção com a possibilidade da alteração do comportamento padrão de uma base de dados no SQL Server, quando se trata de concorrência e isolamento das transações.
+</span></p>
+<p style="text-align: justify;"><span style="color: #333333; font-family: Arial; font-size: 10pt;">Por padrão, o SQL Server tem um comportamento "Pessimista", onde o nível de isolamento padrão é o "Read Committed", o que basicamente faz com que o SQL Server tenha um número maior de locks, reduzindo a concorrência entre as transações.
+</span></p>
+<p style="text-align: justify;"><span style="color: #333333; font-family: Arial; font-size: 10pt;">Clique <a href="http://msdn.microsoft.com/en-us/library/ms189122(v=sql.105).aspx" target="_blank" rel="noopener">aqui</a>, para um overview dos <a href="http://msdn.microsoft.com/en-us/library/ms189122(v=sql.105).aspx" target="_blank" rel="noopener">Níveis de Isolamento no SQL Server.</a>
+</span></p>
+<p style="text-align: justify;"><span style="color: #333333; font-family: Arial; font-size: 10pt;"><span style="text-decoration: underline;"><strong>MUITO BOM,</strong></span>
+</span></p>
+<p style="text-align: justify;"><span style="color: #333333; font-family: Arial; font-size: 10pt;">Resumidamente, o Read Committed Snapshot Isolation (RCSI), trabalha com o versionamento de registros, utilizando-se da tempdb para tal, fazendo com que o comportamento "Pessimista" do nível de isolamento "Read Committed" onde Leitores (Select) bloqueiam Escritores (Insert, Update e Delete), e vice-versa, seja substituído por padrão na base em que foi ativado o RCSI para o comportamento "Otimista", onde Leitores (Select) e Escritores (Insert, Update, Delete) não se bloqueiam.
+</span></p>
+<p style="text-align: justify;"><span style="color: #333333; font-family: Arial; font-size: 10pt;">Quando há concorrência entre um Updates e Selects submetidos a um mesmo registro, é gerado uma versão <em>comitada</em> do registro, que então esta é lida da pela transação que entrou em segundo lugar.
+</span></p>
+<p style="text-align: justify;"><span style="color: #333333; font-family: Arial; font-size: 10pt;">Esta alteração do corportamento Pessimista para Otimista, pela habilitação do RCSI não acaba com bloqueios entre escritores (update x update) e também não evita bloqueios onde há verificação de constraints (foreign Keys, por exemplo).
+</span></p>
+<p style="text-align: justify;"><span style="color: #333333; font-family: Arial; font-size: 10pt;">Quando leva-se em consideração o Read Committed Snapshot Isolation Level apenas até os pontos aqui exibidos, não há mais o que se pensar, pode se ter a falsa ideia de solução para todos os problemas de concorrência e bloqueios e a ideia de ativá-lo imediatamente em todas as bases SQL Server da instância é demasiadamente tentadora.
+</span></p>
+<p style="text-align: justify;"><span style="color: #333333; font-family: Arial; font-size: 10pt;">Para Exemplificar melhor, segue uma citação de quando o problema é solucionado habilitando-se o RCSI.
+</span></p>
+<p style="text-align: justify;"><span style="color: #333333; font-family: Arial; font-size: 10pt; text-decoration: underline;">Cenário:
+</span></p>
+
+<ul style="text-align: justify;">
+ 	<li>
+<div style="text-align: justify;"><span style="color: #333333; font-family: Arial; font-size: 10pt;">Na padaria do Sr. Joaquim, são produzidos 1.000.000 de pães por dia, e o sistema de panificação automaticamente faz um update na tabela de pães produzidos naquele dia. Esporadicamente o Sr. Joaquim gosta de tirar relatórios para saber a quantidade produzida até então, porém, seus relatórios ficam bloqueados por muito tempo, visto que os updates são constantes e demorados.
+</span></div></li>
+</ul>
+<p style="text-align: justify;"><span style="color: #333333; font-family: Arial; font-size: 10pt; text-decoration: underline;">RCSI no caso do Sr. Joaquim
+</span></p>
+
+<ul style="text-align: justify;">
+ 	<li>
+<div style="text-align: justify;"><span style="color: #333333; font-family: Arial; font-size: 10pt;">Neste caso específico, a habilitação do RCSI pode minimizar drasticamente os problemas do Sr. Joaquim com a lentidão de seus relatórios, uma vez que seus "selects" não mais esperarão pelos "updates" automáticos realizados pelo moderno sistema de fabricação de pães.
+</span></div></li>
+ 	<li>
+<div style="text-align: justify;"><span style="color: #333333; font-family: Arial; font-size: 10pt;">Os updates continuam sendo realizados com a mesma frequência, e apenas bloqueando-se entre si quando necessários (lembrando que o RCSI não evita bloqueios entre updates), e quando o Sr. Joaquim submeter um select envolvendo os registros bloqueados, ele receberá o resultados dos últimos comitados e não serão considerados aqueles com transações em aberto.
+</span></div></li>
+</ul>
+<p style="text-align: justify;"><span style="color: #333333; font-family: Arial; font-size: 10pt;"><span style="text-decoration: underline;"><strong>MAS</strong></span>...
+</span></p>
+<p style="text-align: justify;"><span style="color: #333333; font-family: Arial; font-size: 10pt;">Porém, como mencionado no início deste post...
+</span></p>
+<p style="text-align: justify;"><span style="color: #333333; font-family: Arial; font-size: 10pt;">"Não existe almoço grátis"...
+</span></p>
+<p style="text-align: justify;"><span style="color: #333333; font-family: Arial; font-size: 10pt;">"Muito cuidado com as armadilhas do RCSI"...
+</span></p>
+<p style="text-align: justify;"><span style="color: #333333; font-family: Arial; font-size: 10pt;">Adiciono mais uma...
+</span></p>
+<p style="text-align: justify;"><span style="color: #333333; font-family: Arial; font-size: 10pt;">"Coisas estranhas podem acontecer"
+</span></p>
+<p style="text-align: justify;"><span style="color: #333333; font-family: Arial; font-size: 10pt;">Não são raras às vezes em que os bloqueios e espera são benéficos e necessários, para se evitar erros de negócios ou até mesmo inconsistências no valor dos dados de sua base.
+</span></p>
+<p style="text-align: justify;"><span style="color: #333333; font-family: Arial; font-size: 10pt;">O Read Committed Snapshot Isolation, é uma excelente opção, fantástica e que é passível sim, de ser habilitada na maioria das bases de dados da maioria dos ambientes com SQL Server, porém é necessário um levantamento cauteloso dos pontos onde podem incorrer problemas pela habilitação deste "comportamento" de uma base de dados do SQL Server.
+</span></p>
+<p style="text-align: justify;"><span style="color: #333333; font-family: Arial; font-size: 10pt;">Um dos maiores pontos de atenção é que o RCSI é habilitado para a base inteira, fazendo com que o nível de isolamento das transações para esta base, seja por padrão alterado. Para que se tenha níveis de isolamento diferentes, é necessário que estes sejam informados dentro das transações submetidas.
+</span></p>
+<p style="text-align: justify;"><span style="color: #333333; font-family: Arial; font-size: 10pt;">Vale ressaltar que apesar dos cuidados, custos e advertências supracitados, normalmente a relação CUSTO X BENEFÍCIO vale a pena e os problemas em potencial são poucos, em relação aos benefícios com o uso do RCSI.
+</span></p>
+<p style="text-align: justify;"><span style="color: #333333; font-family: Arial; font-size: 10pt;">Para facilitar um pouco o entendimento, segue uma descrição de um caso onde o RCSI pode causar um grande problema.
+</span></p>
+<p style="text-align: justify;"> <span style="color: #333333; font-family: Arial; font-size: 10pt; text-decoration: underline;">Cenário:
+</span></p>
+
+<ul style="text-align: justify;">
+ 	<li>
+<div style="text-align: justify;"><span style="color: #333333; font-family: Arial; font-size: 10pt;">Uma empresa tem um programa conjunto entre as áreas Financeira e RH, de empréstimo de dinheiro da própria empresa a seus empregados, com desconto em folha de pagamento. As regras para que o colaborador possa pegar dinheiro, são bem simplistas e a principal delas, é que o e mesmo esteja empregado.
+</span></div></li>
+</ul>
+<p style="text-align: justify;"><span style="color: #333333; font-family: Arial; font-size: 10pt;"><span style="text-decoration: underline;">O problema</span>:
+</span></p>
+
+<ul style="text-align: justify;">
+ 	<li>
+<div style="text-align: justify;"><span style="color: #333333; font-family: Arial; font-size: 10pt;">João Castro, trabalhou por 10 anos na empresa referida, e um belo dia foi chamado pelo RH que lhe agradeceu pelos serviços e o demitiu. Sabendo João que a empresa tinha o programa de empréstimos e que o Depto Financeiro era logo na sala ao lado, passou diretamente no financeiro e pegou 20 mil reais que foi prontamente liberado. João acabava de ser demitido e receber 20 mil reais em empréstimo, que não pagaria nunca, visto que não teria mais vínculo com a empresa.
+</span></div></li>
+</ul>
+<p style="text-align: justify;"><span style="color: #333333; font-family: Arial; font-size: 10pt; text-decoration: underline;">RCSI neste caso:
+</span></p>
+
+<ul style="text-align: justify;">
+ 	<li>
+<div style="text-align: justify;"><span style="color: #333333; font-family: Arial; font-size: 10pt;">Supondo que existam 2 Tabelas envolvidas no processo:
+</span></div>
+<ul>
+ 	<li>
+<div style="text-align: justify;"><span style="color: #333333; font-family: Arial; font-size: 10pt;">TB_PESSOA
+</span></div></li>
+ 	<li>
+<div style="text-align: justify;"><span style="color: #333333; font-family: Arial; font-size: 10pt;">TB_EMPRESTIMO
+</span></div></li>
+</ul>
+</li>
+ 	<li>
+<div style="text-align: justify;"><span style="color: #333333; font-family: Arial; font-size: 10pt;">O processo de empréstimo verifica se a pessoa está empregada ou não (TB_PESSOA) para liberar o dinheiro (TB_EMPRESTIMO).
+</span></div></li>
+ 	<li>
+<div style="text-align: justify;"><span style="color: #333333; font-family: Arial; font-size: 10pt;">Hipoteticamente falando, João por demitido por alguém do RH que abriu o sistema para atualizar o status para "DEMITIDO", mas antes de executar o <em>commit</em> da transação, resolveu ir tomar um café e a deixou aberta. João foi ao Depto Financeiro, alguém deste departamento abriu uma transação para liberar empréstimo, foi consultar na tabela TB_PESSOA se João estava empregado e recebeu como resultado "EMPREGADO", visto que uma transação de update já estava aberta, porém não havia sido comitada. Quando o alguém do RH voltou, salvou via sistema a demissão de João, alterando seu status para "DEMITIDO", porém o campo SITUACAO_EMPRESTIMO na tabela TB_EMPRESTIMO estava como "LIBERADO".
+</span></div></li>
+</ul>
+<p style="text-align: justify;"><span style="color: #333333; font-family: Arial; font-size: 10pt;">Neste caso específico, o bloqueio deveria acontecer e a transação de liberação do empréstimo obrigatoriamente deveria ser bloqueada pela alteração na tabela que informa se a pessoa está empregada ou não.
+</span></p>
+<p style="text-align: justify;"><span style="color: #333333; font-family: Arial; font-size: 10pt;">Ainda assim, este não seria um empecilho para a habilitação do RCSI na base, visto que é possível forçar com um HINT que a espera aconteça.
+</span></p>
+<p style="text-align: justify;"><span style="color: #333333; font-family: Arial; font-size: 10pt;">Foram criados Scripts para demonstração do caso citado que podem ser baixados – <a href="http://sdrv.ms/18QwfsK" target="_blank" rel="noopener">CLIQUE AQUI</a>.
+</span></p>
+<p style="text-align: justify;"><span style="color: #333333; font-family: Arial; font-size: 10pt;">Ou visualizados no trecho de código abaixo.
+</span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: green;">--CRIAÇÃO DO AMBIENTE PARA OS TESTES</span>
+</span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: green;">--CRIAÇÃO DA BASE</span>
+</span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">USE </span><span style="color: blue;">master</span></span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">GO</span>
+</span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">IF</span> <span style="color: fuchsia;">db_id<span style="color: gray;">(<span style="color: red;">'DEMO_RCSI'<span style="color: gray;">)</span> <span style="color: gray;">IS</span> <span style="color: gray;">NOT</span> <span style="color: gray;">NULL</span></span></span></span></span><span style="font-family: Consolas; font-size: 9pt;">
+<span style="color: blue;">DROP</span> <span style="color: blue;">DATABASE</span> <span style="color: teal;">DEMO_RCSI</span>
+</span><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">GO</span>
+</span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">CREATE</span> <span style="color: blue;">DATABASE</span> <span style="color: teal;">DEMO_RCSI</span>
+</span><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">ON</span> <span style="color: blue;">PRIMARY</span></span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: gray;">(<span style="color: teal;">NAME</span> =</span> <span style="color: red;">'DEMO_RCSI_Data'<span style="color: gray;">,</span><span style="color: blue;">FILENAME</span> <span style="color: gray;">=</span> 'C:TEMPDEMO_RCSI.mdf'<span style="color: gray;">,<span style="color: teal;">SIZE</span> =</span> 128 <span style="color: teal;">MB<span style="color: gray;">)</span> </span></span></span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: fuchsia;">LOG</span> <span style="color: blue;">ON</span> </span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: gray;">(<span style="color: teal;">NAME</span> =</span> <span style="color: red;">'DEMO_RCSI_Log'<span style="color: gray;">,</span> <span style="color: blue;">FILENAME</span> <span style="color: gray;">=</span> 'C:TEMPDEMO_RCSI.ldf'<span style="color: gray;">,<span style="color: teal;">SIZE</span> =</span> 128 <span style="color: teal;">MB<span style="color: gray;">)</span> </span></span></span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">GO</span>
+</span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">USE</span> <span style="color: teal;">DEMO_RCSI</span>
+</span><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">GO</span>
+</span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: green;">--CRIA A TABELA PESSOA</span></span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">IF</span> <span style="color: fuchsia;">object_id<span style="color: gray;">(<span style="color: red;">'TB_PESSOA'<span style="color: gray;">)</span> <span style="color: gray;">IS </span><span style="color: gray;">NOT</span> <span style="color: gray;">NULL</span></span></span></span></span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">DROP</span> <span style="color: blue;">TABLE</span> <span style="color: teal;">TB_PESSOA</span>
+</span><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">GO</span>
+</span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">CREATE</span> <span style="color: blue;">TABLE</span> <span style="color: teal;">TB_PESSOA</span>
+</span><span style="font-family: Consolas; font-size: 9pt;"><span style="color: gray;">(</span>
+</span><span style="font-family: Consolas; font-size: 9pt;"><span style="color: teal;">ID_PESSOA</span> <span style="color: blue;">INT</span> <span style="color: blue;">IDENTITY</span> <span style="color: blue;">CONSTRAINT</span> <span style="color: teal;">PK_TB_PESSOA_ID_PESSOA</span> <span style="color: blue;">PRIMARY</span> <span style="color: blue;">KEY</span> </span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: gray;">,<span style="color: teal;">DATA_CONTRATACAO</span> <span style="color: blue;">DATE</span> <span style="color: blue;">DEFAULT</span> <span style="color: fuchsia;">GETDATE<span style="color: gray;">()</span></span></span></span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"> <span style="color: gray;">,<span style="color: teal;">NOME_PESSOA</span> <span style="color: blue;">VARCHAR<span style="color: gray;">(</span>60<span style="color: gray;">)</span></span></span></span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"> <span style="color: gray;">,<span style="color: teal;">BOL_EMPREGADO</span> <span style="color: blue;">CHAR<span style="color: gray;">(</span>1<span style="color: gray;">)</span> </span></span></span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: gray;">)</span>
+</span><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">GO</span>
+</span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: green;">--CRIA A TABELA EMPRESTIMO</span>
+</span><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">IF</span> <span style="color: fuchsia;">object_id<span style="color: gray;">(<span style="color: red;">'TB_EMPRESTIMO'<span style="color: gray;">)</span> <span style="color: gray;">IS</span> <span style="color: gray;">NOT</span> <span style="color: gray;">NULL</span></span></span></span></span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">DROP</span> <span style="color: blue;">TABLE</span> <span style="color: teal;">TB_EMPRESTIMO</span></span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">GO</span>
+</span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">CREATE</span> <span style="color: blue;">TABLE</span> <span style="color: teal;">TB_EMPRESTIMO</span></span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: gray;">(</span></span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: teal;">ID_EMPRESTIMO</span> <span style="color: blue;">INT</span> <span style="color: blue;">IDENTITY</span> <span style="color: blue;">CONSTRAINT</span> <span style="color: teal;">PK_TB_EMPRESTIMO_ID_EMPRESTIMO</span> <span style="color: blue;">PRIMARY</span> <span style="color: blue;">KEY</span> </span><span style="font-family: Consolas; font-size: 9pt;">
+<span style="color: gray;">,<span style="color: teal;">ID_PESSOA</span> <span style="color: blue;">INT</span> <span style="color: green;">--CONSTRAINT FK_TB_PESSOA_TB_EMPRESTIMO FOREIGN KEY REFERENCES TB_PESSOA (ID_PESSOA) </span></span></span><span style="font-family: Consolas; font-size: 9pt;">
+<span style="color: gray;">,<span style="color: teal;">VALOR_EMPRESTIMO</span> <span style="color: blue;">DECIMAL<span style="color: gray;">(</span>10<span style="color: gray;">,</span>2<span style="color: gray;">)</span></span></span></span><span style="font-family: Consolas; font-size: 9pt;">
+<span style="color: gray;">,<span style="color: teal;">LIBERACAO_EMPRESTIMO</span> <span style="color: blue;">CHAR<span style="color: gray;">(</span>1<span style="color: gray;">)</span></span></span></span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: gray;">)</span>
+</span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: green;">--EXISTE O NÍVEL DE ISOLAMENTO</span></span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: green;">--EXIBE INFORMAÇÃO SOBRE O NIVEL DE ISOLAMENTO ATUAL</span> </span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">SELECT</span>    <span style="color: teal;">NAME</span></span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: gray;">,<span style="color: blue;">CASE</span> <span style="color: teal;">is_read_committed_snapshot_on</span></span></span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;">             <span style="color: blue;">WHEN</span> 1 <span style="color: blue;">THEN</span> <span style="color: red;">'ENABLED'</span> </span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;">             <span style="color: blue;">WHEN</span> 0 <span style="color: blue;">THEN</span> <span style="color: red;">'DISABLED'</span> </span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;">         <span style="color: blue;">END</span>
+<span style="color: blue;">AS</span> <span style="color: red;">'Read_Committed_Snapshot'</span></span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">FROM</span> <span style="color: green;">SYS<span style="color: gray;">.<span style="color: green;">DATABASES</span></span></span></span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"> <span style="color: blue;">WHERE </span><span style="color: teal;">NAME</span> <span style="color: gray;">=</span> <span style="color: red;">'DEMO_RCSI'</span>
+</span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;">
+<span style="color: green;">--CARREGA DADOS NA TABELA PESSOA</span>
+</span><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">INSERT</span> <span style="color: blue;">INTO</span> <span style="color: teal;">TB_PESSOA<span style="color: blue;"> <span style="color: gray;">(<span style="color: teal;">NOME_PESSOA<span style="color: gray;">,</span> BOL_EMPREGADO<span style="color: gray;">)</span></span></span></span></span></span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">VALUES <span style="color: gray;">(<span style="color: red;">'JOAO CASTRO'<span style="color: gray;">,<span style="color: red;">'S'<span style="color: gray;">)</span></span></span></span></span></span></span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;">      <span style="color: gray;">,(<span style="color: red;">'MANOEL MAIA'<span style="color: gray;">,<span style="color: red;">'S'<span style="color: gray;">)</span></span></span></span></span></span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;">      <span style="color: gray;">,(<span style="color: red;">'BENEDITO LIMA'<span style="color: gray;">,<span style="color: red;">'N'<span style="color: gray;">)</span></span></span></span></span></span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;">      <span style="color: gray;">,(<span style="color: red;">'MARIA CASTRO'<span style="color: gray;">,<span style="color: red;">'N'<span style="color: gray;">)</span></span></span></span></span></span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;">      <span style="color: gray;">,(<span style="color: red;">'CLEONTINA OLIVEIRA'<span style="color: gray;">,<span style="color: red;">'S'<span style="color: gray;">)</span></span></span></span></span></span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;">      <span style="color: gray;">,(<span style="color: red;">'CANDIDO DUARTE'<span style="color: gray;">,<span style="color: red;">'S'<span style="color: gray;">)</span>
+</span></span></span></span></span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: green;">--ALTERA O NÍVEL DE ISOLAMENTO PARA RCSI</span>
+</span><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">USE master</span></span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">ALTER</span> <span style="color: blue;">DATABASE</span> <span style="color: teal;">DEMO_RCSI</span> <span style="color: blue;">SET</span> <span style="color: blue;">READ_COMMITTED_SNAPSHOT</span> <span style="color: blue;">ON</span>
+</span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: green;">--EXIBE DADOS DA TABELA PESSOA</span>
+</span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">SELECT</span> <span style="color: gray;">*</span> <span style="color: blue;">FROM</span> <span style="color: teal;">TB_PESSOA</span>
+</span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: green;">--ID_PESSOA    DATA_CONTRATACAO    NOME_PESSOA            BOL_EMPREGADO</span>
+</span><span style="font-family: Consolas; font-size: 9pt;"><span style="color: green;">--1            2013-07-27          JOAO CASTRO            S</span>
+</span><span style="font-family: Consolas; font-size: 9pt;"><span style="color: green;">--2            2013-07-27          MANOEL MAIA            S</span>
+</span><span style="font-family: Consolas; font-size: 9pt;"><span style="color: green;">--3            2013-07-27          BENEDITO LIMA          N</span>
+</span><span style="font-family: Consolas; font-size: 9pt;"><span style="color: green;">--4            2013-07-27          MARIA CASTRO           N</span>
+</span><span style="font-family: Consolas; font-size: 9pt;"><span style="color: green;">--5            2013-07-27          CLEONTINA OLIVEIRA     S</span>
+</span><span style="font-family: Consolas; font-size: 9pt;"><span style="color: green;">--6            2013-07-27          CANDIDO DUARTE         S</span>
+</span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: green;">--ALTERA NÍVEL DE ISOLAMENTO</span>
+</span><span style="font-family: Consolas; font-size: 9pt;"><span style="color: green;">--ALTER DATABASE DEMO_RCSI SET READ_COMMITTED_SNAPSHOT ON</span>
+</span><span style="font-family: Consolas; font-size: 9pt;"><span style="color: green;">--ALTER DATABASE DEMO_RCSI SET READ_COMMITTED_SNAPSHOT OFF</span>
+</span><span style="font-family: Consolas; font-size: 9pt;">
+<span style="color: green;">/*------------------------------------------------------------------------------*/
+</span></span><span style="color: green; font-family: Consolas; font-size: 9pt;">TRANSAÇÃO T1
+</span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: green;">--TRANSAÇÃO DE DEMISSÃO (T1)</span>
+</span><span style="font-family: Consolas; font-size: 9pt;"><span style="color: green;">--EXIBE INFORMAÇÃO SOBRE O NIVEL DE ISOLAMENTO ATUAL</span>
+</span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">SELECT</span>    <span style="color: teal;">NAME</span> </span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: gray;">,<span style="color: blue;">CASE</span> <span style="color: teal;">is_read_committed_snapshot_on</span>
+</span></span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;">      <span style="color: blue;">WHEN</span> 1 <span style="color: blue;">THEN</span> <span style="color: red;">'ENABLED'</span>
+</span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;">      <span style="color: blue;">WHEN</span> 0 <span style="color: blue;">THEN</span> <span style="color: red;">'DISABLED'</span>
+</span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">END</span> <span style="color: blue;">AS</span> <span style="color: red;">'Read_Committed_Snapshot'</span></span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">FROM</span>
+<span style="color: green;">SYS<span style="color: gray;">.<span style="color: green;">DATABASES</span>
+</span></span></span><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">WHERE</span> <span style="color: teal;">NAME</span> <span style="color: gray;">=</span> <span style="color: red;">'DEMO_RCSI'</span>
+</span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: green;">-- PARA ALTERAR PARA O RCSI</span>
+</span><span style="font-family: Consolas; font-size: 9pt;"><span style="color: green;">--USE MASTER</span>
+</span><span style="font-family: Consolas; font-size: 9pt;"><span style="color: green;">--ALTER DATABASE DEMO_RCSI SET READ_COMMITTED_SNAPSHOT ON WITH ROLLBACK IMMEDIATE</span>
+</span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: green;">--INICIO DA TRANSAÇÃO DE UPDATE</span>
+</span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">BEGIN</span> <span style="color: blue;">TRAN</span> <span style="color: teal;">T1</span>
+</span><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">SELECT</span> <span style="color: gray;">*</span></span><span style="font-family: Consolas; font-size: 9pt;"> <span style="color: blue;">FROM</span> <span style="color: teal;">TB_PESSOA</span>
+</span><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">WHERE</span> <span style="color: teal;">NOME_PESSOA</span> <span style="color: gray;">=</span> <span style="color: red;">'JOAO CASTRO'</span>
+</span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">USE</span> <span style="color: teal;">DEMO_RCSI</span>
+</span><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">GO</span>
+</span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: fuchsia;">UPDATE</span> <span style="color: teal;">P</span>
+</span><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">SET</span> <span style="color: teal;">P<span style="color: gray;">.<span style="color: teal;">BOL_EMPREGADO</span> =</span> <span style="color: red;">'N'</span>
+</span></span><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">FROM</span> <span style="color: teal;">TB_PESSOA</span> <span style="color: teal;">P</span>
+</span><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">WHERE</span> <span style="color: teal;">NOME_PESSOA</span> <span style="color: gray;">=</span> <span style="color: red;">'JOAO CASTRO'</span>
+</span><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">GO</span>
+</span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">SELECT </span><span style="color: gray;">*</span></span><span style="font-family: Consolas; font-size: 9pt;"> <span style="color: blue;">FROM</span> <span style="color: teal;">TB_PESSOA</span>
+</span><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">WHERE</span> <span style="color: teal;">NOME_PESSOA</span> <span style="color: gray;">=</span> <span style="color: red;">'JOAO CASTRO'</span>
+</span><span style="font-family: Consolas; font-size: 9pt;">
+<span style="color: green;">--ROLLBACK TRAN T1</span>
+</span><span style="font-family: Consolas; font-size: 9pt;"><span style="color: green;">--COMMIT TRAN T1
+</span></span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: green;">--ABRA A SEGUNDA TRANSAÇÃO EM UMA NOVA JANELA (NEW QUERY)E FAÇA A OPERAÇÃO DE EMPRESTIMO (T2)</span>
+</span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: green;">/*------------------------------------------------------------------------------*/</span>
+</span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;">
+<span style="color: green;">TRANSAÇÃO T2
+</span></span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: green;">--TRANSAÇÃO DE EMPRÉSTIMO (T2)</span>
+</span><span style="font-family: Consolas; font-size: 9pt;"><span style="color: green;">---- GARANTIR QUE ESTEJA COM RCSI HABILITADO</span>
+</span><span style="font-family: Consolas; font-size: 9pt;"><span style="color: green;">--USE MASTER</span>
+</span><span style="font-family: Consolas; font-size: 9pt;"><span style="color: green;">--ALTER DATABASE DEMO_RCSI SET READ_COMMITTED_SNAPSHOT ON WITH ROLLBACK IMMEDIATE</span>
+</span><span style="font-family: Consolas; font-size: 9pt;"><span style="color: green;">--GO</span>
+</span><span style="font-family: Consolas; font-size: 9pt;"><span style="color: green;">------------------------------------------------------------------------------------------</span>
+</span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: green;">--INICIO DA TRANSAÇÃO DE UPDATE</span>
+</span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">BEGIN</span> <span style="color: blue;">TRAN</span> <span style="color: teal;">T2</span>
+</span><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">USE</span> <span style="color: teal;">DEMO_RCSI</span>
+</span><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">GO</span>
+</span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">INSERT</span> <span style="color: blue;">INTO</span> <span style="color: teal;">TB_EMPRESTIMO</span>
+</span><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">SELECT</span> <span style="color: teal;">ID_PESSOA<span style="color: gray;">,</span> <span style="color: red;">'20000'<span style="color: gray;">,<span style="color: red;">'S'</span>
+</span></span></span></span><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">FROM</span> <span style="color: teal;">TB_PESSOA</span> <span style="color: teal;">P</span>
+</span><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">WHERE</span> <span style="color: teal;">NOME_PESSOA</span> <span style="color: gray;">=</span> <span style="color: red;">'JOAO CASTRO'</span>
+</span><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">COMMIT</span> <span style="color: blue;">TRAN</span> <span style="color: teal;">T2</span>
+</span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: green;">------------------------------------------------------------------------------------------</span>
+</span><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">SELECT</span> <span style="color: gray;">*</span> <span style="color: blue;">FROM</span> <span style="color: teal;">TB_EMPRESTIMO</span>
+</span><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">SELECT</span> <span style="color: gray;">*</span> <span style="color: blue;">FROM</span> <span style="color: teal;">TB_PESSOA</span>
+</span><span style="font-family: Consolas; font-size: 9pt;"><span style="color: green;">------------------------------------------------------------------------------------------</span>
+</span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: green;">--VEJA O RESULTADO ANTES DO COMMIT DA T1 (TRANSAÇÃO DE DEMISSÃO)</span>
+</span><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">SELECT</span> <span style="color: teal;">P<span style="color: gray;">.<span style="color: teal;">ID_PESSOA<span style="color: gray;">,</span> P<span style="color: gray;">.<span style="color: teal;">NOME_PESSOA<span style="color: gray;">,</span> E<span style="color: gray;">.<span style="color: teal;">VALOR_EMPRESTIMO<span style="color: gray;">,</span> P<span style="color: gray;">.<span style="color: teal;">BOL_EMPREGADO<span style="color: gray;">,</span> E<span style="color: gray;">.<span style="color: teal;">LIBERACAO_EMPRESTIMO</span>
+</span></span></span></span></span></span></span></span></span></span></span><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">FROM</span> <span style="color: teal;">TB_EMPRESTIMO </span><span style="color: teal;">E</span>
+</span><span style="font-family: Consolas; font-size: 9pt;"><span style="color: gray;">JOIN</span> <span style="color: teal;">TB_PESSOA</span> <span style="color: teal;">P</span>
+</span><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">ON</span> <span style="color: teal;">E<span style="color: gray;">.<span style="color: teal;">ID_PESSOA</span> =</span> P<span style="color: gray;">.<span style="color: teal;">ID_PESSOA</span> </span></span></span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><a href="../../assets/uploads/2013/07/resultado_rcsi_x4.jpg"><img class=" wp-image-754 alignleft" src="../../assets/uploads/2013/07/resultado_rcsi_x4.jpg" alt="resultado_RCSI_X" width="588" height="40" /></a></span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: green;">------------------------------------------------------------------------------------------</span>
+</span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: green;">--EXECUTE O COMMIT DA TRANSAÇÃO T1 E RODE NOVAMENTE O RESULTADO. OBSERVER QUE HÁ ERRO DE NEGÓCIO</span>
+</span><span style="font-family: Consolas; font-size: 9pt;"><span style="color: green;">--POIS FOI LIBERADO EMPRÉSTIMOI PARA UMA PESSOA QUE NÃO ESTÁ EMPREGADA.</span>
+</span></p>
+<p style="text-align: justify;"><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">SELECT</span> <span style="color: teal;">P<span style="color: gray;">.<span style="color: teal;">ID_PESSOA<span style="color: gray;">,</span> P<span style="color: gray;">.<span style="color: teal;">NOME_PESSOA<span style="color: gray;">,</span> E<span style="color: gray;">.<span style="color: teal;">VALOR_EMPRESTIMO<span style="color: gray;">,</span> P<span style="color: gray;">.<span style="color: teal;">BOL_EMPREGADO<span style="color: gray;">,</span> E<span style="color: gray;">.<span style="color: teal;">LIBERACAO_EMPRESTIMO</span>
+</span></span></span></span></span></span></span></span></span></span></span><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">FROM</span> <span style="color: teal;">TB_EMPRESTIMO</span> <span style="color: teal;">E</span>
+</span><span style="font-family: Consolas; font-size: 9pt;"><span style="color: gray;">JOIN</span> <span style="color: teal;">TB_PESSOA</span> <span style="color: teal;">P</span>
+</span><span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">ON</span> <span style="color: teal;">E<span style="color: gray;">.<span style="color: teal;">ID_PESSOA</span> =</span> P<span style="color: gray;">.<span style="color: teal;">ID_PESSOA</span>
+</span></span></span></p>
+<p style="text-align: justify;"><a href="../../assets/uploads/2013/07/resultado_rcsi13.jpg"><img class="alignleft wp-image-756" src="../../assets/uploads/2013/07/resultado_rcsi13.jpg" alt="resultado_RCSI" width="587" height="32" /></a></p>
+<p style="text-align: justify;"><span style="color: green; font-family: Consolas; font-size: 9pt;">/*------------------------------------------------------------------------------*/
+</span></p>
+<p style="text-align: justify;"><span style="color: #333333; font-family: Arial; font-size: 10pt; text-decoration: underline;"><strong>RESUMINDO</strong></span>:</p>
+<p style="text-align: justify;"><span style="color: #333333; font-family: Arial; font-size: 10pt; text-decoration: underline;">Prós do Read Committed Snapshot Isolation</span>:</p>
+
+<ul style="text-align: justify;">
+ 	<li>Reduz consideravelmente problemas provenientes de bloqueios.</li>
+ 	<li>Habilitação fácil e rápida.</li>
+</ul>
+<p style="text-align: justify;"><span style="color: #333333; font-family: Arial; font-size: 10pt; text-decoration: underline;">Contras do Read Committed Snapshot Isolation</span>:</p>
+
+<ul style="text-align: justify;">
+ 	<li>Não é útil em bloqueios entre transações de update.</li>
+ 	<li>Bloqueios com verificação de constraints também não são beneficiados.</li>
+ 	<li>Pode resultar com algum erro negocial não esperado, caso não seja bem mapeado.</li>
+</ul>
+<p style="text-align: justify;"><span style="color: #333333; font-family: Arial; font-size: 10pt; text-decoration: underline;">Conclusão</span>:</p>
+<p style="text-align: justify;">O RCSI é passível de utilização em qualquer ambiente, desde que os "porens " sejam bem mapeados e os erros provenientes sejam mitigados, com o uso de HINTS ( Ex: (<span style="font-family: Consolas; font-size: 9pt;"><span style="color: blue;">SELECT</span> <span style="color: gray;">*</span> <span style="color: blue;">FROM</span> <span style="color: teal;">TABELA</span> <span style="color: blue;">WITH <span style="color: gray;">(<span style="color: blue;">READCOMMITTED<span style="color: gray;">)</span></span></span></span></span>), Alterando o nível de isolamento nas transações que necessitam que os bloqueios aconteçam entre outros meios que podem ser utilizados.</p>
+<p style="text-align: justify;">READ COMMITTED SNAPSHOT ISOLATION - APRECIE COM MODERAÇÃO<span style="color: gray; font-family: Consolas; font-size: 9pt;">
+</span></p>
+<p style="text-align: justify;"><span style="color: #333333; font-family: Arial; font-size: 10pt;">Referências
+</span></p>
+
+<ul style="text-align: justify; margin-left: 54pt;">
+ 	<li>
+<div style="text-align: justify;"><a href="http://msdn.microsoft.com/pt-br/library/ms173763.aspx"><span style="font-family: Arial; font-size: 10pt;">http://msdn.microsoft.com/pt-br/library/ms173763.aspx</span></a><span style="color: #333333; font-family: Arial; font-size: 10pt;">
+</span></div></li>
+ 	<li>
+<div style="text-align: justify;"><a href="http://msdn.microsoft.com/en-us/library/tcbchxcb(v=VS.80).aspx"><span style="font-family: Arial; font-size: 10pt;">http://msdn.microsoft.com/en-us/library/tcbchxcb(v=VS.80).aspx</span></a><span style="color: #333333; font-family: Arial; font-size: 10pt;">
+</span></div>
+<p style="text-align: justify;"></p>
+</li>
+</ul>
+<p style="text-align: justify;"><span style="color: #333333; font-family: Arial; font-size: 10pt;">Grande abraço,
+</span></p>
+<p style="text-align: justify;"><span style="color: #333333; font-family: Arial; font-size: 10pt;">Edvaldo Castro
+</span></p>
+<p style="text-align: justify;"><span style="color: #333333; font-family: Arial; font-size: 10pt;">MCITP | MCTS | MCT | MTA | MTAC | CCSQLA | TOEIC
+</span></p>
+  </div>
+  <div class="article-footer">
+    <div class="pill-row"><span class="pill">Database Administration</span><span class="pill">Tech</span><span class="pill">Virtual PASS BR</span></div>
+    <div class="pill-row"><span class="pill">isolation level</span><span class="pill">rcsi</span><span class="pill">read committed snapshot</span><span class="pill">read committed snapshot isolation</span><span class="pill">SQL SERVER</span><span class="pill">Virtual Pass Br</span><span class="pill">Virtual Pass PT</span></div>
+    <div class="post-nav">
+      <div><a href="../sql-saturday-253-brasilia-df/">Newer: SQL Saturday 253 - Bras&#237;lia-DF</a></div>
+      <div><a href="../sql_2014/">Older: SQL Server&#174; 2014 CTP1 Product Guide</a></div>
+    </div>
+  </div>
+</article>
+    </main>
+    <footer class="site-footer">
+      <p>Conteudo preservado a partir do export WordPress do blog de Edvaldo Castro.</p>
+      <p>Este site foi gerado como um arquivo estatico para consulta publica.</p>
+    </footer>
+  </div>
+</body>
+</html>

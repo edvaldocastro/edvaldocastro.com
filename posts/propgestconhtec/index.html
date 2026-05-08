@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="(function(i,s,o,g,r,a,m){i[&#39;GoogleAnalyticsObject&#39;]=r;i[r]=i[r]||function(){ (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o), m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.in..." />
+  <title>A import&#226;ncia do passado t&#233;cnico na vida de um gestor...</title>
+  <link rel="stylesheet" href="../../styles.css" />
+</head>
+<body class="single-post">
+  <div class="page-shell">
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark">EC</span>
+        <span class="brand-copy">
+          <strong>Edvaldo Castro</strong>
+          <small>Arquivo estatico do antigo WordPress</small>
+        </span>
+      </a>
+      <nav class="site-nav">
+        <a href="../../">Home</a>
+        <a href="../../posts/">Posts</a>
+        <a href="../../pages/">Pages</a>
+        <a href="../../archive/">Arquivo</a>
+      </nav>
+    </header>
+    <main class="site-main">
+      <article class="article-card">
+  <div class="article-head">
+    <p class="meta-line">Post</p>
+    <h1 class="post-title">A import&#226;ncia do passado t&#233;cnico na vida de um gestor...</h1>
+    <p class="meta-line">23 Jul 2014 <span class="dot">&middot;</span> Carreira, Virtual PASS BR <span class="dot">&middot;</span> Backup, banco de dados, Carreira, Pol&#237;tica de Backup, SQL SERVER, virtual pass, Virtual Pass Br, VirtualPassPT</p>
+  </div>
+  <div class="article-content">
+    <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-28806596-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+<p style="text-align:justify;">Antes de qualquer palavra escrita a respeito do assunto relacionado ao título deste post, quero ressaltar que esta é apenas a minha visão e não representa nenhum caso ou cenário específico que eu por ventura já tenha visto e/ou vivenciado.</p>
+<p style="text-align:justify;">Há algum tempo já se fala muito em globalização, informação, a velocidade desta mesma informação e a importância dos dados para as organizações. Existem, diversos outros fatores e problemas que podem ser facilmente associados ao contexto do conteúdo deste post, mas aqui será abordado principalmente o que é relacionado a Banco de dados, armazenamento e segurança de dados sensíveis e importantes para a sobrevivência do negócio.</p>
+<p style="text-align:justify;"><strong>Segurança</strong></p>
+<p style="text-align:justify;">É difícil enumerar em ordem de prioridade quais são os serviços e consequentemente os dados e informações mais críticas ou sensíveis, temos diversos exemplos que batem de frente em questões de complexidade, criticidade e todos tem suas perdas de alguma forma, que os tornam altamente críticos: Sistemas de saúde, Sistemas Financeiros, Sistemas de segurança nacional e etc.</p>
+<p style="text-align:justify;">Naturalmente existe uma hierarquia dos profissionais e organograma dos profissionais que lidam com estes serviços, passando pro presidentes, diretores, superintendentes e chegando ao técnico que efetivamente conhece (ou não) as normas e práticas de segurança, para assegurar-se de que somente pessoas autorizadas e designadas pelos responsáveis ou proprietários dos dados tenham acesso à manipulação destes dados críticos (ou não).</p>
+<p style="text-align:justify;">Tecnicamente falando existem diversas formas de se proteger o acesso aos dados, seja através do SGBD (Sistema Gerenciador de Banco de Dados), por meio de Firewalls, pelas próprias aplicações ou outras formas. Algumas mais simples e menos eficientes, outras mais complexas e mais eficientes, mas há sempre um meio de se proteger o negócio contra acessos indevidos e não autorizados, como também há sempre um meio para se quebrar esta proteção.</p>
+<p style="text-align:justify;">Uma forma de utilizar-se bem dos recursos disponíveis, é configurando-os de forma que os acessos sejam os mais restritivos possíveis e somente tenha este acesso, quem realmente o necessitar e estiver em conformidade normas da instituição</p>
+<p style="text-align:justify;"><strong>Armazenamento</strong></p>
+<p style="text-align:justify;">Não menos importante do que a segurança, o armazenamento dos dados é outro ponto extremamente crítico quando trata-se de sistemas e dados igualmente críticos. Existem profissionais que lidam especificamente com armazenamento, seja ele em discos, fitas e o que é muito comum atualmente armazenamento na nuvem. Descendo um pouco mais no nível de complexidade, desde os primórdios já haviam sistemas para redundância e proteção contra falhas nestes mesmos sistemas de armazenamento, um exemplo é o <a href="http://pt.wikipedia.org/wiki/RAID" target="_blank">RAID</a> que em seus diversos níveis, provê performance e proteção para sistemas discos.</p>
+<p style="text-align:justify;">É necessário pensar sempre que o pior pode acontecer: O pior incidente, a pior falha, a pior catástrofe; e tentar estar o mais precavido possível para passar por estas situações como estas e ainda ter seu negócio (leia-se: seus dados) intactos após o ocorrido. Um bom exemplo, é o que aconteceu em <a href="http://pt.wikipedia.org/wiki/Ataques_de_11_de_setembro_de_2001" target="_blank">11 de setembro de 2001</a> com as torres gêmeas do World Trade Center, nem o mais pessimista e precavido dos profissionais que cuida do armazenamento dos dados, imaginaria que algo como a queda de ambas as torres pudesse acontecer. Aconteceu, e a empresa que tinha seus dados duplicados, "backapeados" ou replicados para a outra torre, podem ter simplesmente desaparecido do Mapa.</p>
+<p style="text-align:justify;"><strong>Backup / Restore</strong></p>
+<p style="text-align:justify;">Um dos assuntos que mais gosto quando trata-se de "Administração de banco de dados", pois INFELIZMENTE é sub-julgado e não recebe a devida importância, é o backup.</p>
+<p style="text-align:justify;">Para o backup, vale o famoso ditado:</p>
+
+<blockquote>"Quem tem dois, tem um. Quem tem um, não tem nenhum"</blockquote>
+<p style="text-align:justify;">Uma situação recorrente em muitos ambientes que já presenciei (mais uma vez, não refiro-me a nenhum em especifico), é a existência de backups, no mesmo local de armazenamento dos dados "quentes". Exemplificando, se você tem seus arquivos de dados, do SQL Server em uma LUN, disco ou Array, e armazena seus backups no mesmo local - <span style="color:#ff0000;"><strong>VOCÊ NÃO TEM BACKUP!!!</strong></span></p>
+<p style="text-align:justify;">O entendimento literal de Backup é "Cópia de Segurança", se a sua cópia de segurança não está segura, logo você não tem esta cópia de segurança.</p>
+<p style="text-align:justify;">Cabe aqui até mesmo uma sugestão de um artigo muito bom, escrito por Fabrício Lima: "<a href="http://fabriciolima.net/blog/2014/06/16/cliente-diz-tenho-backups-e-meu-banco-esta-seguro-sera/" target="_blank">Cliente diz: “Tenho Backups e meu banco está seguro”. Será???</a>"</p>
+<p style="text-align:justify;">Existem diversos outros aspectos que podem ser levantados e observados, mas acredito que os supracitados já passam uma noção de quão crítica é esta situação.</p>
+<p style="text-align:justify;"><strong>Proprietários, gerentes e conhecimento técnico</strong></p>
+<p style="text-align:justify;">A ligação do que foi exposto até aqui, com os profissionais de nível gerencial, ou até mesmo os proprietários da informação, é que estes podem ter a falsa impressão de que estão seguros, respaldados e que seu negócios está 100% protegido contra falhas e resistente a incidentes.</p>
+<p style="text-align:justify;">Existe hoje no mercado uma grande demanda por profissionais de TI em geral, o que acaba fazendo com que a qualidade e o conhecimento técnico nem sempre seja o primeiro quesito na lista de prioridades na hora da contratação. Alguns destes profissionais contratados, por sua vez deixam de realizar atividades essenciais à sobrevivência do negócio nos casos descritos e em outros, e na maioria das vezes, até mesmo sem saber que assim o fizeram, colocam em risco a continuidade do negócio, seja em forma de segurança, armazenamento ou ausência de backup, dentre outros.</p>
+<p style="text-align:justify;">Na área de TI, um outro grande fator, é a necessidade de estudo, atualização e dedicação, que certamente demanda mais esforço do que em várias outras áreas profissionais. Na maioria das vezes, não é suficiente estar em seu ambiente de trabalho durante o horário de expediente e esquecer-se de sua profissão após o fim do expediente; é preciso dedicar-se e estudar um pouco além, para estar seguro e deixar tudo conforme os gerentes e proprietários imaginam que as coisas estão.</p>
+<p style="text-align:justify;"><strong>Conclusão</strong></p>
+<p style="text-align:justify;">Existem etapas na vida profissional que se completam naturalmente enquanto o profissional de TI está trilhando o caminho para se chegar em níveis hierárquicos mais altos. Geralmente os gerentes, e líderes que tiveram uma sólida carreira, e foram excelentes profissionais enquanto técnicos, conseguem se resguardar dos problemas aqui mencionados, pois caso vejam algo que não atende aos requisitos, saberão identificar e cobrar dos responsáveis técnicos pela atividade.</p>
+<p style="text-align:justify;">Isto não quer dizer que os demais, não sejam bons gerentes ou líderes, mas acredito que fique um pouco mais difícil de identificar possíveis lacunas e falhas em processos e implementações relacionadas aos itens mencionados.</p>
+<p style="text-align:justify;">Acredito que o conhecimento técnico deva ser algo que esteja fluente e abundante nos profissionais de nível técnico, que executam atividades técnicas, mas que também deva ser algo não muito distante dos gestores, gerentes e pessoas que gerenciam estes profissionais com perfis e atividades puramente técnicas.</p>
+<p style="text-align:justify;">Mais uma vez, quero ressaltar, que este é apenas meu ponto de vista, e que o que foi exposto não faz referência a nenhum caso ou ambiente específico.</p>
+<p style="text-align:justify;">Abraços,</p>
+<p style="text-align:justify;">Edvaldo Castro</p>
+  </div>
+  <div class="article-footer">
+    <div class="pill-row"><span class="pill">Carreira</span><span class="pill">Virtual PASS BR</span></div>
+    <div class="pill-row"><span class="pill">Backup</span><span class="pill">banco de dados</span><span class="pill">Carreira</span><span class="pill">Pol&#237;tica de Backup</span><span class="pill">SQL SERVER</span><span class="pill">virtual pass</span><span class="pill">Virtual Pass Br</span><span class="pill">VirtualPassPT</span></div>
+    <div class="post-nav">
+      <div><a href="../sql-sat325/">Newer: SQL Saturday 325 - S&#227;o Paulo - Palestras Aprovadas o/</a></div>
+      <div><a href="../convitenimbus/">Older: Convite SrNimbus - Vem coisa boa por a&#237;...</a></div>
+    </div>
+  </div>
+</article>
+    </main>
+    <footer class="site-footer">
+      <p>Conteudo preservado a partir do export WordPress do blog de Edvaldo Castro.</p>
+      <p>Este site foi gerado como um arquivo estatico para consulta publica.</p>
+    </footer>
+  </div>
+</body>
+</html>

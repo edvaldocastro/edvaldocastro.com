@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="SQL Server has encountered the following error: The wrong diskette is in the drive. Insert (Volume Serial Number: ) into drive. (Exception from HRESULT: 0X80070022). O ambiente Sistema Operacional : Windows Server 2008 R..." />
+  <title>[Troubleshooting] The wrong diskette is in the drive. Insert (Volume Serial Number: ) into drive.</title>
+  <link rel="stylesheet" href="../../styles.css" />
+</head>
+<body class="single-post">
+  <div class="page-shell">
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark">EC</span>
+        <span class="brand-copy">
+          <strong>Edvaldo Castro</strong>
+          <small>Arquivo estatico do antigo WordPress</small>
+        </span>
+      </a>
+      <nav class="site-nav">
+        <a href="../../">Home</a>
+        <a href="../../posts/">Posts</a>
+        <a href="../../pages/">Pages</a>
+        <a href="../../archive/">Arquivo</a>
+      </nav>
+    </header>
+    <main class="site-main">
+      <article class="article-card">
+  <div class="article-head">
+    <p class="meta-line">Post</p>
+    <h1 class="post-title">[Troubleshooting] The wrong diskette is in the drive. Insert (Volume Serial Number: ) into drive.</h1>
+    <p class="meta-line">16 Sep 2015 <span class="dot">&middot;</span> Database Administration, HADR, Tech, Virtual PASS BR <span class="dot">&middot;</span> Backup, CLUSTER, diskpart, erro, MTAC, SQL SERVER, sqlserver, Virtual Pass Br, Virtual Pass PT, VirtualPassPT</p>
+  </div>
+  <div class="article-content">
+    <img class="aligncenter size-full wp-image-1703" src="../../assets/uploads/2015/09/7.png" alt="7" width="612" height="157" />
+SQL Server has encountered the following error:
+The wrong diskette is in the drive. Insert (Volume Serial Number: ) into drive. (Exception from HRESULT: 0X80070022).
+<h2>O ambiente</h2>
+<u>Sistema Operacional</u>: Windows Server 2008 R2 Datacenter - Service Pack 1
+<u>SGBD</u>: SQL Server 2008 R2 Service Enterprise Edition - Service Pack 3
+<u>Feature</u>: Windows Server Failover Clustering
+<u>Nodes</u>: 3
+<u>Roles (Cluster Groups, Instâncias SQL Server)</u>: 8
+<h2>A demanda</h2>
+Originalmente este era um Cluster Windows Server 2008 R2 <em><del datetime="2015-09-15T20:20:03+00:00">hosteando</del></em> SQL Server 2008 R2 com 4 nós físicos e com <em>Disk Witness.</em> Um dos servidores físicos teve problema e precisou passar por um <em>evict</em> do cluster para refazimento do sistema operacional, ficando algumas semanas fora do conjunto de servidores que compunham este cluster.
+Após a ação mencionada, o servidor estava então pronto para retomar sua função de Nó do cluster supracitado.
+A demanda seria simplesmente executar um "Add node" no cluster a nível de Windows Cluster e em seguida executar o SETUP.EXE do SQL Server, com a opção "Add Node" para que este servidor pudesse ser uma opção em casos de falha e também agir como nó primário para algumas das instâncias deste cluster.
+<h2>O erro</h2>
+Em outras duas ocasiões, já havia-se tentado executar as demandas descritas acima, porém sem sucesso, tento sempre como retorno o referido erro, conforme imagem abaixo.
+<img class="aligncenter size-full wp-image-1703" src="../../assets/uploads/2015/09/7.png" alt="7" width="612" height="157" />
+
+Foram executadas diversas tentativas de buscas na internet acerca deste erro, porém nada muito fidedigno era encontrado, uma vez que não parece ser um erro muito comumente visto.
+<h2>Troubleshooting</h2>
+Um ponto de falha que tivemos, foi o de não ter feito a validação do cluster para tentar deixar mais claro o que poderia estar acontecendo, e principalmente onde estaria acontecendo.
+Realizamos então a validação do cluster, através da opção "Validate Cluster" (Botão direito sobre o nome do cluster).
+Uma parte do resultado (exibida na mensagem abaixo, mostrava haver um erro diretamente ligado aos <em>Cluster Volumes</em>.
+<img class="aligncenter size-full wp-image-1708" src="../../assets/uploads/2015/09/imagem1.png" alt="imagem1" width="858" height="376" />
+
+Clicando em um dos links do relatório, chegamos até a mensagem inicialmente informada, porém com um nível de detalhe maior, informando desta vez, o local exato (disco) onde o problema estava ocorrendo.
+<img class="aligncenter size-full wp-image-1710" src="../../assets/uploads/2015/09/imagem3.png" alt="imagem3" width="674" height="571" />
+
+Também exibido ao tentar listar os volumes do cluster
+<img class="aligncenter size-full wp-image-1711" src="../../assets/uploads/2015/09/imagem2.png" alt="imagem2" width="1021" height="223" />
+
+Mesmo no cluster management, não conseguíamos listar as propriedades do disco, tendo como resposta a mensagem de erro: ", conforme imagem abaixo.
+<a href="../../assets/uploads/2015/09/4.png"><img class="aligncenter size-full wp-image-1714" src="../../assets/uploads/2015/09/4.png" alt="4" width="1095" height="634" /></a>
+
+Fomos ao <em>Disk Management</em> onde nota-se que a única diferença entre o disco em questão e os demais discos, é que este está com a partição com <em>status</em> de "<em>active</em>". Neste ponto, já tínhamos uma pista sobre onde poderia estar o problema e o que poderia ser feito para solucioná-lo.
+Como trata-se de um ambiente crítico e não tínhamos previsto nenhuma indisponibilidade, foi aberto um chamado junto à Microsoft para tratativa do problema e maior segurança, de que a alteração do status da partição deste disco, não causaria nenhuma indisponibilidade ou perda de dados.
+<a href="../../assets/uploads/2015/09/imagem6.png"><img class="aligncenter size-full wp-image-1715" src="../../assets/uploads/2015/09/imagem6.png" alt="imagem6" width="1364" height="767" /></a>
+
+Um ponto importante aqui, é que durante o atendimento mencionamos que não encontramos muito sobre o referido erro, e fomos informados que não existe um kb ofical e público da microsoft a respeito deste problema (este também é o motivo da escassez de referências neste post).
+<h2>A solução</h2>
+Conforme orientados pelo suporte da Microsoft, realizados as atividades necessárias para retirar o status de "<em>active</em>" da partição do disco, e executamos novamente a validação do cluster, que não apresentou mais o erro.
+Um breve resumo dos comandos executados no CMD para alteração deste status.
+OBS.: Não tivemos indisponibilidade nem perda de dados em nosso ambiente. Porém vale lembrar:
+<blockquote><strong>FAÇA ISSO POR SUA CONTA E RISCO...</strong></blockquote>
+<strong>Iniciar &gt; Executar &gt; CMD
+C:Diskpart
+DISKPART&gt; list disk
+DISKPART&gt; select disk x
+DISKPART&gt; list partition
+DISKPART&gt; select partition x
+DISKPART&gt; inactive
+DISKPART&gt; rescan</strong>
+
+Após a execução dos comandos acima, o erro foi sanado e o problema foi enfim resolvido, tendo sido instaladas todas as instâncias com sucesso.
+<a href="../../assets/uploads/2015/09/8.png"><img class="aligncenter size-full wp-image-1716" src="../../assets/uploads/2015/09/8.png" alt="8" width="817" height="612" /></a>
+<h2>Conclusão</h2>
+Uma lição aprendida com este problema foi que é sempre muito importante fazer todas as validações possível, analisar logs e todos os recursos disponíveis durante o troubleshooting em caso de problema.
+No caso específico de problemas relacionados ao Windows Server Failover Cluster, vale sempre a pena em primeiro momento, executar e verificar minunciosamente o relatório gerado pela validação do cluster.
+
+Até a próxima...
+
+Se gostou, deixe um like aí embaixo... =)
+
+Abraços,
+
+Edvaldo Castro
+../../
+http://facebook.com/edvaldocastro
+  </div>
+  <div class="article-footer">
+    <div class="pill-row"><span class="pill">Database Administration</span><span class="pill">HADR</span><span class="pill">Tech</span><span class="pill">Virtual PASS BR</span></div>
+    <div class="pill-row"><span class="pill">Backup</span><span class="pill">CLUSTER</span><span class="pill">diskpart</span><span class="pill">erro</span><span class="pill">MTAC</span><span class="pill">SQL SERVER</span><span class="pill">sqlserver</span><span class="pill">Virtual Pass Br</span><span class="pill">Virtual Pass PT</span><span class="pill">VirtualPassPT</span></div>
+    <div class="post-nav">
+      <div><a href="../benchmarking-teste-do-novo-extended-event/">Newer: [XE SQL 2016] - Track Backup e Restore - Parte 1</a></div>
+      <div><a href="../hadr-windows-server-failover-clustering-overview/">Older: [HADR] - Windows Server Failover Clustering - Overview para DBAs</a></div>
+    </div>
+  </div>
+</article>
+    </main>
+    <footer class="site-footer">
+      <p>Conteudo preservado a partir do export WordPress do blog de Edvaldo Castro.</p>
+      <p>Este site foi gerado como um arquivo estatico para consulta publica.</p>
+    </footer>
+  </div>
+</body>
+</html>

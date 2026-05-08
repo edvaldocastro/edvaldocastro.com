@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Tradicionalmente diretores, presidentes e os &quot;donos&quot; do neg&#243;cio querem (e est&#227;o muito certos nesse ponto) otimizar os investimentos realizados para terem garantia de disponibilidade, seguran&#231;a, alta performance e outros,..." />
+  <title>AntiAffinityClassNames - Separac&#227;o autom&#225;tica de workloads cr&#237;ticos no mesmo cluster</title>
+  <link rel="stylesheet" href="../../styles.css" />
+</head>
+<body class="single-post">
+  <div class="page-shell">
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark">EC</span>
+        <span class="brand-copy">
+          <strong>Edvaldo Castro</strong>
+          <small>Arquivo estatico do antigo WordPress</small>
+        </span>
+      </a>
+      <nav class="site-nav">
+        <a href="../../">Home</a>
+        <a href="../../posts/">Posts</a>
+        <a href="../../pages/">Pages</a>
+        <a href="../../archive/">Arquivo</a>
+      </nav>
+    </header>
+    <main class="site-main">
+      <article class="article-card">
+  <div class="article-head">
+    <p class="meta-line">Post</p>
+    <h1 class="post-title">AntiAffinityClassNames - Separac&#227;o autom&#225;tica de workloads cr&#237;ticos no mesmo cluster</h1>
+    <p class="meta-line">09 Dec 2016 <span class="dot">&middot;</span> Database Administration, HADR, Tech, Virtual PASS BR <span class="dot">&middot;</span> AlwaysOn, bts, CLUSTER, FoRG, Friends of RedGate, MTAC, Pass, sqlserver, wsfc</p>
+  </div>
+  <div class="article-content">
+    <p style="text-align: justify;">Tradicionalmente diretores, presidentes e os "donos" do negócio querem (e estão muito certos nesse ponto) otimizar os investimentos realizados para terem garantia de disponibilidade, segurança, alta performance e outros, evitando que equipamentos fiquem ociosos ou subutilizados. Quando o investimento em questão é realizado em uma solução para alta disponibilidade do SQL Server, uma das opções é a utilização do Windows server Failover Cluster (WSFC), rodando instalações <em>clusterizadas </em>do SQL Server (Failover Cluster Instances).</p>
+<p style="text-align: justify;">Originalmente o SQL Server Failover Cluster Instances, trabalha de forma a agrupar um conjunto de recursos (disco, nome virtual, serviços, MSDTC, etc) e trabalhar de forma "ativa" em um servidor (NODE) por vez, deixando os demais servidores do WSFC em estado "passivo", aguardando por uma falha para que seguindo regras de configurações de propriedades como "<em>preferred owner" </em>e "<em>possible owner" </em>possam assumir automaticamente uma "ROLE" onde o SQL Server FCI passe a estar em execução.</p>
+<p style="text-align: justify;">Uma das formas de se evitar que um ou mais servidores fiquem ociosos simplesmente aguardando a falha do servidor onde o SQL Server está ativo, é realizar a configuração cruzada do cluster, onde uma instância clusterizada (<strong><span style="color: #0000ff;">SQL1</span></strong>) ativa em um<strong><span style="color: #0000ff;"> servidor A</span></strong> tenha o <span style="color: #0000ff;">servidor B</span> como <span style="color: #0000ff;">passivo</span>, e uma outra instância clusterizada (<strong><span style="color: #008000;">SQL2</span></strong>) ativa no <span style="color: #008000;"><strong>Servidor B</strong></span> tenha o <span style="color: #008000;">servidor A</span> como <span style="color: #008000;">passivo</span>.</p>
+
+
+[caption id="" align="aligncenter" width="626"]<img class="size-medium" src="../..//publico/Blog/crossCluster.JPG" width="626" height="466" /> Imagem representando um cluster cruzado[/caption]
+<p style="text-align: center;"><span style="color: #ff0000;">NÃO EXISTE CLUSTER ATIVO x ATIVO COM SQL SERVER FCI</span></p>
+<p style="text-align: justify;"><span style="color: #ffffff;">d</span></p>
+
+<h3 style="text-align: justify;">O problema</h3>
+&nbsp;
+
+Um grande problema em configurar um cluster cruzado com vários NODES e várias instâncias FCI do SQL Server, é que eventualmente duas ou mais instâncias críticas podem estar ativas no mesmo servidor físico, o que pode causar depreciação na performance, dependendo do workload dessas instâncias, e em horários de pico de processamento, pode gerar grandes transtornos aos usuários finais de aplicações possivelmente críticas.
+
+&nbsp;
+<h3>Exemplos do cenário supracitado</h3>
+&nbsp;
+
+[caption id="" align="aligncenter" width="661"]<img class="size-medium" src="../..//publico/Blog/WSFC-Well-Distributed.PNG" alt="teste teste teste" width="661" height="520" /> Instâncias distribuídas uniformemente em um cenário onde não há qualquer problema.[/caption]
+
+A imagem acima mostra (<strong>CENÁRIO NORMAL</strong>) um ambiente com 3 servidores físicos rodando 3 instâncias SQL Server FCI, cada instância ativa em um servidor distinto e tendo os dois outros como NODES passivos.
+
+<span style="color: #ffffff;">d</span>
+
+[caption id="" align="aligncenter" width="729"]<img class="size-medium" src="../..//publico/Blog/WSFC-Wrong-Distribution.PNG" width="729" height="535" /> Cenário com failover da instância SQL-CRIT-01, tendo a mesma sendo movia para um NODE impróprio para a situação.[/caption]
+
+Já no <strong>CENÁRIO DE FAILOVER</strong>, o <strong>NODE 1</strong> teve um problema fazendo com que a instância <strong><span style="color: #ff0000;">SQL-CRIT-01</span></strong> que é crítica, fosse movida para o <strong>NODE 2</strong>, onde já se encontrava o <strong><span style="color: #008000;">SQL-CRIT-02</span></strong> que também é uma instância crítica com workload pesado, quando o ideal seria que o move fosse direcionado para o <strong>NODE 3</strong>, onde encontra-se atualmente o <span style="color: #000080;"><strong>SQL-<span style="color: #000080;">LI</span>GHT-01</strong></span> que é uma instância com workload baixo e com baixa criticidade, conforme representado pela imagem abaixo.
+
+<span style="color: #ffffff;">d</span>
+
+[caption id="" align="aligncenter" width="709"]<img class="size-medium" src="../..//publico/Blog/WSFC-Antiaffinity-Distribution.PNG" width="709" height="538" /> Cenário ideal, com a configuração da propriedade "AntiAffinityClassNames" nas instâncias críticas.[/caption]
+
+&nbsp;
+<h3>Contornando o problema</h3>
+&nbsp;
+
+Uma das principais soluções para o problema exposto é a utilização de uma propriedade do WSFC, a <strong>AntiAffinityClassNames </strong>que permite que através da configuração de uma string qualquer, quaisquer ROLES do cluster que tenham uma determinada string idêntica configurada para essa propriedade, preferencialmente não fiquem ativas no mesmo NODE do cluster, evitando-se assim uma sobrecarga de um servidor específico e degradação na performance de aplicações críticas.
+
+Seguindo a ordem configurada em <em>"prefferred owner" </em>a(s) instância(s) ativa(s) no NODE que falhou fará o failover para o próximo na lista de preferência, caso já uma dessas instâncias possua uma string <em>AntiAffinityClassNames, </em>o próximo NODE da lista é escolhido para ser o destino do failover dessa instância.
+
+Caso não existam NODES disponíveis para atender à preferencialidade de que duas instâncias com a mesma string na propriedade <em>AntiAffinityClassNames, </em>não fiquem juntas no mesmo NODE, esta propriedade é simplesmente ignorada e então as instâncias ficarão online (mesmo que com possível degradação de performance) no mesmo NODE.
+
+&nbsp;
+<h4>Para configurar a propriedade, siga os passos abaixo:</h4>
+&nbsp;
+<ul>
+ 	<li>Abra o Powershell com elevação de privilégios (Administrador) e com permissões para alterar propriedades no cluster.</li>
+ 	<li>Execute o comando abaixo, para alterar a propriedade.</li>
+ 	<li>
+<ul>
+ 	<li><a href="../..//publico/Blog/Posh-AntiaffinityClassNames-SQL-CRIT-01.PNG" target="_blank" rel="noopener"><img class="alignleft" src="../..//publico/Blog/Posh-AntiaffinityClassNames-SQL-CRIT-01.PNG" width="952" height="119" /></a></li>
+ 	<li>PS C:\Users\BTS-NOTE&gt; (Get-Cluster NOMEDOSEUCLUSTER | Get-ClusterGroup "<span style="color: #ff0000;"><strong>SQL-CRIT-01</strong></span>").AntiAffinityClassNames = "Qualquer Texto Aqui"</li>
+</ul>
+</li>
+ 	<li>
+<ul>
+ 	<li><a href="../..//publico/Blog/Posh-AntiaffinityClassNames-SQL-CRIT-02.PNG" target="_blank" rel="noopener"><img class="alignleft" src="../..//publico/Blog/Posh-AntiaffinityClassNames-SQL-CRIT-02.PNG" width="942" height="110" /></a></li>
+ 	<li>PS C:\Users\BTS-NOTE&gt; (Get-Cluster ORACLE_WEAK | Get-ClusterGroup "<strong><span style="color: #008000;">SQL-CRIT-01</span></strong>").AntiAffinityClassNames = "Qualquer Texto Aqui"</li>
+</ul>
+</li>
+</ul>
+&nbsp;
+<ul>
+ 	<li>Para verificar que a propriedade foi corretamente configurada, execute também via powershell o comando abaixo:</li>
+ 	<li>
+<ul>
+ 	<li><a href="../..//publico/Blog/Posh-AntiaffinityClassNames-show.PNG" target="_blank" rel="noopener"><img class="alignleft" src="../..//publico/Blog/Posh-AntiaffinityClassNames-show.PNG" width="838" height="109" /></a></li>
+ 	<li>PS C:\Users\BTS-NOTE&gt; Get-Cluster NOMEDOSEUCLUSTER | Get-ClusterGroup | ft Name, AntiaffinityClassNames -AutoSize</li>
+</ul>
+</li>
+</ul>
+&nbsp;
+
+Também é possível utilizar o programa <strong>cluster.exe</strong> para realizar a alteração, porém o mesmo encontra-se com status de "<em>deprecated</em>", e deve ser descontinuado em breve, por este motivo, estou mostrando apenas exemplos de configuração via powershell.
+
+No link abaixo, há um mapeamento de todos os comandos do <strong>cluster.exe </strong>para o powershell, que deve substituí-lo em breve.
+
+<a href="https://technet.microsoft.com/pt-br/library/ee619744(v=ws.10).aspx" target="_blank" rel="noopener">https://technet.microsoft.com/pt-br/library/ee619744(v=ws.10).aspx</a>
+
+<span style="color: #ffffff;">d</span>
+
+E por último, também é possível fazer a configuração via alteração direta nas chaves de registro, o que torna o processo arriscado e mais complexo. Resumindo, quer fazer, use o powershell =).
+
+&nbsp;
+
+Espero que tenha gostado, se chegou até aqui, deixe seu joinha (ou crítica) nos comentários.
+
+&nbsp;
+
+Até o próximo...
+
+<span style="color: #ffffff;">d</span>
+<h4>Referências</h4>
+<ul>
+ 	<li><a href="https://msdn.microsoft.com/en-us/library/aa369651(v=vs.85).aspx" target="_blank" rel="noopener">https://msdn.microsoft.com/en-us/library/aa369651(v=vs.85).aspx</a></li>
+ 	<li><a href="https://gallery.technet.microsoft.com/PowerShell-module-for-16242485" target="_blank" rel="noopener">PowerShell module for configuring AntiAffinityClassNames in Failover Clustering</a></li>
+</ul>
+&nbsp;
+  </div>
+  <div class="article-footer">
+    <div class="pill-row"><span class="pill">Database Administration</span><span class="pill">HADR</span><span class="pill">Tech</span><span class="pill">Virtual PASS BR</span></div>
+    <div class="pill-row"><span class="pill">AlwaysOn</span><span class="pill">bts</span><span class="pill">CLUSTER</span><span class="pill">FoRG</span><span class="pill">Friends of RedGate</span><span class="pill">MTAC</span><span class="pill">Pass</span><span class="pill">sqlserver</span><span class="pill">wsfc</span></div>
+    <div class="post-nav">
+      <div><a href="../sql-server-2016-it-just-runs-faster-bob-ward/">Newer: SQL Server 2016 - It just runs faster (Bob Ward)</a></div>
+      <div><a href="../review-e-analise-sql-saturday-573-brasilia/">Older: Review e An&#225;lise - SQL Saturday #573 - Bras&#237;lia</a></div>
+    </div>
+  </div>
+</article>
+    </main>
+    <footer class="site-footer">
+      <p>Conteudo preservado a partir do export WordPress do blog de Edvaldo Castro.</p>
+      <p>Este site foi gerado como um arquivo estatico para consulta publica.</p>
+    </footer>
+  </div>
+</body>
+</html>

@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Tracking BACKUP operation No blog post anterior , falei um pouco sobre o conceito que envolve este novo XE bem como os traceflags que t&#237;nhamos dispon&#237;veis at&#233; ent&#227;o, e uma das formas para se mapear as atividades realizad..." />
+  <title>[XE SQL 2016] - Track Backup e Restore - Parte 2</title>
+  <link rel="stylesheet" href="../../styles.css" />
+</head>
+<body class="single-post">
+  <div class="page-shell">
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark">EC</span>
+        <span class="brand-copy">
+          <strong>Edvaldo Castro</strong>
+          <small>Arquivo estatico do antigo WordPress</small>
+        </span>
+      </a>
+      <nav class="site-nav">
+        <a href="../../">Home</a>
+        <a href="../../posts/">Posts</a>
+        <a href="../../pages/">Pages</a>
+        <a href="../../archive/">Arquivo</a>
+      </nav>
+    </header>
+    <main class="site-main">
+      <article class="article-card">
+  <div class="article-head">
+    <p class="meta-line">Post</p>
+    <h1 class="post-title">[XE SQL 2016] - Track Backup e Restore - Parte 2</h1>
+    <p class="meta-line">07 Oct 2015 <span class="dot">&middot;</span> Backup, Database Administration, Tech, Virtual PASS BR <span class="dot">&middot;</span> Backup, banco de dados, Extended Events, SQL SERVER, sqlserver, SQLSERVER2016, virtual pass, Virtual Pass Br, Virtual Pass PT, VirtualPass, VirtualPassBr, XE</p>
+  </div>
+  <div class="article-content">
+    <h1></h1>
+<h1>Tracking BACKUP operation</h1>
+&nbsp;
+<p style="text-align: justify;">No <a href="../..//benchmarking-teste-do-novo-extended-event/" target="_blank">blog post anterior</a>, falei um pouco sobre o conceito que envolve este novo XE bem como os <em>traceflags </em>que tínhamos disponíveis até então, e uma das formas para se mapear as atividades realizadas durante um procedimento de BACKUP ou RESTORE.</p>
+<p style="text-align: justify;">Dando continuidade, neste neste post será feito um teste do mesmo XE, porém para uma operação de RESTORE.</p>
+
+<h2></h2>
+<h2>O teste</h2>
+A mesma base de dados do teste anterior foi utilizada, conforme os dados abaixo:
+<ul>
+	<li>Database_Size: 36.698 MB</li>
+	<li>DataFileSize: 30.553 MB</li>
+	<li>LogFileSize: 6.146 MB</li>
+	<li>BackupSize: 24.153 MB</li>
+	<li>CompressedBackupSize: 4.364 MB</li>
+</ul>
+<h2></h2>
+<p style="text-align: justify;">Para maiores detalhes da configuração e introdução a este Extended Event, acesse o post <a href="../..//benchmarking-teste-do-novo-extended-event/" target="_blank">[XE SQL 2016] - Track Backup e Restore - Parte 1</a> sobre este novo XE.</p>
+<p style="text-align: justify;">Lembrando que a mesma sessão do XE pode ser utilizada para acompanhar o progresso das operações de BACKUP e também de RESTORE.</p>
+
+<h2 style="text-align: justify;"></h2>
+<h2>Código T-SQL do backup:</h2>
+<span style="color: #0000ff;">BACKUP DATABASE</span> BDXeTeste
+<span style="color: #0000ff;">TO DISK</span> = <span style="color: #ff0000;">'D:MSSQLSQL2016BACKUPBDXeTeste.bak'</span>
+<span style="color: #0000ff;">WITH</span> <span style="color: #008000;">STATS</span> = 1
+
+&nbsp;
+<h2 style="text-align: justify;">Resultado do teste</h2>
+<p style="text-align: justify;">Conforme executado no teste anterior, abaixo será exibido o <em>output </em>do XE, bem como uma explicação detalhada dos principais itens.</p>
+<a href="../../assets/uploads/2015/10/xebkp01.jpg"><img class="aligncenter size-full wp-image-1768" src="../../assets/uploads/2015/10/xebkp01.jpg" alt="xebkp01" width="838" height="333" /></a>
+
+Figura 1:
+<ul>
+	<li style="text-align: justify;"><strong>BACKUP DATABASE started</strong>
+<ul>
+	<li>Início da operação de backup do banco de dados.</li>
+</ul>
+</li>
+	<li style="text-align: justify;"><span style="color: #000000;"><b>Opening the database with S lock</b></span>
+<ul>
+	<li>Neste momento é adquirido um lock do tipo "<em>shared" no banco de dados, para início da leitura dos dados.</em></li>
+</ul>
+</li>
+	<li style="text-align: justify;"><strong>Acquiring bulk-op lock on the database</strong>
+<ul>
+	<li>Adquirido um lock do tipo "<em>bulk-op" </em>para cópia dos dados.</li>
+</ul>
+</li>
+	<li style="text-align: justify;"><strong>Synchronizing with other operations on the database is complete</strong></li>
+	<li style="text-align: justify;"><strong>Opening the backup media set</strong>
+<ul>
+	<li>Neste ponto é iniciado a verificação do acesso ao diretório onde o backup será criado, bem como espaço disponível para criação do arquivo de backup.</li>
+</ul>
+</li>
+	<li style="text-align: justify;"><strong>The backup media set is open</strong></li>
+	<li style="text-align: justify;"><span style="color: #000000;"><b>Preparing the media set for writing</b></span>
+<ul>
+	<li>Após o arquivo ter sido previamente "alocado" e validadas as possibilidades de gravação no diretório, o "<em>media set</em>" é preparado para iniciar o processo de escrita (gravação).</li>
+</ul>
+</li>
+	<li style="text-align: justify;"><strong>The media set is ready for backup</strong></li>
+	<li style="text-align: justify;"><strong>Efective options: Checksum=0, Compression=0, Encryption=0, BufferCount=7, MaxTransferSize=1024 KB</strong>
+<ul>
+	<li style="text-align: justify;">Neste ponto são checadas as opções adicionais do backup, como: Checksum, Compressão, Criptografia, além das tão importantes BufferCount e MaxTransferSize, que podem ser de grande valia quando deseja-se aumentar o <em>throughput </em>do backup,  reduzindo consequentemente o tempo total de execução do mesmo. Um pouco mais detalhado em outro post que escrevi "<a href="../..//sql-server-backup-internals-backup-full/" target="_blank">[SQL Server Backup Internals] - Backup Full</a>"</li>
+</ul>
+</li>
+	<li style="text-align: justify;"><span style="color: #000000;"><b>Clearing differential bitmaps</b></span>
+<ul>
+	<li style="text-align: justify;">Uma das fases do backup full é limpar (ou zerar) a DCM (Differential Change Map), que é a página com Page_id = 6, responsável por mapear as alterações realizadas após o backup full, para fins de geração de backups do tipo <em>"Differential".</em> Neste ponto é realizado a limpeza da DCM, fazendo com que este backup full seja a base para novos backups diferenciais.</li>
+</ul>
+</li>
+	<li style="text-align: justify;"><strong>Differential bitmaps are cleared</strong></li>
+	<li style="text-align: justify;"><strong>Writing a checkpoint</strong></li>
+	<li style="text-align: justify;"><strong>Checkpoint is complete (elapsed = 16 ms)</strong>
+<ul>
+	<li style="text-align: justify;">Realizado um checkpoint, para marcar o início do backup, bem como o LSN inicial.</li>
+</ul>
+</li>
+</ul>
+<a href="../../assets/uploads/2015/10/xebkp02.jpg"><img class="aligncenter size-full wp-image-1769" src="../../assets/uploads/2015/10/xebkp02.jpg" alt="xebkp02" width="838" height="456" /></a>
+
+Figura 2:
+<ul>
+	<li style="text-align: justify;"><strong>Start LSN: 293881:2670:1, SERepl LSN: 0:0:0</strong>
+<ul>
+	<li style="text-align: justify;">Gravado o LSN inicial.</li>
+</ul>
+</li>
+	<li style="text-align: justify;"><span style="color: #000000;"><b>Scanning allocation bitmaps</b></span></li>
+	<li style="text-align: justify;"><strong>Scanning allocation bitmaps is complete</strong>
+<ul>
+	<li style="text-align: justify;">Neste ponto é realizado um <em>scan </em>nas páginas de alocação para fins de cálculo de espaço e tamanho do backup.</li>
+</ul>
+</li>
+	<li style="text-align: justify;"><strong>Calculating expected size of total data</strong>
+<ul>
+	<li style="text-align: justify;">Realizando o cálculo esperado do tamanho total de dados a serem copiados.</li>
+</ul>
+</li>
+	<li style="text-align: justify;"><strong>FID=1, ExpectedExtents=379167, IsDifferentialMapAccurate=0</strong>
+<ul>
+	<li style="text-align: justify;">Informação sobre o(s) arquivo(s) de dados, e quantidade de extents esperados para o backup, neste caso 379167 (extents) * 64 (KB por extent) =~ 24.266.688 Kilobytes</li>
+</ul>
+</li>
+	<li style="text-align: justify;"><strong>TotalSize=24849088512 bytes</strong>
+<ul>
+	<li style="text-align: justify;">Tamanho total em bytes</li>
+</ul>
+</li>
+	<li style="text-align: justify;"><strong>Estimated total size = 26291393536 bytes (data size = 24849088512 bytes, log size = 1442305024 bytes)</strong>
+<ul>
+	<li style="text-align: justify;">Tamanho total estimado em bytes dos dados, e do log.</li>
+</ul>
+</li>
+	<li style="text-align: justify;"><strong>Work estimation is complete</strong>
+<ul>
+	<li style="text-align: justify;">Conclusão do trabalho de estimativa sobre o backup que será realizado.</li>
+</ul>
+</li>
+	<li style="text-align: justify;"><strong>Last LSN: 293925:219912:1</strong>
+<ul>
+	<li style="text-align: justify;">LSN final dos dados que farão parte do backup.</li>
+</ul>
+</li>
+	<li style="text-align: justify;"><strong>Writing the leading metadata</strong></li>
+	<li style="text-align: justify;"><strong>BackupStream(0): Writing leading metadata to device D:MSSQLSQL2016BACKUPBDXeTeste.bak</strong>
+<ul>
+	<li style="text-align: justify;">Neste ponto é realizado a gravação dos metadados no arquivo de destino do backup. Estas informações podem ser recuperadas posteriormente pelas opções: <span style="color: #0000ff;">FILELISTONLY</span> e <span style="color: #0000ff;">HEADERONLY</span></li>
+</ul>
+</li>
+	<li style="text-align: justify;"><strong>Calculating expected size of total data</strong></li>
+	<li style="text-align: justify;"><strong>FID=1, ExpectedExtents=379167, IsDifferentialMapAccurate=0</strong></li>
+	<li style="text-align: justify;"><strong>TotalSize=24849088512 bytes</strong></li>
+	<li style="text-align: justify;"><strong>Copying data files</strong>
+<ul>
+	<li style="text-align: justify;">Copiando os dados dos arquivos de dados.</li>
+</ul>
+</li>
+	<li style="text-align: justify;"><strong>Number of data file readers = 1</strong>
+<ul>
+	<li style="text-align: justify;">Número de <em>readers </em>que farão as leituras nos arquivos de dados para execução do backup.</li>
+</ul>
+</li>
+	<li style="text-align: justify;"><span style="color: #000000;"><b>Reading the data file D:MSSQLSQL2016|DATABDXeTeste.mdf</b></span>
+<ul>
+	<li style="text-align: justify;">Informação de leitura do arquivo de dados (.mdf), o backup é lido diretamente do arquivo de dados, copiado em uma área de memória (<span style="color: #008000;">MEMORYCLERK_SQLUTILITIES</span>) específica para este fim e em seguida gravado no arquivo de destino (geralmente .bak)</li>
+</ul>
+</li>
+	<li style="text-align: justify;"><strong>BackupStream(0): Writing MSDA of size 379168</strong>
+<ul>
+	<li style="text-align: justify;">Escrevendo os dados lidos do <em>datafile .</em></li>
+</ul>
+</li>
+	<li style="text-align: justify;"><strong>1 percent (263061504/26291393536 bytes) processed</strong>
+<ul>
+	<li style="text-align: justify;">Percentual já processado. Note que o cálculo é exibido em detalhe e mostrado exatamente o <em>size </em>do que já foi copiado.</li>
+</ul>
+</li>
+</ul>
+<a href="../../assets/uploads/2015/10/xebkp03.jpg"><img class="aligncenter size-full wp-image-1770" src="../../assets/uploads/2015/10/xebkp03.jpg" alt="xebkp03" width="838" height="432" /></a>
+<p style="text-align: justify;">Figura 3</p>
+
+<ul>
+	<li style="text-align: justify;"><strong>94 percent (24714018816/26291393536) processed</strong>
+<ul>
+	<li style="text-align: justify;">Percentual já processado</li>
+</ul>
+</li>
+	<li style="text-align: justify;"><strong>Completed reading the data file D:MSSQLSQL2016DATABDXeTest.mdf</strong>
+<ul>
+	<li style="text-align: justify;">Fim da leitura de TODOS os extents do arquivo de dados, que irão para o arquivo de backup.</li>
+</ul>
+</li>
+	<li style="text-align: justify;"><strong>BackupStream(0): Padding MSDA with 65536 bytes</strong>
+<ul>
+	<li style="text-align: justify;">Completando a cópia dos dados com <strong>65536 bytes</strong></li>
+</ul>
+</li>
+	<li style="text-align: justify;"><strong>BackupStream(0): Total MSDA size = 379168 extents</strong>
+<ul>
+	<li style="text-align: justify;">Informação do tamanho total de extents copiados.</li>
+</ul>
+</li>
+	<li style="text-align: justify;"><strong>InitialExpectedSize=24849088512 bytes, FinalSize=24849088512 bytes, ExcessMode=0</strong>
+<ul>
+	<li style="text-align: justify;">Balanço entre tamanho inicial experado e tamanho final atingido, bem como a informação de divergências.</li>
+</ul>
+</li>
+	<li style="text-align: justify;"><strong>Last LSN: 293925:219912:1</strong>
+<ul>
+	<li style="text-align: justify;">Último LSN do backup.</li>
+</ul>
+</li>
+	<li style="text-align: justify;"><strong>Copying data files is complete</strong>
+<ul>
+	<li style="text-align: justify;">Informação de conclusão da cópia do(s) <em>datafile(</em>s)</li>
+</ul>
+</li>
+	<li style="text-align: justify;"><strong>Copying transaction log</strong>
+<ul>
+	<li style="text-align: justify;">Iniciando a cópia do arquivo de <em>transaction log.</em> Esta é a porção ativa do log de transações contendo todas as transações que realizadas após o primeiro <em>checkpoint </em>e anteriores ao último <em>checkpoint.</em></li>
+</ul>
+</li>
+	<li style="text-align: justify;"><span style="color: #000000;"><b>MediaFamily(0): FID=2, VLFID=29388<span style="color: #008000;">7</span>, DataStreamSize=26214400 bytes</b></span>
+<ul>
+	<li style="text-align: justify;">Informação sobre cópia do VLF <b>293887 </b>do arquivo com ID=2 com tamanho de <b>26214400 bytes</b></li>
+</ul>
+</li>
+	<li style="text-align: justify;"><span style="color: #000000;"><b>MediaFamily(0): FID=2, VLFID=29388<span style="color: #008000;">8</span>, DataStreamSize=26214400 bytes</b></span>
+<ul>
+	<li style="text-align: justify;">Informação sobre cópia do VLF <b>293887 </b>do arquivo com ID=2 com tamanho de <b>26214400 bytes</b></li>
+</ul>
+</li>
+</ul>
+<p style="text-align: justify;"><a href="../../assets/uploads/2015/10/xebkp04.jpg"><img class="aligncenter size-full wp-image-1771" src="../../assets/uploads/2015/10/xebkp04.jpg" alt="xebkp04" width="837" height="289" /></a>
+Figura 4</p>
+
+<ul>
+	<li style="text-align: justify;"><strong>100 percent (26291393536/26291393536 bytes) processed</strong>
+<ul>
+	<li style="text-align: justify;">Percentual processado:</li>
+</ul>
+</li>
+	<li style="text-align: justify;"><strong>Copying transaction log is complete</strong>
+<ul>
+	<li style="text-align: justify;">Informação de finalização da cópia do log de transações.</li>
+</ul>
+</li>
+	<li style="text-align: justify;"><strong>Writing the trailing metadata</strong>
+<ul>
+	<li style="text-align: justify;">Escrevendo os metadados finais.</li>
+</ul>
+</li>
+	<li style="text-align: justify;"><strong>BackupStream(0): Writing trailing metadata to the device D:MSSQLSQL2016BACKUPBDXeTeste.bak</strong>
+<ul>
+	<li style="text-align: justify;">Finalizando a escrita dos metadados no arquivo de <em>backup </em>(.bak)</li>
+</ul>
+</li>
+	<li style="text-align: justify;"><strong>Writing the end of backup set</strong></li>
+	<li style="text-align: justify;"><strong>Writing history records</strong>
+<ul>
+	<li style="text-align: justify;">Escrevendo os registros da operação nas tabelas de sistema no banco de dados MSDB.</li>
+</ul>
+</li>
+	<li style="text-align: justify;"><strong>Writing history records is complete (elapsed = 19 ms)</strong></li>
+	<li style="text-align: justify;"><strong>BACKUP DATABASE finished</strong>
+<ul>
+	<li style="text-align: justify;">BACKUP FINALIZADO COM SUCESSO.</li>
+</ul>
+</li>
+</ul>
+&nbsp;
+
+Se gostou, deixe um like, comentário, crítica ou um abraço nos comentários...
+
+&nbsp;
+
+Grande Abraço,
+
+&nbsp;
+
+Edvaldo Castro
+<blockquote>Curta a página do Facebook:
+
+<a href="http://facebook.com/edvaldocastro" target="_blank">http://facebook.com/edvaldocastro</a></blockquote>
+&nbsp;
+<blockquote>Siga no Twitter
+
+<a href="http://twitter.com/edvaldocastro02" target="_blank">http://twitter.com/edvaldocastro02</a>
+
+&nbsp;</blockquote>
+&nbsp;
+  </div>
+  <div class="article-footer">
+    <div class="pill-row"><span class="pill">Backup</span><span class="pill">Database Administration</span><span class="pill">Tech</span><span class="pill">Virtual PASS BR</span></div>
+    <div class="pill-row"><span class="pill">Backup</span><span class="pill">banco de dados</span><span class="pill">Extended Events</span><span class="pill">SQL SERVER</span><span class="pill">sqlserver</span><span class="pill">SQLSERVER2016</span><span class="pill">virtual pass</span><span class="pill">Virtual Pass Br</span><span class="pill">Virtual Pass PT</span><span class="pill">VirtualPass</span><span class="pill">VirtualPassBr</span><span class="pill">XE</span></div>
+    <div class="post-nav">
+      <div><a href="../19-de-outubro-dia-do-profissional-de-ti/">Newer: 19 de Outubro - Dia do profissional de TI</a></div>
+      <div><a href="../benchmarking-teste-do-novo-extended-event/">Older: [XE SQL 2016] - Track Backup e Restore - Parte 1</a></div>
+    </div>
+  </div>
+</article>
+    </main>
+    <footer class="site-footer">
+      <p>Conteudo preservado a partir do export WordPress do blog de Edvaldo Castro.</p>
+      <p>Este site foi gerado como um arquivo estatico para consulta publica.</p>
+    </footer>
+  </div>
+</body>
+</html>

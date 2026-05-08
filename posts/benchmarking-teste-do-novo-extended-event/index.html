@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Tracking RESTORE operation O SQL Server 2016 j&#225; vem dando as caras desde que foi anunciado o primeiro CTP (Community Technical Preview) . O Program Manager Ajay Jagannathan publicou no blog do oficial do time de engenhei..." />
+  <title>[XE SQL 2016] - Track Backup e Restore - Parte 1</title>
+  <link rel="stylesheet" href="../../styles.css" />
+</head>
+<body class="single-post">
+  <div class="page-shell">
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark">EC</span>
+        <span class="brand-copy">
+          <strong>Edvaldo Castro</strong>
+          <small>Arquivo estatico do antigo WordPress</small>
+        </span>
+      </a>
+      <nav class="site-nav">
+        <a href="../../">Home</a>
+        <a href="../../posts/">Posts</a>
+        <a href="../../pages/">Pages</a>
+        <a href="../../archive/">Arquivo</a>
+      </nav>
+    </header>
+    <main class="site-main">
+      <article class="article-card">
+  <div class="article-head">
+    <p class="meta-line">Post</p>
+    <h1 class="post-title">[XE SQL 2016] - Track Backup e Restore - Parte 1</h1>
+    <p class="meta-line">01 Oct 2015 <span class="dot">&middot;</span> Backup, Database Administration, Tech, Virtual PASS BR <span class="dot">&middot;</span> Backup, FoRG, Friends of RedGate, Pol&#237;tica de Backup, SQLSERVER2016, Virtual Pass Br, VirtualPass, VirtualPassPT</p>
+  </div>
+  <div class="article-content">
+    <h2>Tracking RESTORE operation</h2>
+O SQL Server 2016 já vem dando as caras desde que foi anunciado o primeiro <a href="https://msdn.microsoft.com/en-us/library/dn876712.aspx?f=255&amp;MSPPError=-2147217396" target="_blank">CTP (Community Technical Preview)</a>.
+
+O Program Manager <a href="https://social.msdn.microsoft.com/profile/ajay.msft/" target="_blank">Ajay <span class="fn"><span class="full-name" dir="auto">Jagannathan</span></span></a> publicou no <a href="http://blogs.msdn.com/b/sql_server_team/" target="_blank">blog do oficial do time de engenheiros do SQL Server</a>, uma novidade muito interessante para visualização detalhada de cada passo do que a engine do SQL Server faz durante a execução de operações de Backup e Restore. A partir da release <a href="https://msdn.microsoft.com/en-us/library/dn876712.aspx?f=255&amp;MSPPError=-2147217396#bkmk_2016_ctp2_0" target="_blank">CTP 2.0</a> do SQL Server 2016, existe um <a href="http://blogs.msdn.com/b/sql_server_team/archive/2015/09/22/new-extended-event-to-track-backup-and-restore-progress.aspx#.VgtLzHpVhBd" target="_blank">novo <em>Extended Event</em> (XE)</a> que permite que você saiba exatamente em que fase está a sua operação de backup ou restore.
+
+Em um outro blog post (<a href="../..//sql-server-backup-internals-backup-full/" target="_blank">[SQL Server Backup Internals] – Backup Full</a>), escrevi detalhando um pouco do que acontece durante seu backup e, apesar de ter bastante detalhes no que foi mostrado naquele blog post, este novo evento do <em>XE </em>exibe as informações de uma forma muito mais detalhada e durante o acontecimento.
+
+No post supracitado, foram utilizados alguns <em>traceflags</em> para exibição de algumas informações sobre o processo do backup após sua execução, dentre eles, os seguintes:
+<ul>
+	<li><strong>3604 : </strong>Este Trace Flag é necessário para exibição do resultado de alguns outros TF.</li>
+	<li><strong>3014 : </strong>Utilizado para fornecer maiores informações detalhadas sobre as operações de Backup / Restore.</li>
+	<li><strong>3226: </strong>Omite do Error Log do SQL Server, as entradas contendo informações de sucesso de backups realizados. Vale lembrar que operações de backup com falha ainda continuam sendo escritas no Error Log.</li>
+	<li><strong>3004: </strong>Exibe informações detalhadas sobre o que está acontecendo entre o SQL Server e a mídia de backup. Este TraceFlag também mostra informações sobre o processos que escrevem em disco, como por exemplo o <a href="http://msdn.microsoft.com/en-us/library/ms175935.aspx" target="_blank">“Instant File Inicialization”.</a></li>
+</ul>
+Algo importante a ser observado, é que o propósito dos <em>traceflags </em>é diferente do novo XE que foi anunciado, visto que os <em>traceflags </em>exibem informações com bastante riqueza de detalhes, mas somente após o término do backup / restore, enquando o novo XE exibe informações sobre o progresso de tais operações, sendo assim seria possível até mesmo uma combinação de ambos para uma cobertura completa de tudo o que está acontecendo durante a operação de backup ou restore, e um "relatório" minucioso após a conclusão destas operações.
+<h1>Vamos ao teste:</h1>
+Para validar e conhecer o <em>output</em> gerado pelo novo XE, monitorei o restore de uma base de dados com as seguintes Características:
+<ul>
+	<li>Database_Size: 36.698 MB</li>
+	<li>DataFileSize: 30.553 MB</li>
+	<li>LogFileSize: 6.146 MB</li>
+	<li>BackupSize: 24.153 MB</li>
+	<li>CompressedBackupSize: 4.364 MB</li>
+</ul>
+<h2>Configuração do Extended Event:</h2>
+Para criação da sessão do XE, pode-se executar o código (retirado do <a href="http://blogs.msdn.com/b/sql_server_team/archive/2015/09/22/new-extended-event-to-track-backup-and-restore-progress.aspx#.Vg1DBXpVhBc" target="_blank">blog post informativo do novo XE</a> ) abaixo no SSMS.
+<p style="text-align: left;"><span style="color: #0000ff;">CREATE EVENT SESSION</span> [Backup trace] <span style="color: #0000ff;">ON SERVER</span>
+<span style="color: #0000ff;">ADD EVENT</span> sqlserver.backup_restore_progress_trace
+<span style="color: #0000ff;">ADD TARGET</span> package0.event_file(<span style="color: #0000ff;">SET filename</span>=<span style="color: #ff0000;">N'Backup trace'</span>)
+<span style="color: #0000ff;">WITH</span> (MAX_MEMORY=4096 KB,EVENT_RETENTION_MODE=ALLOW_SINGLE_EVENT_LOSS,
+MAX_DISPATCH_LATENCY=5 SECONDS,MAX_EVENT_SIZE=0 KB,MEMORY_PARTITION_MODE=<span style="color: #0000ff;">NONE</span>,
+TRACK_CAUSALITY=<span style="color: #0000ff;">OFF</span>,STARTUP_STATE=<span style="color: #0000ff;">OFF</span>)
+<span style="color: #0000ff;">GO</span></p>
+
+<h2>Código T-SQL do restore:</h2>
+<p style="text-align: left;"><span style="color: #0000ff;">RESTORE DATABASE</span> BDXeTeste
+<span style="color: #0000ff;">FROM DISK</span> = <span style="color: #ff0000;">'D:MSSQLSQL2016BACKUPBDXeTeste.bak'</span>
+<span style="color: #0000ff;">WITH</span> <span style="color: #008000;">STATS</span> = 1
+,<span style="color: #0000ff;">MOVE</span> <span style="color: #ff0000;">'BDXeTeste'</span> <span style="color: #0000ff;">TO</span> <span style="color: #ff0000;">'D:MSSQLSQL2016DATABDXeTeste.mdf'</span>
+,<span style="color: #0000ff;">MOVE</span> <span style="color: #ff0000;">'BDXeTeste_Log'</span> <span style="color: #0000ff;">TO</span> <span style="color: #ff0000;">'D:MSSQLSQL2016LogBDXeTeste.ldf'</span></p>
+&nbsp;
+<h2>Resultado:</h2>
+O Resultado em tempo real é impressionante, as informações exibidas são detalhadas exatamente com o que está acontecendo naquele exato momento dentro da <em>engine </em>do SQL Server com relação à operação de Backup ou Restore (restore, neste caso).
+<h2>Abaixo, uma explicação item a item do <em>output </em> do novo XE:</h2>
+&nbsp;
+<p style="text-align: center;"><a href="../../assets/uploads/2015/10/xe1.jpg"><img class="aligncenter size-full wp-image-1739" src="../../assets/uploads/2015/10/xe1.jpg" alt="xe1" width="852" height="411" /></a></p>
+<p style="text-align: center;">Figura 1 - Parte inicial do processo de restore, até 6%.</p>
+<p style="text-align: justify;">Na imagem acima é possível observar os processos iniciais que são excutados:</p>
+
+<ul>
+	<li style="text-align: justify;"><strong>RESTORE DATABASE started</strong>
+<ul>
+	<li style="text-align: justify;">Início do restore.</li>
+</ul>
+</li>
+	<li style="text-align: justify;"><strong>Opening backup set</strong>
+<ul>
+	<li style="text-align: justify;">Abertura (acesso) ao backup set (arquivo(s) de backup).</li>
+</ul>
+</li>
+	<li style="text-align: justify;"><strong>Processing the leading metadata</strong>
+<ul>
+	<li style="text-align: justify;">Processamento dos metadados do backup set para iniciar o planejamento do restore</li>
+</ul>
+</li>
+	<li style="text-align: justify;"><strong>Planing begins</strong>
+<ul>
+	<li style="text-align: justify;">Início do planejamento de como será realizado o restore.</li>
+</ul>
+</li>
+	<li style="text-align: justify;"><strong>Effective options : Checksum=0, Compression = 1, Encryption=0, BufferCount=6, MaxTransferSize=1024 KB</strong>
+<ul>
+	<li style="text-align: justify;">Opções a serem utilizadas para o restore. neste caso, não fará a verificação com checksum, o restore está com compressão habilitada, sem criptografia e o tamanho do memory cleark a ser utilizado, definido pelos parâmetros BufferCount e MaxTransferSize. (Valores default)</li>
+	<li style="text-align: justify;"><strong><span style="color: #ff0000;">UPDATE</span></strong>: <span style="color: #0000ff;"><em><span style="color: #008000;">Este post nasceu de uma conversa / dica do meu amigo e também MVP em SQL Server Luciano [Luti] Moreira (<a href="http://luticm.blogspot.com.br/" target="_blank">Blog</a>| <a href="https://twitter.com/luticm" target="_blank">Twitter</a>), e então ele me sugeriu ressaltar a importâncias dos parâmetros BufferCount e MaxTransferSize, que podem ser de grande valia para aumentar consideravelmente a performance das operações de Backup e Restore.</span></em></span></li>
+</ul>
+</li>
+	<li style="text-align: justify;"><strong>Planning is complete</strong>
+<ul>
+	<li style="text-align: justify;">Conclusão da fase de planejamento do restore,</li>
+</ul>
+</li>
+	<li style="text-align: justify;"><strong>Beginning OFFLINE restore</strong>
+<ul>
+	<li style="text-align: justify;">Início dos procedimentos de restore previamente planejados.</li>
+</ul>
+</li>
+	<li style="text-align: justify;"><strong>Attached database as DB_ID=6</strong>
+<ul>
+	<li style="text-align: justify;">Realizado o Attach (criação) do banco de dados, com ID = 6.</li>
+</ul>
+</li>
+	<li style="text-align: justify;"><strong>Preparing containers</strong>
+<ul>
+	<li style="text-align: justify;">Preparando os containers (Filegroups e Files) que receberão os dados restaurados.</li>
+</ul>
+</li>
+	<li style="text-align: justify;"><strong>Containers are ready</strong>
+<ul>
+	<li style="text-align: justify;">Conclusão da preparação dos containers</li>
+</ul>
+</li>
+	<li style="text-align: justify;"><strong>Restoring the backup set</strong></li>
+	<li style="text-align: justify;"><strong>Estimated total size to transfer = 25326763008 bytes</strong>
+<ul>
+	<li style="text-align: justify;">Estimativa total da quantidade de dados a serem transferidos do arquivo de backup para os datafiles. (24153 MB)</li>
+</ul>
+</li>
+	<li style="text-align: justify;"><strong>Transfering data</strong>
+<ul>
+	<li style="text-align: justify;">Transferindo os dados</li>
+</ul>
+</li>
+	<li style="text-align: justify;"><strong>BackupStream(0): Processing MSDA of size 386464 extents</strong>
+<ul>
+	<li style="text-align: justify;">Processamento do restore dos dados com tamanho de 386464 (extents) * 64 (kb / extent) = 24153.43 MB</li>
+</ul>
+</li>
+	<li style="text-align: justify;"><strong>1 percent</strong></li>
+	<li style="text-align: justify;"><strong>2 percent</strong></li>
+</ul>
+<p style="text-align: center;"><a href="../../assets/uploads/2015/10/xe2.jpg"><img class="aligncenter size-full wp-image-1740" src="../../assets/uploads/2015/10/xe2.jpg" alt="xe2" width="853" height="483" /></a></p>
+<p style="text-align: center;">Figura 2 - Início dos processos finais para conclusão do restore.</p>
+Na imagem acima é possível observar os processos que são excutados:
+<ul>
+	<li><strong>99 percent</strong></li>
+	<li><strong>100 percent</strong></li>
+	<li><strong>Backup Stream(0): Completed MSDA</strong>
+<ul>
+	<li>Conclusão do Streaming entre o arquivo de backup e os datafiles.</li>
+</ul>
+</li>
+	<li><strong>Waiting for log zeroing to complete</strong>
+<ul>
+	<li>Alocando o arquivo de Log (ldf) e zerando o mesmo. (Lembrando que arquivos de log não beneficiam-se do Instant File Initialization)</li>
+</ul>
+</li>
+	<li><strong>Log zeroing is complete</strong>
+<ul>
+	<li>Conclusão da alocação do arquivo de Log.</li>
+</ul>
+</li>
+	<li><strong>BackupStream(0): Processing MSTL (FID=2, VLFID=293881, size=131071 bytes)</strong>
+<ul>
+	<li>Início da transferência do conteúdo do backup (parte ativa do log) para o arquivo do log de transações (.ldf)</li>
+</ul>
+</li>
+	<li><strong>Data transfer is complete</strong>
+<ul>
+	<li>Conclusão da transferência.</li>
+</ul>
+</li>
+	<li><strong>Backup set is restored</strong>
+<ul>
+	<li>Informação de conclusão do "restore" (cópia do conteúdo do backup do arquivo para os datafiles e logfile).</li>
+</ul>
+</li>
+	<li><strong>Offline rollfoward begins</strong>
+<ul>
+	<li>Início do processo de <em>rollfoward</em> (re-executar as transações que foram executadas durante</li>
+</ul>
+</li>
+	<li><strong>Processing 63 VLF headers</strong>
+<ul>
+	<li>Processamento dos cabeçalhos dos VLFs que passarão pelo <em>rollfoward.</em></li>
+</ul>
+</li>
+	<li><strong>Processing VLF headers is complete</strong>
+<ul>
+	<li>Conclusão do processamento dos cabeçalhos dos VLFs</li>
+</ul>
+</li>
+	<li><strong>First LSN: 293881:26608:225, Last LSN: 293881:26757:1 </strong></li>
+	<li><strong>Stop LSN: 293881:26757:1</strong>
+<ul>
+	<li>Informações sobres os LSNs referentes aos <em>rollfowards</em></li>
+</ul>
+</li>
+	<li><strong>Offline rollfoward is complete</strong>
+<ul>
+	<li>Conclusão do processo de <em>rollfoward </em>das transações "<em>in-flight</em>" durante a realização do backup.</li>
+</ul>
+</li>
+	<li><strong>Database fixup is complete</strong>
+<ul>
+	<li>Conclusão das etapas de "<em>fixup</em>" do banco de dados.</li>
+</ul>
+</li>
+	<li><strong>Transitioning database to ONLINE</strong></li>
+	<li><strong>Restarting database for ONLINE</strong>
+<ul>
+	<li>Transição do banco para status <i>ONLINE </i>para finalização do restore.</li>
+</ul>
+</li>
+	<li><strong>PostRestoreContainerFixups begins</strong></li>
+	<li><strong>PostRestoreContainerFixups is complete</strong>
+<ul>
+	<li>Conclusão das etapas relacionadas aos conteineres (arquivos de dados (.mdf))</li>
+</ul>
+</li>
+	<li><strong>PostRestoreReplicationFixup begins</strong></li>
+</ul>
+<p style="text-align: center;"><a href="../../assets/uploads/2015/10/xe3.jpg"><img class="aligncenter size-full wp-image-1741" src="../../assets/uploads/2015/10/xe3.jpg" alt="xe3" width="851" height="217" /></a><a href="../../assets/uploads/2015/10/image002.png">
+</a>Figura 3 - Parte final do processo de restore, quando o mesmo é finalizado .</p>
+Na imagem acima é possível observar os processos finais que são excutados:
+<ul>
+	<li><strong>PostRestoreReplicationFixup: CDC cleanup begins</strong></li>
+	<li><strong>PostRestoreReplicationFixup: CDC cleanup is complete</strong>
+<ul>
+	<li>Execução do <em>cleanup </em>do CDC (Change Data Capture) no banco restaurado. Essa ação deve-se ao fato de o restore não ter sido realizado com a opção: KEEP_CDC.</li>
+</ul>
+</li>
+	<li><strong>PostRestoreReplicationFixup is complet</strong></li>
+	<li><strong>Database is Restarted</strong>
+<ul>
+	<li>Restart do banco de dados.</li>
+</ul>
+</li>
+	<li><strong>Resuming any halted Fulltext crawls</strong></li>
+	<li><strong>Writing history records</strong></li>
+	<li><strong>Writing history records is complete (elapsed = 606 ms)</strong>
+<ul>
+	<li>Gravação do registo da atividade de restore nas tabelas de sistema do banco de MSDB. (restorehistory)</li>
+</ul>
+</li>
+	<li><strong>MSDB maintenance is complete</strong></li>
+	<li><strong>RESTORE DATABASE finished</strong>
+<ul>
+	<li>Finalização do Backup e disponibilização do banco de dados para utilização.</li>
+</ul>
+</li>
+</ul>
+<h1>Conclusão:</h1>
+Para uma simples conferência do percentual do progresso de atividades de BACKUP e RESTORE, um select na DMV <span style="color: #008000;">sys.dm_exec_requests</span> ou mesmo a cláusula <span style="color: #008000;">STATS</span> no comando de backup / restore podem resolver, porém se for necessário um acompanhamento mais detalhado, principalmente para grandes bancos de dados (VLDB), pois nestes casos, mesmo após a exibição de 100% do progresso, pode-se demorar um tempo considerável, é possível a utilização deste novo XE juntamente com os <em>traceflags </em>mencionados neste blog post, e conseguir com isso um excelente detalhamento do processo como um todo.
+<h1>Referências:</h1>
+<ul>
+	<li><strong>New extended event to track backup and restore progress</strong>
+<ul>
+	<li><a href="http://blogs.msdn.com/b/sql_server_team/archive/2015/09/22/new-extended-event-to-track-backup-and-restore-progress.aspx#.VgtLzHpVhBd" target="_blank">http://blogs.msdn.com/b/sql_server_team/archive/2015/09/22/new-extended-event-to-track-backup-and-restore-progress.aspx#.VgtLzHpVhBd</a></li>
+</ul>
+</li>
+	<li><strong>Instant File Intialization</strong>
+<ul>
+	<li><a href="http://msdn.microsoft.com/en-us/library/ms175935.aspx" target="_blank">http://msdn.microsoft.com/en-us/library/ms175935.aspx</a></li>
+</ul>
+</li>
+</ul>
+&nbsp;
+
+&nbsp;
+
+&nbsp;
+  </div>
+  <div class="article-footer">
+    <div class="pill-row"><span class="pill">Backup</span><span class="pill">Database Administration</span><span class="pill">Tech</span><span class="pill">Virtual PASS BR</span></div>
+    <div class="pill-row"><span class="pill">Backup</span><span class="pill">FoRG</span><span class="pill">Friends of RedGate</span><span class="pill">Pol&#237;tica de Backup</span><span class="pill">SQLSERVER2016</span><span class="pill">Virtual Pass Br</span><span class="pill">VirtualPass</span><span class="pill">VirtualPassPT</span></div>
+    <div class="post-nav">
+      <div><a href="../xe-sql-2016-track-backup-e-restore-parte-2/">Newer: [XE SQL 2016] - Track Backup e Restore - Parte 2</a></div>
+      <div><a href="../troubleshooting-the-wrong-diskette-is-in-the-drive-insert-volume-serial-number-into-drive/">Older: [Troubleshooting] The wrong diskette is in the drive. Insert (Volume Serial Number: ) into drive.</a></div>
+    </div>
+  </div>
+</article>
+    </main>
+    <footer class="site-footer">
+      <p>Conteudo preservado a partir do export WordPress do blog de Edvaldo Castro.</p>
+      <p>Este site foi gerado como um arquivo estatico para consulta publica.</p>
+    </footer>
+  </div>
+</body>
+</html>

@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Continuando, conforme informado no post anterior , onde comecei a falar sobre Backup e seguran&#231;a dos dados, a inten&#231;&#227;o neste artigo &#233; dissertar um pouco sobre minha vis&#227;o a respeito de &quot;Pol&#237;tica de Backup&quot; e tentar desta..." />
+  <title>Pol&#237;tica de backup - Implante esta ideia.</title>
+  <link rel="stylesheet" href="../../styles.css" />
+</head>
+<body class="single-post">
+  <div class="page-shell">
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark">EC</span>
+        <span class="brand-copy">
+          <strong>Edvaldo Castro</strong>
+          <small>Arquivo estatico do antigo WordPress</small>
+        </span>
+      </a>
+      <nav class="site-nav">
+        <a href="../../">Home</a>
+        <a href="../../posts/">Posts</a>
+        <a href="../../pages/">Pages</a>
+        <a href="../../archive/">Arquivo</a>
+      </nav>
+    </header>
+    <main class="site-main">
+      <article class="article-card">
+  <div class="article-head">
+    <p class="meta-line">Post</p>
+    <h1 class="post-title">Pol&#237;tica de backup - Implante esta ideia.</h1>
+    <p class="meta-line">19 Jan 2012 <span class="dot">&middot;</span> Backup, Tech, Virtual PASS BR <span class="dot">&middot;</span> Backup, banco de dados, Pol&#237;tica de Backup, Seguran&#231;a, SQL SERVER, Virtual Pass Br</p>
+  </div>
+  <div class="article-content">
+    <p style="text-align: justify;">Continuando, conforme informado no <a href="http://edvaldocastro.wordpress.com/2012/01/05/backup01/">post anterior</a>, onde comecei a falar sobre Backup e segurança dos dados, a intenção neste artigo é dissertar um pouco sobre minha visão a respeito de "Política de Backup" e tentar desta forma esclarecer e discutir um pouco sobre este assunto de extrema importância.</p>
+<p style="text-align: justify;">Gosto sempre de começar meus escritos com uma definição acerca daquilo que estou escrevendo, mas desta vez, vou fazer um pouco diferente e dar minha própria definição para "Política de Backup". O termo refere-se não somente a um documento onde estão definidas diversas diretrizes sobre a gerência de backups da empresa, mas também a uma cultura adotada pela mesma, acerca da segurança e integridade dos dados.</p>
+<p style="text-align: justify;">A principal recomendação a respeito da criação e manutenção de uma política de backup, é que tudo, extremamente tudo referente a esta política deve estar documentado e sempre atualizado, afim de que esta documentação seja seguida à risca e seja de conhecimento de todos envolvidos no processo.</p>
+<p style="text-align: justify;">A seguir alguns tópicos e boas práticas (na minha visão) para que seja definida e implantada uma boa política de backup, e também para que esta não torne-se mais um documento que nunca é utilizado, ou sequer lido por nenhum dos colaboradores de uma empresa.</p>
+
+<ul style="text-align: justify;">
+ 	<li><strong><span style="text-decoration: underline;">Cenário Atual</span></strong>: É necessário realizar um levantamento detalhado do cenário atual como inventário dos ativos disponíveis para armazenamento, servidores envolvidos nos processos de backup e softwares utilizados, com a finalidade de se ter conhecimento dos riscos aos quais os dados estão sujeitos, os problemas e demais não conformidades encontradas, para que a implantação da política de backup possa mitigar tais problemas, minimizar os riscos e ajustar não conformidades.</li>
+</ul>
+<ul style="text-align: justify;">
+ 	<li><strong><span style="text-decoration: underline;">Tolerância à falha e tempo de downtime</span></strong>: Nesta fase é realizado a Identificação dos dados críticos da empresa, bem como o nível de criticidade destes dados, pretendendo-se com esta informação evitar a aquisição e disponibilização de recursos além do necessário, o que certamente aumentaria o custo da implantação da política de backup. Também deve-se fazer a verificação da tolerância ao tempo de <em>downtime</em> (tempo em que os dados ficam indisponíveis), esta será uma informação de extrema importância para a definição dos tipos e periodicidade dos backups.</li>
+</ul>
+<ul style="text-align: justify;">
+ 	<li><strong><span style="text-decoration: underline;">Políticas de Restauração</span></strong>: Afim de não ser pego de surpresa no evento de uma falha e também para minimizar o tempo de restore, independente se a tolerância e criticidade dos dados permitem um tempo maior, é necessário definir os responsáveis por cada uma das atividades relacionadas ao backup (Geração do backup, Restore, Documentação, etc), pois estando todos os papéis e funções bem definidos, cada um já saberá o que fazer no advento de um problema de proporções maiores.</li>
+</ul>
+<ul style="text-align: justify;">
+ 	<li><span style="text-decoration: underline;"><strong>Testes de Restore</strong></span>: Um dos pontos mais importantes quando pretende-se implantar uma política de backup que seja eficiente e eficaz, é garantir que os backups gerados funcionem quando os mesmo forem necessários, pouco ou nada adianta você ter uma política de backup implantada, documentada e rodando perfeitamente em seu ambiente, se quando você precisar realizar um restore, seu backup falhar, neste caso todo o trabalho anterior terá sido em vão. Afim de evitar estes tipos de problemas, é extremamente necessário que na política de backup esteja explicitamente documentado a periodicidade e os procedimentos para realizações periódicas de testes de restore e validação dos backups gerados, inclusive gerando evidências e documentações destes testes realizados com ou sem sucesso. Assim garante-se que o backup está sendo realizado, e que estará sempre disponível quando se precisar do mesmo.</li>
+</ul>
+<ul style="text-align: justify;">
+ 	<li><span style="text-decoration: underline;"><strong>Tipos de Backups e periodicidade</strong></span>: Com base nas informações previamente levantadas, é possível definir quais são os tipos de backup a serem realizados (Full, Diferencial, Log de Transações, Grupo de Arquivos, etc), bem como a periodicidade de cada um destes, esta definição está diretamente ligada à quão tolerante a empresa é à perda de dados e ao tempo suportado de <em>downtime</em>.</li>
+</ul>
+<ul style="text-align: justify;">
+ 	<li><span style="text-decoration: underline;"><strong>Armazenamento do Backup</strong></span>: Deve-se definir mídias e locais seguros para o armazenamento do backup seguindo algumas recomendações básicas.
+<ul>
+ 	<li>Armazenar o backup em mídia seguro (Fita magnética por exemplo), e que fique fisicamente separado do servidor onde os dados estão em produção.</li>
+ 	<li>Se possível e aplicável armazenar estas fitas magnéticas em cofres anti-chamas, anti-roubo e que tenha segurança contra acesso não autorizado.</li>
+ 	<li>Restringir acesso ao local onde tais backups estão armazenados, somente às pessoas envolvidas no processo e os proprietários dos dados.</li>
+</ul>
+</li>
+</ul>
+<ul style="text-align: justify;">
+ 	<li><strong><span style="text-decoration: underline;">Divulgação e atualização da política de backup</span></strong>: Uma vez desenvolvida, implantada e documentada, a política de backup deve ser amplamente divulgada ficando em local de fácil acesso a todos os envolvidos no processo de backup e também àqueles que podem porventura necessitar fazer solicitações de dados armazenados nos backups. Conforme previamente mencionado, devem ser definidos responsáveis por cada processo envolvendo o backup, e o responsável pela criação e manutenção da política de backup deve manter esta sempre o mais atualizada possível, divulgando novamente toda e qualquer alteração na mesma.</li>
+</ul>
+<p style="text-align: justify;">Estas são somente algumas das recomendações básicas para o desenvolvimento de uma política de backup que funcione e defina bem os processos para segurança e armazenamento dos dados de uma empresa.</p>
+<p style="text-align: justify;">Quando se pensa em backup e assuntos ligados a banco de dados como um todo, todo e qualquer cuidado e precaução são poucos, logo o responsável por este processo (geralmente um DBA) deve ser precavido e jamais sentir-se seguro e confortável com a configuração atual de seus sistemas de backup e deve buscar sempre melhorias e mudanças que aumentem a segurança relacionadas aos dados pelos quais é responsável.</p>
+<p style="text-align: justify;">Em próximos posts, partirei um pouco mais para a prática demonstrando passo a passo a criação de backups e restores com os principais tipos disponíveis pelo SGDB SQL SERVER.</p>
+<p style="text-align: justify;">Se você chegou até aqui, por favor deixe sua crítica, comentário sugestão ou opinião, se devo parar ou continuar, e qual direcionamento dar nos próximos posts.</p>
+<p style="text-align: justify;">Até a próxima edição...</p>
+<p style="text-align: justify;">Att.:</p>
+<p style="text-align: justify;">Edvaldo Castro</p>
+
+<div style="text-align: justify;"><span style="color: #999999;">Administrador de Banco de Dados</span></div>
+<div style="text-align: justify;"><span style="color: #999999;">
+</span></div>
+<div style="text-align: justify;"><span style="color: #999999;">MCITP / MCTS: DBA SQLSERVER 2005</span></div>
+<div style="text-align: justify;"><span style="color: #999999;">MCITP / MCTS: DBA SQLSERVER 2008 </span></div>
+<div style="text-align: justify;"><span style="color: #999999;">CCSQLA </span></div>
+<div style="text-align: justify;"><span style="color: #999999;">TOEIC</span></div>
+  </div>
+  <div class="article-footer">
+    <div class="pill-row"><span class="pill">Backup</span><span class="pill">Tech</span><span class="pill">Virtual PASS BR</span></div>
+    <div class="pill-row"><span class="pill">Backup</span><span class="pill">banco de dados</span><span class="pill">Pol&#237;tica de Backup</span><span class="pill">Seguran&#231;a</span><span class="pill">SQL SERVER</span><span class="pill">Virtual Pass Br</span></div>
+    <div class="post-nav">
+      <div><a href="../webcasts-comunidade-tecnica-mcitpsc/">Newer: Webcasts - Comunidade T&#233;cnica MCITPSC</a></div>
+      <div><a href="../backup01/">Older: BACKUP - Voc&#234; est&#225; fazendo corretamente?</a></div>
+    </div>
+  </div>
+</article>
+    </main>
+    <footer class="site-footer">
+      <p>Conteudo preservado a partir do export WordPress do blog de Edvaldo Castro.</p>
+      <p>Este site foi gerado como um arquivo estatico para consulta publica.</p>
+    </footer>
+  </div>
+</body>
+</html>

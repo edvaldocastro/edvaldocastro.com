@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Dando sequ&#234;ncia &#224; s&#233;rie de posts sobre backup, iniciada com os posts &quot; BACKUP - Voc&#234; est&#225; fazendo corretamente? &quot; e &quot; Pol&#237;tica de backup - Implante esta ideia &quot;, este post ser&#225; um pouco mais voltado &#224; pr&#225;tica, demonstran..." />
+  <title>Full, Diferencial e T-Log - Salve seus dados</title>
+  <link rel="stylesheet" href="../../styles.css" />
+</head>
+<body class="single-post">
+  <div class="page-shell">
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark">EC</span>
+        <span class="brand-copy">
+          <strong>Edvaldo Castro</strong>
+          <small>Arquivo estatico do antigo WordPress</small>
+        </span>
+      </a>
+      <nav class="site-nav">
+        <a href="../../">Home</a>
+        <a href="../../posts/">Posts</a>
+        <a href="../../pages/">Pages</a>
+        <a href="../../archive/">Arquivo</a>
+      </nav>
+    </header>
+    <main class="site-main">
+      <article class="article-card">
+  <div class="article-head">
+    <p class="meta-line">Post</p>
+    <h1 class="post-title">Full, Diferencial e T-Log - Salve seus dados</h1>
+    <p class="meta-line">11 Feb 2012 <span class="dot">&middot;</span> Backup, Tech, Virtual PASS BR <span class="dot">&middot;</span> Backup, banco de dados, diferencial, differential backup, full, log, Pol&#237;tica de Backup, Seguran&#231;a, SQL SERVER, transaction log, Virtual Pass Br</p>
+  </div>
+  <div class="article-content">
+    <p style="text-align:justify;">Dando sequência à série de posts sobre backup, iniciada com os posts "<a href="http://edvaldocastro.wordpress.com/2012/01/05/backup01/">BACKUP - Você está fazendo corretamente?</a>" e "<a href="http://edvaldocastro.wordpress.com/2012/01/19/politicabkp/">Política de backup - Implante esta ideia</a>", este post será um pouco mais voltado à prática, demonstrando como executar os três tipos de backup mais comuns e que de uma forma básica, podem garantir que seus dados estejam a salvos, caso bem implantados.</p>
+<p style="text-align:justify;">Não tenho intenção aqui, de substituir, copiar ou quaisquer outras formas de referências aos meios de documentação oficial do SQL SERVER no que refere-se a Backup. A ideia desta série de posts, é mostrar de forma clara, simples e prática "POR QUE", "QUANDO" e "COMO" realizar seus backups e implantar política, documentação e etc.</p>
+<p style="text-align:justify;">Para saber quais, que tipos, e quando foram gerados os backups de uma determinada instância, pode-se consultar:</p>
+<p style="text-align:justify;"><span style="color:#0000ff;">SELECT</span> * <span style="color:#0000ff;">FROM</span> msdb..backupset</p>
+<p style="text-align:justify;">No SQL SERVER, existem diversos tipos de backup, já citados nos posts anteriores, porém os principais tipos para garantir-se que TODOS seus dados poderão ser restaurados são três: "Backup Full", "Backup Differential" e "Backup de Transaction Log", abaixo segue explicação rápida, com opções e exemplos de cada um deles.</p>
+<p style="text-align:justify;">Abaixo, é criado um banco de dados "DB_BACKUP_EXEMPLO " para exemplificar e permitir testes na prática dos backups que serão demonstrados em seguida.</p>
+<p style="text-align:justify;"><span style="color:#0000ff;">CREATE DATABASE</span> [DB_BACKUP_EXEMPLO]</p>
+<p style="text-align:justify;"><span style="color:#0000ff;">GO</span></p>
+<p style="text-align:justify;"><span style="text-decoration:underline;"><strong>BACKUP FULL</strong></span></p>
+<p style="text-align:justify;">O backup full, ou completo de um banco de dados no SQL Server leva consigo todas as páginas de dados deste banco, além do log das transações ativas durante a execução do backup.Caso seja feito um backup com as opções "default" conforme abaixo, o tamanho do backup full será igual ao tamanho das páginas utilizadas dentro do espaço reservado para este banco, somado ao tamanho do log das transações que estavam ativas durante a execução do backup, que pode durar desde minutos até horas, para garantir a consistência dos dados armazenados, o arquivo de backup full contém esta porção do log de transações.</p>
+<p style="text-align:justify;">O exemplo abaixo, gera um backup full com as opções "default", pois as mesmas não são explicitamente informadas no script que gera o backup</p>
+<p style="text-align:justify;"><span style="color:#0000ff;">BACKUP DATABASE</span> [DB_BACKUP_EXEMPLO]</p>
+<p style="text-align:justify;"><span style="color:#0000ff;">TO DISK</span> = <span style="color:#ff0000;">N'C:tempBackups_SQLSERVERBKP_BACKUP_EXEMPLO.BAK'</span></p>
+<p style="text-align:justify;">Além das opções default para um backup, é possível definir explicitamente algumas opções, abaixo segue exemplo de algumas:</p>
+<p style="text-align:justify;"><span style="color:#0000ff;">INIT</span> [INIT / NOINIT] - Esta opção define que você vai ou não sobrescrever o arquivo de backup no diretório em que este está sendo salvo, você pode optar por dar um "append" nos arquivos de backup gerados, e no momento do restore informar qual o arquivo será utilizado para gerar o backup.</p>
+<p style="text-align:justify;"><span style="color:#0000ff;">COMPRESSION</span> - com esta opção, pode-se gerar o arquivo de backup já compactado, caso a opção de compressão de backup seja explicitamente informada, o SQL Server executa uma verificação do backup com "<a href="http://msdn.microsoft.com/pt-br/library/ms189788.aspx">CHECKSUM</a>" muito recomendada para economiza de espaço para armazenamento do backup</p>
+<p style="text-align:justify;"><span style="color:#008000;">STATS</span> = 10 - Define em porcentagem um valor para que a console do SQL Server exiba o progresso da geração do backup. Caso não seja especificado, o resultado só é exibido no final da execução do backup. Para bases de dados muito grandes, é extremamente aconselhável que se defina esta opção, pois ter-se-á a informação do progresso do backup, podem estimar-se o tempo decorrido e restante para conclusão da operação.</p>
+<p style="text-align:justify;">Existem outra dezenas de opções a serem definidas durante a geração de um backup no SQL Server, porém a intenção aqui é descrever de maneira simples e objetiva os meios de geração dos backups mais comuns. Para descrição completa e detalhada dos backups no SQL Server, é possível consultar no site do <a href="http://msdn.microsoft.com/pt-br/library/ms186865.aspx">MSDN.</a></p>
+<p style="text-align:justify;">O script de backup full com as opções supracitadas ficaria da seguinte forma:</p>
+<p style="text-align:justify;"><span style="color:#0000ff;">BACKUP DATABASE</span> [DB_BACKUP_EXEMPLO]
+<span style="color:#0000ff;">TO DISK</span> = <span style="color:#ff0000;">N'C:tempBackups_SQLSERVERBKP_DB_BACKUP_EXEMPLO_FULL.BAK'</span>
+<span style="color:#0000ff;">WITH INIT</span>
+,<span style="color:#0000ff;">COMPRESSION</span>
+,<span style="color:#008000;">STATS</span> = 10</p>
+<p style="text-align:justify;"><strong><span style="text-decoration:underline;">BACKUP DIFFERENTIAL</span></strong></p>
+<p style="text-align:justify;">O backup diferencial gera uma cópia em disco da diferença das páginas de dados alteradas a partir do último BACKUP FULL. Um pré requisito para que seja possível a criação de um backup deste tipo, é que exista um backup full desta base antes de se criar o backup diferencial.</p>
+<p style="text-align:justify;">Diferente do backup de log de transações, que veremos a seguir ainda neste post, o backup diferencial é cumulativo, ou seja, cada backup gerado, contém todas as alterações desde o último backup full. Exemplo: Se uma rotina executa um backup diferencial automaticamente de segunda a sexta, o backup da quinta feira, conterá os dados de todos os demais backups de segunda, terça, quarta, quinta, que foram gerados após o último Full.</p>
+<p style="text-align:justify;">A sintaxe é idêntica ao backup full e aceitas as mesmas opções, exceto que para informar que o backup que se deseja gerar é do tipo DIFFERENTIAL, deve-se incluir esta opção na lista de opções informadas para o backup full. Um exemplo de backup diferencial do nosso banco DB_BACKUP_EXEMPLO, seria:</p>
+<p style="text-align:justify;"><span style="color:#0000ff;">BACKUP DATABASE</span> [DB_BACKUP_EXEMPLO]
+<span style="color:#0000ff;">TO DISK</span> = <span style="color:#ff0000;">N'C:tempBackups_SQLSERVERBKP_DB_BACKUP_EXEMPLO_DIFF.BAK'</span>
+<span style="color:#0000ff;">WITH DIFFERENTIAL</span>
+,<span style="color:#0000ff;">COMPRESSION</span>
+,<span style="color:#008000;">STATS</span> = 10</p>
+<p style="text-align:justify;"><span style="text-decoration:underline;"><strong>BACKUP TRANSACTION LOG</strong></span></p>
+<p style="text-align:justify;">O log de transações é ao meu ver um dos pontos mais complexos e fascinantes dentro do SQL Server, é ele quem garante a integridade e consistência da base em casos de falha, e também permite através de operações de backup / restore que sejam feitas por exemplos recuperações ao exato ponto antes de uma falha do banco, servidor ou instância.</p>
+<p style="text-align:justify;">O T-LOG gera uma sequência numérica, crescente e única chamada de LOG CHAIN ou Cadeia de Log, que é utilizada entre outras coisas para garantir uma sequência em que as transações são realizadas e gravadas e assim permitir a restauração das mesmas. Para maiores detalhes sobre este fantástico recurso do SQL Server, indico a leitura das páginas do <a href="http://msdn.microsoft.com/pt-br/library/ms179355.aspx">MSDN </a>que tratam a respeito.</p>
+<p style="text-align:justify;">O backup do log de transações depende diretamente do <a href="http://msdn.microsoft.com/pt-br/library/ms189275.aspx">Modelo de Recuperação</a> com que o banco está configurado e é necessário a realização de backup para controlar seu crescimento.</p>
+<p style="text-align:justify;">A sintaxe de criação para o backup do log de transações é um pouco diferente, porém tão simples quanto. Segue exemplo:</p>
+<p style="text-align:justify;"><span style="color:#0000ff;">BACKUP</span> <span style="color:#ff00ff;">LOG</span> [DB_BACKUP_EXEMPLO]
+<span style="color:#0000ff;">TO DISK</span> = <span style="color:#ff0000;">N'C:tempBackups_SQLSERVERBKP_DB_BACKUP_EXEMPLO_LOG.BAK'</span>
+<span style="color:#0000ff;">WITH COMPRESSION</span>
+,<span style="color:#008000;">STATS</span> = 5</p>
+<p style="text-align:justify;"><strong><span style="text-decoration:underline;">BACKUP TAIL LOG</span></strong></p>
+<p style="text-align:justify;">O backup denominado como TAIL DO LOG, é exatamente o mesmo tipo de backup do log de transações, porém este deixa a base inacessível, para que não haja quaisquer alterações após a conclusão deste backup, alguns exemplos de utilização para o backup do tail do log são:</p>
+
+<ul style="text-align:justify;">
+	<li>Para mover o banco entre instâncias, e garantir que nenhuma transação será feita durante a geração do backup de log no destino e restore na origem</li>
+	<li>Em caso de falha do banco, é possível na maioria das vezes alterar o status do banco para o modo EMERGENGY e efetuar o backup do tail do log</li>
+	<li>entre outras...</li>
+</ul>
+<p style="text-align:justify;">Segue exemplo da sintaxe de criação de um backup com tail do log:</p>
+<p style="text-align:justify;"><span style="color:#0000ff;">BACKUP</span> <span style="color:#ff00ff;">LOG</span> [DB_BACKUP_EXEMPLO]
+<span style="color:#0000ff;">TO DISK</span> = <span style="color:#ff0000;">N'C:tempBackups_SQLSERVERBKP_DB_BACKUP_EXEMPLO_TAIL_LOG.BAK'</span>
+<span style="color:#0000ff;">WITH NORECOVERY</span></p>
+<p style="text-align:justify;">Estes foram exemplos simples e práticos da criação dos três tipos de backup mais comuns do SQL Server e que sem requerer muita complexidade podem garantir o mínimo de "data loss" para o seu ambiente, caso sigam as recomendações e boas práticas algumas citadas em meus posts anteriores...</p>
+<p style="text-align:justify;">Mais uma vez, peço que caso tenha chegado até este ponto no artigo, por favor, deixe seu comentário, sugestão, crítica ou qualquer coisa, para que possa avaliar a qualidades dos conteúdos postados e estar em melhoria contínua...</p>
+<p style="text-align:justify;">Abraço....</p>
+<p style="text-align:justify;">Edvaldo Castro</p>
+<p style="text-align:justify;">@edvaldocastro02</p>
+  </div>
+  <div class="article-footer">
+    <div class="pill-row"><span class="pill">Backup</span><span class="pill">Tech</span><span class="pill">Virtual PASS BR</span></div>
+    <div class="pill-row"><span class="pill">Backup</span><span class="pill">banco de dados</span><span class="pill">diferencial</span><span class="pill">differential backup</span><span class="pill">full</span><span class="pill">log</span><span class="pill">Pol&#237;tica de Backup</span><span class="pill">Seguran&#231;a</span><span class="pill">SQL SERVER</span><span class="pill">transaction log</span><span class="pill">Virtual Pass Br</span></div>
+    <div class="post-nav">
+      <div><a href="../restore/">Newer: Restore - A fase cr&#237;tica do processo</a></div>
+      <div><a href="../webcasts-comunidade-tecnica-mcitpsc/">Older: Webcasts - Comunidade T&#233;cnica MCITPSC</a></div>
+    </div>
+  </div>
+</article>
+    </main>
+    <footer class="site-footer">
+      <p>Conteudo preservado a partir do export WordPress do blog de Edvaldo Castro.</p>
+      <p>Este site foi gerado como um arquivo estatico para consulta publica.</p>
+    </footer>
+  </div>
+</body>
+</html>

@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Demanda: Um dos clientes da Sr. Nimbus , solicitou a instala&#231;&#227;o de um cluster Windows Server 2012 R2 com SQL Server 2014. Um dos requisitos do SQL Server 2012 / 2014 &#233; a habilita&#231;&#227;o do &quot;.Net Framework 3.5&quot; que pode ser r..." />
+  <title>[Troubleshooting] - Erro ao habilitar .Net Framework 3.5 no Windows Server 2012 R2</title>
+  <link rel="stylesheet" href="../../styles.css" />
+</head>
+<body class="single-post">
+  <div class="page-shell">
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark">EC</span>
+        <span class="brand-copy">
+          <strong>Edvaldo Castro</strong>
+          <small>Arquivo estatico do antigo WordPress</small>
+        </span>
+      </a>
+      <nav class="site-nav">
+        <a href="../../">Home</a>
+        <a href="../../posts/">Posts</a>
+        <a href="../../pages/">Pages</a>
+        <a href="../../archive/">Arquivo</a>
+      </nav>
+    </header>
+    <main class="site-main">
+      <article class="article-card">
+  <div class="article-head">
+    <p class="meta-line">Post</p>
+    <h1 class="post-title">[Troubleshooting] - Erro ao habilitar .Net Framework 3.5 no Windows Server 2012 R2</h1>
+    <p class="meta-line">14 Nov 2014 <span class="dot">&middot;</span> Database Administration, Tech, Virtual PASS BR <span class="dot">&middot;</span> .net framework 3.5, .netframework3.5, english, erro, erroclusterSQL, SERVERsqlserver2014, sqlpass, troubleshooting, VirtualPassBr, VirtualPassPT</p>
+  </div>
+  <div class="article-content">
+    <h3 style="text-align: justify;">Demanda:</h3>
+Um dos clientes da <a href="http://www.srnimbus.com.br/" target="_blank">Sr. Nimbus</a>, solicitou a instalação de um cluster Windows Server 2012 R2 com SQL Server 2014.
+<p style="text-align: justify;">Um dos requisitos do SQL Server 2012 / 2014 é a habilitação do ".Net Framework 3.5" que pode ser realizado tanto pela interface gráfica quanto via linha de comando, utilizando por exemplo o "<a href="http://technet.microsoft.com/en-us/library/hh825236.aspx" target="_blank">Dism.exe</a>"</p>
+<p style="text-align: justify;">Para habilitar o .Net Framework 3.5 via linha de comando, basicamente deve-se especificar a habilitação da feature e o caminho dos arquivos de onde serão instalados, conforme exemplo a seguir:</p>
+
+<address style="text-align: left;"><span style="color: #ff0000;">Dism.exe /online /enable-feature /featurename:NetFx3 /All /Source:D:sourcessxs</span></address>
+<h3 style="text-align: justify;">Problema:</h3>
+<a href="../../assets/uploads/2015/04/ErroNetFramework1.png"><img class="aligncenter wp-image-1450 size-full" src="../../assets/uploads/2015/04/ErroNetFramework1.png" alt="ErroNetFramework" width="799" height="563" /></a>
+
+O último trecho ( <span style="color: #0000ff;">/Source:D:sourcessxs</span>) da linha de comando supracitada, é onde deve-se informar a fonte para a habilitação do .Net Framework 3.5.
+<p style="text-align: justify;">O erro retornado é que não foi possível fazer o download (da origem informada) dos arquivos para a necessários para esta habilitação, mesmo o caminho tendo sido informado corretamente.</p>
+<p style="text-align: center;"><i>“...the source files could not be downloaded...”</i></p>
+<p style="text-align: justify;">Este erro acontece devido a atualizações de segurança (<a href="http://support.microsoft.com/kb/2966828" target="_blank">KB2966828</a> e <a href="https://support.microsoft.com/kb/2966827" target="_blank">KB2966827</a>) do .Net Framework 3.5 que podem ter sido instaladas antes de sua habilitação, automaticamente via windows update (caso o servidor tenha acesso à internet), via WSUS ou mesmo manualmente.</p>
+
+<h3 style="text-align: justify;">Solução:</h3>
+<ul>
+	<li> Run: Appwiz.cpl (Adicionar ou Remover programas)</li>
+	<li>Clique em Installed Updates</li>
+	<li>Na caixa de pesquisa, procure por KB2966828 e KB2966827</li>
+	<li>Desinstale ambos, ou apenas o que encontrar</li>
+	<li>Faça o procedimento de habilitação do .NetFramework 3.5</li>
+	<li>Faça o download
+<ul>
+	<li>KB2966828
+<ul>
+	<li><a href="http://www.microsoft.com/en-us/download/details.aspx?id=43926">http://www.microsoft.com/en-us/download/details.aspx?id=43926</a></li>
+</ul>
+</li>
+	<li>KB2966827
+<ul>
+	<li><a href="http://www.microsoft.com/en-us/download/details.aspx?id=43951">http://www.microsoft.com/en-us/download/details.aspx?id=43951</a></li>
+</ul>
+</li>
+</ul>
+</li>
+	<li>Reinstale o(s) KB(s) removido(s).</li>
+	<li>Prossiga normalmente com a instalação do SQL Server.</li>
+</ul>
+<h3 style="text-align: justify;"> Referências:</h3>
+<ul>
+	<li>  KB2966828</li>
+	<li>
+<ul>
+	<li><a href="http://www.microsoft.com/en-us/download/details.aspx?id=43926">http://www.microsoft.com/en-us/download/details.aspx?id=43926</a></li>
+</ul>
+</li>
+	<li>KB2966827
+<ul>
+	<li><a href="http://www.microsoft.com/en-us/download/details.aspx?id=43951">http://www.microsoft.com/en-us/download/details.aspx?id=43951</a></li>
+</ul>
+</li>
+	<li>Erro de instalação do .NET Framework 3.5
+<ul>
+	<li><a href="http://support.microsoft.com/kb/2734782">http://support.microsoft.com/kb/2734782</a></li>
+</ul>
+</li>
+	<li>Ask Premier Field Engineering (PFE) Platforms
+<ul>
+	<li><a href="http://blogs.technet.com/b/askpfeplat/archive/2014/09/29/attempting-to-install-net-framework-3-5-on-windows-server-2012-r2-fails-with-error-code-0x800f0906-or-the-source-files-could-not-be-downloaded-even-when-supplying-source.aspx">http://blogs.technet.com/b/askpfeplat/archive/2014/09/29/attempting-to-install-net-framework-3-5-on-windows-server-2012-r2-fails-with-error-code-0x800f0906-or-the-source-files-could-not-be-downloaded-even-when-supplying-source.aspx</a></li>
+</ul>
+</li>
+</ul>
+<p style="text-align: justify;">Obrigado pela visita,</p>
+<p style="text-align: justify;">Edvaldo Castro</p>
+  </div>
+  <div class="article-footer">
+    <div class="pill-row"><span class="pill">Database Administration</span><span class="pill">Tech</span><span class="pill">Virtual PASS BR</span></div>
+    <div class="pill-row"><span class="pill">.net framework 3.5</span><span class="pill">.netframework3.5</span><span class="pill">english</span><span class="pill">erro</span><span class="pill">erroclusterSQL</span><span class="pill">SERVERsqlserver2014</span><span class="pill">sqlpass</span><span class="pill">troubleshooting</span><span class="pill">VirtualPassBr</span><span class="pill">VirtualPassPT</span></div>
+    <div class="post-nav">
+      <div><a href="../vlf_control/">Newer: Controle Autom&#225;tico dos VLFs (Virtual Log Files)</a></div>
+      <div><a href="../sql-server-backup-internals-backup-full/">Older: [SQL Server Backup Internals] - Backup Full</a></div>
+    </div>
+  </div>
+</article>
+    </main>
+    <footer class="site-footer">
+      <p>Conteudo preservado a partir do export WordPress do blog de Edvaldo Castro.</p>
+      <p>Este site foi gerado como um arquivo estatico para consulta publica.</p>
+    </footer>
+  </div>
+</body>
+</html>

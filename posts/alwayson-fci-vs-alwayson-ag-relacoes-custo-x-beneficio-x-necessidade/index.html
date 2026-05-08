@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="O assunto come&#231;a prometendo ser extenso, interessante e com uma pitada de pol&#234;mica... Prossigamos ent&#227;o com as defini&#231;&#245;es: (Segundo Edvaldo Castro) WSFC Windows Server Failover Cluster : &#201; o servi&#231;o do Windows Server que..." />
+  <title>AlwaysOn FCI VS AlwaysOn AG - Rela&#231;&#245;es: Custo X Benef&#237;cio X Necessidade</title>
+  <link rel="stylesheet" href="../../styles.css" />
+</head>
+<body class="single-post">
+  <div class="page-shell">
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark">EC</span>
+        <span class="brand-copy">
+          <strong>Edvaldo Castro</strong>
+          <small>Arquivo estatico do antigo WordPress</small>
+        </span>
+      </a>
+      <nav class="site-nav">
+        <a href="../../">Home</a>
+        <a href="../../posts/">Posts</a>
+        <a href="../../pages/">Pages</a>
+        <a href="../../archive/">Arquivo</a>
+      </nav>
+    </header>
+    <main class="site-main">
+      <article class="article-card">
+  <div class="article-head">
+    <p class="meta-line">Post</p>
+    <h1 class="post-title">AlwaysOn FCI VS AlwaysOn AG - Rela&#231;&#245;es: Custo X Benef&#237;cio X Necessidade</h1>
+    <p class="meta-line">23 Jun 2015 <span class="dot">&middot;</span> HADR, Tech, Virtual PASS BR <span class="dot">&middot;</span> Comunidade, MTAC, sqlfriends, sqlserver, sqlserver2014, SQLSERVER2016, Virtual Pass Br, VirtualPassBr, VirtualPassPT</p>
+  </div>
+  <div class="article-content">
+    &nbsp;
+
+O assunto começa prometendo ser extenso, interessante e com uma pitada de polêmica...
+
+Prossigamos então com as definições: (Segundo Edvaldo Castro)
+<ol><strong>WSFC</strong></ol>
+<ul>
+<u>Windows Server Failover Cluster</u>: É o serviço do Windows Server que suporta e coordena os recursos de um Cluster de Failover, construído para prover disponibilidade para uma ou mais aplicações e/ou serviços.</ul>
+&nbsp;
+<ol><strong>AlwaysOn FCI</strong></ol>
+<ul>
+<u>AlwaysOn Failover Cluster Instances</u>: É o modo de instalação do SQL Server para que este possa fazer uso do WSFC e trabalhar com alta disponibilidade (HA), sendo capaz de estar "Ativo" em um nó do Cluster de Failover por vez em quaisquer nós que tenham sido previamente configurados para isto. Esta forma de alta disponibilidade do SQL Server já está presente desde as versões mais antigas, sendo aprimorado a cada nova versão, juntamente com o WSFC.</ul>
+&nbsp;
+<ol><strong>AlwaysOn AG</strong></ol>
+<ul>
+<u>AlwaysOn Availability Groups</u>: Feature nova no SQL Server lançada com a versão 2012 do produto, provê alta disponibilidade a nível de banco de dados, podendo agrupar um conjunto de bancos em uma mesma instância atribuir um nome virtual que será acessível pelas aplicações independente da réplica (cluster node) onde este grupo de disponibilidade estiver ativo. É a solução de Alta disponibilidade mais recente do SQL Server e está se tornando cada vez mais popular</ul>
+<h2>Custo X Benefício</H2>Para quaisquer ferramentas, features ou produtos que se deseja implementar, existem dois lados que são: Benefício(Prós) e Custo(Contras). Com as soluções de alta disponibilidade apresentadas para o SQL Server não é diferente, cada uma delas oferece um ou mais benefícios, mas também existe um "preço" a ser pago (não necessariamente, algo financeiro).
+A seguir um pouco dos pontos de benefício e custo destas features (Segundo Edvaldo Castro).
+&nbsp;
+<h3>WSFC</h3>
+O WSFC é a base para as soluções de Alta Disponibilidade apresentadas neste artigo (AlwaysOn FCI e AlwaysOn AG).
+Basicamente, o WSFC é um serviço do windows que pode "clusterizar" diversas aplicações provendo Alta Disponibilidade a nível de servidor (seja ele físico ou virtual). Enquanto o serviço clusterizado é executado um dos nós do cluster, um ou mais nós estarão em estado passivo, prontos para assumirem o serviço clusterizado no caso de uma falha no nó primário que force um failover entre estes nós.
+
+&nbsp;
+<h3>AlwaysOn FCI</h3>
+É a nomenclatura nova para uma instalação "clusterizada" do SQL Server, permitindo que um nó passivo assuma em caso de falha no nó ativo.
+&nbsp;
+<ol><strong>Prós</strong></ol>
+<ul>
+	<li>Menor custo com relação a armazenamento, visto que os dados são entregues em discos compartilhados entre os nós do cluster.</li>
+</ul>
+<ul>
+	<li>Dependendo do contrato e tipo de licenciamento, pode ser mais barato, pois não há necessidade (em alguns casos) de licenciamento do nó passivo.</li>
+</ul>
+<ul>
+	<li>Failover da instância como um todo (Logins, Jobs, Planos de Manutenção, Alertas, etc), não havendo a necessidade de controles externos dos itens correlacionados à instância.</li>
+</ul>
+<ul>
+	<li>O MSDTC (Microsoft Distributed Transaction Coordinator) é suportado, diferente do AG que não é suportado (Deverá ser suportado a partir da versão 2016)</li>
+</ul>
+<ul>
+	<li></li>
+</ul>
+&nbsp;
+<ol><strong>Contras</strong></ol>
+<ul>
+	<li>Resiliência e confiabilidade no seu sistema de armazenamento, pois caso uma LUN falhe sem possibilidades de recuperação, o sistema ficará indisponível, e possivelmente sem possibilidade de recuperação dos dados contidos neste disco.</li>
+</ul>
+<ul>
+	<li>Sub utilização de servidores (dependendo do desenho do cluster), visto que o nó passivo fica "ocioso" esperando que ocorra uma falha no nó ativo.</li>
+</ul>
+<ul>
+	<li>Configuração e troubleshooting geralmente complexos</li>
+</ul>
+<ul>
+	<li>Failover mais lento que o AlwaysOn AG</li>
+</ul>
+<ul>
+	<li></li>
+</ul>
+&nbsp;
+<h3>AlwaysOn AG</h3>
+&nbsp;
+<ol><strong>Prós</strong></ol>
+<ul>
+	<li>Disponibilidade de grupos de bancos de dados, com Listener (Nomes Virtuais) para estes grupos de bancos de dados</li>
+</ul>
+<ul>
+	<li>Réplicas Secundárias disponíveis para leitura, possibilitando direcionamento do workload de relatórios para as réplicas secundárias.</li>
+</ul>
+<ul>
+	<li>Possibilidade de execução dos Backups de Log de transações nas réplicas secundárias (e Backup Full com "COPY_ONLY"</li>
+</ul>
+<ul>
+	<li>Failover MUITO mais rapido, pois o único recurso do cluster que vai ser movido entre as réplicas são: Listener, IP e Recurso do AG.</li>
+</ul>
+<ul>
+	<li>Alta Disponibilidade e Recuperação de Desastre configurados juntos e de maneira simples, quando se aloca uma réplica em um site remoto.</li>
+</ul>
+<ol><strong>Contras</strong></ol>
+<ul>
+	<li>Espaço de armazenamento multiplicado pelo número de réplicas na solução de AG</li>
+</ul>
+<ul>
+	<li>Obrigatoriedade de licenciamento das réplicas secundárias, caso as mesmas sejam utilizadas para leitura*</li>
+</ul>
+<ul>
+	<li>Objetos inerentes à instância não são replicados e devem ser controlados externamente à solução de AG.</li>
+</ul>
+<ul>
+	<li>MSDTC (Microsoft Distributed Transaction Coordinator) não suportado (Até a versão 2014). Se o negócio utiliza transações distribuídas, o AlwaysOn AG passa a ser uma opção não muito viável.</li>
+</ul>
+&nbsp;
+<h3>Necessidade</h3>
+&nbsp;
+
+Antes de decidir ou ser tendencioso na escolha de qual solução de Alta Disponibilidade utilizar para um ambiente, é necessário analisar criteriosamente qual a necessidade real e qual a solução melhor se adapta ao cenário.
+É preciso levar-se em conta fatores financeiros, esforço administrativo, esforço para implantação, tempo, e o mais importante de tudo, se atende às demandas de disponibilidade do negócio. Neste ponto é preciso que haja eficácia e eficiência, para se tirar melhor proveito da solução escolhida para implantação.
+
+&nbsp;
+<h3>Conclusão:</h3>
+Independente se o demandante é um cliente externo de consultoria, ou um ambiente onde o profissional está administrando diariamente, é perigoso e pode custar caro não atentar-se aos itens que mais se adequam a este ambiente.
+Muitas tecnologias e soluções novas são lançadas cada vez mais rápido, é humanamente impossível, desnecessário e às vezes até prejudicial, estar sempre atualizado com estas novas tecnologias.
+Nos casos de Alta Disponibilidade de ambientes em SQL Server, por exemplo, o AlwaysOn Availability Groups, apesar de ser uma das novidades do SQL Server, e certamente a que pode fazer mais "barulho positivo" à imagem do profissional que teve a ideia, desenhou e implementou o projeto, não é a única solução e tampouco a melhor em todos os casos.
+Avaliar meticulosamente cada cenário e traçar um mapeamento entre prós e contras, custos e benefícios dentre outros itens de avaliação, é com certeza a melhor abordagem e melhor forma de um profissional apresentar uma solução de Alta Disponibilidade que melhor se adeque ao ambiente, nos quesitos Custo x Benefício x Necessidade.
+
+Obrigado pela leitura, e lembre-se: Nem tudo que é novidade é aplicável e melhor para todos.
+
+Abraços,
+
+Edvaldo Castro
+
+&nbsp;
+<h2>Referências:</h2>
+<ol>
+	<li><strong>Windows Server Failover Clustering (WSFC) with SQL Server</strong></li>
+<ul><a href="https://msdn.microsoft.com/pt-br/library/hh270278.aspx" target="_blank">https://msdn.microsoft.com/pt-br/library/hh270278.aspx</a></ul>
+</ol>
+  </div>
+  <div class="article-footer">
+    <div class="pill-row"><span class="pill">HADR</span><span class="pill">Tech</span><span class="pill">Virtual PASS BR</span></div>
+    <div class="pill-row"><span class="pill">Comunidade</span><span class="pill">MTAC</span><span class="pill">sqlfriends</span><span class="pill">sqlserver</span><span class="pill">sqlserver2014</span><span class="pill">SQLSERVER2016</span><span class="pill">Virtual Pass Br</span><span class="pill">VirtualPassBr</span><span class="pill">VirtualPassPT</span></div>
+    <div class="post-nav">
+      <div><a href="../sql-saturday-424-sao-paulo/">Newer: SQL Saturday 424 - S&#227;o Paulo</a></div>
+      <div><a href="../sql-server-no-limite-arquivos-por-banco-de-dados-2/">Older: [SQL Server No Limite] - Arquivos por banco de dados</a></div>
+    </div>
+  </div>
+</article>
+    </main>
+    <footer class="site-footer">
+      <p>Conteudo preservado a partir do export WordPress do blog de Edvaldo Castro.</p>
+      <p>Este site foi gerado como um arquivo estatico para consulta publica.</p>
+    </footer>
+  </div>
+</body>
+</html>

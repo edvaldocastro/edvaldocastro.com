@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Continuando a linha de posts sobre Backup e j&#225; partindo para um interm&#233;dio entre Seguran&#231;a dos dados e Disponibilidade, o foco da vez &#233; o famoso Recovery Model, ou simplesmente Modelo de Recupera&#231;&#227;o. Venho escrevendo sob..." />
+  <title>Recovery Model - Trate-o com carinho</title>
+  <link rel="stylesheet" href="../../styles.css" />
+</head>
+<body class="single-post">
+  <div class="page-shell">
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark">EC</span>
+        <span class="brand-copy">
+          <strong>Edvaldo Castro</strong>
+          <small>Arquivo estatico do antigo WordPress</small>
+        </span>
+      </a>
+      <nav class="site-nav">
+        <a href="../../">Home</a>
+        <a href="../../posts/">Posts</a>
+        <a href="../../pages/">Pages</a>
+        <a href="../../archive/">Arquivo</a>
+      </nav>
+    </header>
+    <main class="site-main">
+      <article class="article-card">
+  <div class="article-head">
+    <p class="meta-line">Post</p>
+    <h1 class="post-title">Recovery Model - Trate-o com carinho</h1>
+    <p class="meta-line">06 May 2012 <span class="dot">&middot;</span> Backup, Database Administration, Tech, Virtual PASS BR <span class="dot">&middot;</span> Backup, Bulk-Logged, full, Pass, Recovery Model, Simple, SQL SERVER, Virtual Pass Br</p>
+  </div>
+  <div class="article-content">
+    <p style="text-align:justify;">Continuando a linha de posts sobre Backup e já partindo para um intermédio entre Segurança dos dados e Disponibilidade, o foco da vez é o famoso Recovery Model, ou simplesmente Modelo de Recuperação.</p>
+<p style="text-align:justify;">Venho escrevendo sobre backup ultimamente pois tenho ciência que é um dos pontos fortes e de mais necessidades no que se refere à Administração de banco de dados, pois uma vez perdidos, sem backup seus dados jamais serão recuperados, e então pouco adianta tunning, segurança de acesso, etc etc...</p>
+<p style="text-align:justify;">O Modelo de recuperação de um banco de dados está intimamente ligado ao assunto Backup, visto que baseado no modelo de recuperação configurado para determinada base de dados, você terá ou não possibilidades de recovery bem como uma diferenciação na administração e manutenção desta determinada base.</p>
+<p style="text-align:justify;">Antes da criação de uma nova base de dados é necessário bastante planejamento para esta, visto que ela requer diversos cuidados prévios para que não fuja ao controle, como:</p>
+
+<ul style="text-align:justify;">
+	<li>Definição da <a href="http://edvaldocastro.wordpress.com/2012/01/19/politicabkp/">política de backup</a> a ser adotada para a mesma.</li>
+	<li>Definição do Recovery Model a ser configurado.</li>
+	<li>Definição de permissões de acesso, entre outras.</li>
+</ul>
+<p style="text-align:justify;">Para um bom entendimento sobre Recovery Model, e porque este deve ser tratado "com carinho", segue minhas considerações sobre cada um dos três tipos:</p>
+<p style="text-align:justify;"><strong>Recovery Model "Simple"</strong></p>
+
+<ul style="text-align:justify;">
+	<li>Este é o modelo que requer menor esforço administrativo relacionado ao controle do tamanho do log de transações, porém é o que mais expõe o banco ao qual está configurado à perda de dados, este Recovery Model não permite backup do log de transações e consequentemente não permite restaurações além do momento do término do backup (Full ou Diferencial).</li>
+</ul>
+<ul style="text-align:justify;">
+	<li><span style="text-decoration:underline;">Benefícios e aplicação</span>: Pelo motivo de as transações não serem logadas, não requer administração ativa do log de transações, aplica-se este Recovery Model principalmente em ambientes de Homologação, Testes e Desenvolvimento, desde que estes permitam (com base no negócio) que haja perda de dados não presentes em backups previamente realizados.</li>
+</ul>
+<ul style="text-align:justify;">
+	<li><span style="text-decoration:underline;">Principais Riscos</span>: Deve-se ter total atenção, para erroneamente não configurar este modelo de recuperação em ambientes de produção com a finalidade de contenção do tamanho do arquivo de log de transações (.ldf), pois como é conhecida uma famosa frase no meio dos DBAs: <em> "DBA Administra banco de dados, Milagre a gente não faz".</em></li>
+</ul>
+<p style="text-align:justify;"><strong>Recovery Model "Bulk-Logged":</strong></p>
+
+<ul style="text-align:justify;">
+	<li>Certamente um dos Modelos de Recuperação mais complexos e de menor entendimento presentes no SQL Server, este permite que operações de Bulk-Insert sejam minimamente logadas, ou seja, operações de inserção de grande massa de dados, caso fossem logadas normalmente aumentariam o tamanho do log de transações de modo que este poderia fugir ao controle, estourar espaço em disco, dentre outros problemas.</li>
+</ul>
+<ul style="text-align:justify;">
+	<li><span style="text-decoration:underline;">Benefícios e aplicação</span>: Quando há grandes e frequentes inserções de massa de dados, conforme previamente citado, há um grande benefício na utilização do modelo de recuperação "Bulk-Logged", pois este evita que o Administrador da base de dados perca o controle do tamanho do log de transações.</li>
+</ul>
+<ul style="text-align:justify;">
+	<li><span style="text-decoration:underline;">Advertência</span>: Como não existe "almoço grátis", paga-se um preço por esta "mágica" realizada pelo recovery model Bulk-Logged. Embora o arquivo de Log de Transações (.ldf) não cresça com a inserção de dados em massa (Bulk Operations), o backup de log levará consigo todos os extents (conjunto de 8 páginas de dados) que contem páginas alteradas nestas operações, logo é vantajoso utilizá-lo por não aumentar o tamanho do arquivo, porém é necessário ter em mente que seu backup de log conterá não todas as páginas, mas todos os extents que tiveram páginas alteradas. Portando, utilize-o com moderação.</li>
+</ul>
+<p style="text-align:justify;"><strong>Recovery Model "Full"</strong></p>
+<p style="text-align:justify;">"<em>Com grandes poderes vem grandes responsabilidades</em>"   -  (<em>Benjamin Parker).</em></p>
+
+<ul style="text-align:justify;">
+	<li><span style="line-height:13px;">Não há dúvidas de que este seja o mais poderoso dentre todos os modelos de recuperação no SQL Server, o que te permite maior segurança em relação à não exposição a perda de dados. Em contrapartida, é o que existe maior esforço administrativo e atenção quando à manutenção de um banco com teste modelo configurado.</span></li>
+</ul>
+<ul style="text-align:justify;">
+	<li><span style="line-height:13px;"><span style="text-decoration:underline;">Benefícios</span>: É possível que sua exposição à perda de dados seja bem próximo a zero, uma vez que este modelo de recuperação permite a realização de restores em um ponto específico no tempo, restore em pontos prévios à falhas, restore com auxílios do backup tail do log, dentre outros.</span></li>
+</ul>
+<ul style="text-align:justify;">
+	<li><span style="line-height:13px;"><span style="text-decoration:underline;">Principais Riscos</span>: Tendo configurado o modelo de recuperação Full, obrigatoriamente deve-se realizar frequentemente o backup do log de transações, uma vez que para garantir toda este leque de opções de recuperação, as transações são logadas e fazem com que o arquivo de log de transações cresça a medida que o banco é utilizado. O </span><em>overhead </em>administrativo é muito maior em relação aos demais modelos de recuperação. Caso não se tenha o cuidado de fazer backups de logs frequentemente, ou por exemplo um job de backup falhe, corre-se um grande risco de estouro de espaço e com isto, o SQL Server fica impossibilidade de gravar novas transações, uma vez que não terá espaço suficiente para registrar estas transações no arquivo de log.</li>
+</ul>
+<p style="text-align:justify;">Este foi apenas um <em>overview </em>sobre "RECOVERY MODEL" no SQL Server, quaisquer dúvidas ou sugestões fique a vontade para comentar, criticar, elogiar ou o que quer que tenha vontade de escrever no espaço para comentários....</p>
+<p style="text-align:justify;">Abraços, e obrigado pela leitura.</p>
+<p style="text-align:justify;">Edvaldo Castro</p>
+<p style="text-align:justify;">@edvaldocastro</p>
+  </div>
+  <div class="article-footer">
+    <div class="pill-row"><span class="pill">Backup</span><span class="pill">Database Administration</span><span class="pill">Tech</span><span class="pill">Virtual PASS BR</span></div>
+    <div class="pill-row"><span class="pill">Backup</span><span class="pill">Bulk-Logged</span><span class="pill">full</span><span class="pill">Pass</span><span class="pill">Recovery Model</span><span class="pill">Simple</span><span class="pill">SQL SERVER</span><span class="pill">Virtual Pass Br</span></div>
+    <div class="post-nav">
+      <div><a href="../sqlsat147/">Newer: SQL Saturday 147 - Recife-PE</a></div>
+      <div><a href="../sqlsat127-eu-fui-o-download-apresentacao-e-scripts/">Older: #SQLSat127 - Eu Fui o/  -  Download apresenta&#231;&#227;o e scripts</a></div>
+    </div>
+  </div>
+</article>
+    </main>
+    <footer class="site-footer">
+      <p>Conteudo preservado a partir do export WordPress do blog de Edvaldo Castro.</p>
+      <p>Este site foi gerado como um arquivo estatico para consulta publica.</p>
+    </footer>
+  </div>
+</body>
+</html>

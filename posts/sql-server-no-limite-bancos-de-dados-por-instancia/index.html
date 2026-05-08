@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Quase Tudo na vida tem um limite, seja ele tang&#237;vel ou n&#227;o. &#201; de muita import&#226;ncia o conhecimento dos limites de tudo que se lida na vida, tanto pessoal quanto profissional, para que se possa mensurar e planejar melhor c..." />
+  <title>[SQL Server No Limite] - Bancos de dados por inst&#226;ncia</title>
+  <link rel="stylesheet" href="../../styles.css" />
+</head>
+<body class="single-post">
+  <div class="page-shell">
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark">EC</span>
+        <span class="brand-copy">
+          <strong>Edvaldo Castro</strong>
+          <small>Arquivo estatico do antigo WordPress</small>
+        </span>
+      </a>
+      <nav class="site-nav">
+        <a href="../../">Home</a>
+        <a href="../../posts/">Posts</a>
+        <a href="../../pages/">Pages</a>
+        <a href="../../archive/">Arquivo</a>
+      </nav>
+    </header>
+    <main class="site-main">
+      <article class="article-card">
+  <div class="article-head">
+    <p class="meta-line">Post</p>
+    <h1 class="post-title">[SQL Server No Limite] - Bancos de dados por inst&#226;ncia</h1>
+    <p class="meta-line">05 Mar 2015 <span class="dot">&middot;</span> NOLIMITE, Tech, Virtual PASS BR <span class="dot">&middot;</span> Benchmark, Benchmarking, FoRG, Friends of RedGate, MTAC, SQL Server DF, sqlserver2014, virtual pass, Virtual Pass Br, VirtualPassPT</p>
+  </div>
+  <div class="article-content">
+    &nbsp;
+
+<del>Quase</del> Tudo na vida tem um limite, seja ele tangível ou não.
+
+É de muita importância o conhecimento dos limites de tudo que se lida na vida, tanto pessoal quanto profissional, para que se possa mensurar e planejar melhor como lidar com coisas, pessoas e ferramentas.
+
+Com o SQL Server não é diferente, existem limites, que apesar de serem bastante generosos (ao ponto de que se por acaso você os atingir, algo pode não estar bem planejado), é interessante e importante conhecê-los para um correto <em>sizing </em>e melhor utilização dos recursos disponíveis.
+
+A motivação deste post, foi devido a um compartilhamento no Facebook, do meu amigo Thiago Carlos Alencar (<a href="https://tcalencar.wordpress.com/" target="_blank">Blog</a> | <a href="http://twitter.com/alencardba" target="_blank">Twitter</a>), justamente falando sobre os limites do SQL Server.
+
+Falando especificamente da limitação da quantidade de Bancos de dados por instância, existe uma mensagem de erro, que acredito ter sido vista por pouquíssimos profissionais que trabalham direta ou indiretamente com o SQL Server.
+<blockquote>
+<p style="text-align: center;"><span style="color: #ff0000;">Msg 1835, Level 16, State 1, line 29</span></p>
+<p style="text-align: center;"><span style="color: #ff0000;">Unable to create/attach any new database because the number of existing databases has reached the maximum number allowed: 32766</span></p>
+</blockquote>
+O numero máximo de bancos de dados visíveis por instância no SQL Server é de 32766.
+
+Nas versões anteriores do SQL Server, a view de sistema <em>sysdatabases, </em>a coluna que indica o <em>id</em> de um banco de dados é o <em>dbid</em>, que é do tipo <em>smallint (32767). </em>
+
+Nas versões mais recentes (2005+) esta view foi substituída pela view sys.databases e a coluna que indica o <em>id </em>do banco de dados é a <em>database_id </em>que é uma coluna do tipo <em>int (2.147.483.647). </em>
+
+A explicação mais lógica seria que o número 32766 é um número consideravelmente alto, e por questões de compatibilidade.
+
+Os bancos de dados e seus respectivos database_id ficam distribuídos da seguinte forma:
+<ul>
+	<li>1 - master</li>
+	<li>2 - tempdb</li>
+	<li>3 - model</li>
+	<li>4 - msdb</li>
+	<li>[5 .. 32766] - user databases</li>
+	<li> 32767 -  <em>mssqlsystemresource (oculto)</em></li>
+</ul>
+<h2></h2>
+<h2>Só acredito vendo...</h2>
+Se o propósito fosse simplesmente ver a mensagem de erro, um simples select na view <em><span style="color: #008000;">sys.messages</span> resolveria, </em>porém qual seria o efeito colateral, prós e contras em se criar tantos bancos de dados em uma única instância? Quanto de recurso adicional seria necessário? Hora de testar...
+
+&nbsp;
+<h2>Criação dos bancos de dados:</h2>
+<a href="../../assets/uploads/2015/03/create-database_1.png"><img class="aligncenter wp-image-1405 size-full" src="../../assets/uploads/2015/03/create-database_1.png" alt="create database_1" width="622" height="399" /></a>
+<p style="text-align: center;"><a href="../../assets/uploads/2015/03/No-LimiteSQL-Server-Bancosdedadosporinstancia.txt" target="_blank"> Clique aqui </a>- para download do script</p>
+<p style="text-align: justify;">O script exemplificado na imagem acima, executa a criação de 32763 bancos de dados de usuários na instância SQL Server em que for executado (obviamente, <span style="color: #ff0000;">não faça isto em seu ambiente de produção</span>). No caso do meu teste, ainda ficou faltando uma base a ser criada, o que será demonstrado no próximo exemplo.</p>
+<p style="text-align: justify;">A linha de código: <span style="color: #ff0000;">ALTER DATABASE  '</span>+@NOMEBANCO+<span style="color: #ff0000;">' SET OFFLINE WITH ROLLBACK IMMEDIATE' </span><span style="color: #000000;">está propositalmente inserida após a criação de cada banco de dados.</span></p>
+<p style="text-align: justify;">Quando uma base é iniciada (ou criada), mesmo que a mesma não possua nenhum objeto ou dado, o SQL Server carrega algumas páginas da mesma para o <em>data cache</em>, o processo de inicialização da base, também conhecido como <em>Recovery, </em>carrega páginas de controle e da base, para que a mesma possa ser utilizada quando e se necessário.</p>
+<p style="text-align: justify;"><a href="../../assets/uploads/2015/03/StartingUp-Database.png"><img class="aligncenter size-full wp-image-1407" src="../../assets/uploads/2015/03/StartingUp-Database.png" alt="StartingUp Database" width="645" height="287" /></a></p>
+<p style="text-align: justify;">O motivo de cada uma das bases de dados criadas neste teste terem sido alteradas para <em>offline </em>foi para que estas páginas de controle, não fossem carregadas e consequentemente não houvesse problemas de falta de memória durante a criação das mesmas.</p>
+
+<h3 style="text-align: justify;"></h3>
+<h2 style="text-align: justify;">Números:</h2>
+<ul>
+	<li>115 - Média de páginas carregadas (neste teste) por banco (mesmo vazio)</li>
+	<li>115 (páginas) * 8 (tamanho em KB por página) = 920 KBytes (Média de espaço, por banco de dados)</li>
+	<li>920 KB * 32762 (Qtde máxima de bancos de usuários) = 30.141.040 KB</li>
+	<li>~29 GB</li>
+</ul>
+Olhando pelos números supracitados, podemos concluir que apenas para criar todos estes bancos de dados vazios, ou mesmo iniciar uma instância com este número de bancos de dados, precisar-se-ia de aproximadamente 30 GB de memória RAM.
+<h2></h2>
+<h2>Apresentação do erro:</h2>
+Para que pudesse ser exibida a mensagem de erro, após alguns ajustes, foi executado o script abaixo, que retornou o erro exibido na mensagem.
+
+<a href="../../assets/uploads/2015/03/raised_Error_1385.png"><img class="aligncenter size-full wp-image-1411" src="../../assets/uploads/2015/03/raised_Error_1385.png" alt="raised_Error_1385" width="932" height="241" /></a>
+
+&nbsp;
+<h2>Conclusão:</h2>
+Este teste foi realizado com o intuito de uma avaliação dos impactos positivos e negativos em se utilizar o máximo do que o SQL Server oferece em possibilidade de número de bancos de dados em uma instância única.
+
+A conclusão (Opinião pessoal) é que em linhas gerais, é esperado um número maior de problemas do que benefícios quando ambos são comparados com os prós e contras desta abordagem (Utilizar o SQL Server em seu limite).
+<h3>Prós:</h3>
+<ul>
+	<li>Consolidação do ambiente em um único local, mesmo com uma infinidade de banco de dados a serem administrados.</li>
+</ul>
+Contras:
+<ul>
+	<li>Má utilização dos recursos, visto que será necessário um servidor absurdamente potente para gerenciar e conseguir trabalhar com este número enorme de bancos de dados.</li>
+	<li>Maior exposição a <em>downtime, </em>visto que estando todos os bancos em uma única instância, em caso de falha desta, todos os bancos de dados ficarão inacessíveis.</li>
+	<li>Não há margem para crescimento, e caso seja necessário um banco adicional, seria necessário uma instância nova... o que já pode ser pensando previamente, antes mesmo de se atingir tal número.</li>
+</ul>
+<h3></h3>
+<h2>Resumindo</h2>
+Tudo na vida tem um limite, isto não quer dizer que seja necessário trabalhar-se neste limite. Ouvi certa vez em um webcast de uma profissional de SQL Server Americana, que faz todo sentido aqui agora. "É um limite, não uma meta".
+
+&nbsp;
+
+Referências:
+<h1 class="title">Maximum Capacity Specifications for SQL Server</h1>
+<a href="https://msdn.microsoft.com/en-us/library/ms143432.aspx" target="_blank">https://msdn.microsoft.com/en-us/library/ms143432.aspx</a>
+<h1 class="title">Resource Database</h1>
+<a href="https://msdn.microsoft.com/en-us/library/ms190940.aspx" target="_blank">https://msdn.microsoft.com/en-us/library/ms190940.aspx</a>
+
+&nbsp;
+
+Abraços,
+
+&nbsp;
+
+Edvaldo Castro
+
+&nbsp;
+  </div>
+  <div class="article-footer">
+    <div class="pill-row"><span class="pill">NOLIMITE</span><span class="pill">Tech</span><span class="pill">Virtual PASS BR</span></div>
+    <div class="pill-row"><span class="pill">Benchmark</span><span class="pill">Benchmarking</span><span class="pill">FoRG</span><span class="pill">Friends of RedGate</span><span class="pill">MTAC</span><span class="pill">SQL Server DF</span><span class="pill">sqlserver2014</span><span class="pill">virtual pass</span><span class="pill">Virtual Pass Br</span><span class="pill">VirtualPassPT</span></div>
+    <div class="post-nav">
+      <div><a href="../microsoft-tech-road-gwab-2015/">Newer: Microsoft Tech Road GWAB 2015</a></div>
+      <div><a href="../forg2015-friends-of-redgate-2015/">Older: #FoRG2015 - Friends Of RedGate 2015</a></div>
+    </div>
+  </div>
+</article>
+    </main>
+    <footer class="site-footer">
+      <p>Conteudo preservado a partir do export WordPress do blog de Edvaldo Castro.</p>
+      <p>Este site foi gerado como um arquivo estatico para consulta publica.</p>
+    </footer>
+  </div>
+</body>
+</html>

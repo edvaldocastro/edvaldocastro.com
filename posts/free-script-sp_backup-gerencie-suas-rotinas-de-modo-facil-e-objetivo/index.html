@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="&#201; fato que toda empresa, independente de seu porte, gera e armazena muitos dados e informa&#231;&#245;es. Infelizmente tamb&#233;m &#233; fato que muitas n&#227;o se preocupam em criar c&#243;pias de seguran&#231;a e garantir a recuperabilidade destas inf..." />
+  <title>[FREE SCRIPT] - SP_BACKUP - Gerencie suas rotinas de modo simples, f&#225;cil e objetivo.</title>
+  <link rel="stylesheet" href="../../styles.css" />
+</head>
+<body class="single-post">
+  <div class="page-shell">
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark">EC</span>
+        <span class="brand-copy">
+          <strong>Edvaldo Castro</strong>
+          <small>Arquivo estatico do antigo WordPress</small>
+        </span>
+      </a>
+      <nav class="site-nav">
+        <a href="../../">Home</a>
+        <a href="../../posts/">Posts</a>
+        <a href="../../pages/">Pages</a>
+        <a href="../../archive/">Arquivo</a>
+      </nav>
+    </header>
+    <main class="site-main">
+      <article class="article-card">
+  <div class="article-head">
+    <p class="meta-line">Post</p>
+    <h1 class="post-title">[FREE SCRIPT] - SP_BACKUP - Gerencie suas rotinas de modo simples, f&#225;cil e objetivo.</h1>
+    <p class="meta-line">29 Oct 2015 <span class="dot">&middot;</span> Backup, Database Administration, Tech, Virtual PASS BR <span class="dot">&middot;</span> Backup, banco de dados, Comunidade, differential backup, FoRG, Friends of RedGate, MTAC, Pass, Pol&#237;tica de Backup, SQL SERVER, sqlfriends, virtual pass, Virtual Pass Br, Virtual Pass PT, VirtualPass, VirtualPassBr, VirtualPassPT</p>
+  </div>
+  <div class="article-content">
+    <p style="text-align: justify;">É fato que toda empresa, independente de seu porte, gera e armazena muitos dados e informações. Infelizmente também é fato que muitas não se preocupam em criar cópias de segurança e garantir a recuperabilidade destas informações.</p>
+<p style="text-align: justify;">Como é consenso entre muitos profissionais, empresários e população em geral, a informação é um dos bens mais preciosos de uma empresa (e é tão suscetível a falhas) e deve ser tratada e armazenada com muito cuidado e atenção.</p>
+<p style="text-align: justify;">Em um blog post antigo, falo um pouco sobre a questão de se ter bons <em>backups</em> e possibilidades de <em>restores</em>. "<a href="../..//backup01/" target="_blank" rel="noopener">BACKUP - Você está fazendo corretamente?</a>", faça uma visita =).</p>
+<p style="text-align: justify;">A grande maioria dos ambientes que utiliza-se do Microsoft SQL Server para armazenar seus dados, não precisa das soluções mais complexas de backup para garantir a recuperabilidade de seus dados e informações, até mesmo com possibilidades de recuperação no ponto da falha ou em algum ponto no tempo. Com isto, desenvolvi uma <a href="https://msdn.microsoft.com/en-us/.../ms190782.aspx" target="_blank" rel="noopener">Stored Procedure</a> (SP) que atende de forma fácil, simples e objetiva os três principais tipos de backups disponíveis no SQL Server:</p>
+
+<ul>
+ 	<li style="text-align: justify;">Backup FULL</li>
+ 	<li style="text-align: justify;">Backup DIFF (<em>Differential</em>)</li>
+ 	<li style="text-align: justify;">Backup LOG (<em>Transaction Log</em>)</li>
+</ul>
+Para a execução da <i>stored procedure <strong>sp_backup </strong></i>basta executá-la à partir da base de dados <span style="color: #000000;"><b>master </b>passando os seguintes parâmetros:</span>
+<blockquote><span style="color: #0000ff;">Exec</span> <span style="color: #0000ff;">master</span>..sp_backup @NomeBanco = <span style="color: #ff0000;">'master'</span>, @TipoBackup = <span style="color: #ff0000;">'FULL'</span>, @IsCopyOnly = 0, @Caminho = <span style="color: #ff0000;">'C:TEMP'</span></blockquote>
+<ul>
+ 	<li style="text-align: justify;"><span style="color: #000000;"><strong>@NomeBanco</strong>: Parâmetro do tipo Varchar (100) recebe o nome do banco de dados que será <em>"backapeado" (sic)</em></span></li>
+ 	<li style="text-align: justify;"><span style="color: #000000;"><strong>@TipoBackup</strong>: Parâmetro do tipo Varchar (20) recebe o tipo de <em>backup </em>que será realizado.  Aceita como entrada os valores: ‘Log’, ‘FULL’,’FUL’,’DIF’,’DIFF’, NULL . Se for passado NULL para este parâmetro, o valor default ‘FULL’ é assumido.</span></li>
+ 	<li style="text-align: justify;"><span style="color: #000000;"><strong>@IsCopyOnly</strong>: Parâmetro do tipo bit. Aceita como entrada os valores 0 , 1. Utilizado para informar se no <em>backup </em>será utilizado ou não a opção COPY_ONLY</span></li>
+ 	<li style="text-align: justify;"><span style="color: #000000;"><strong>@Caminho</strong>: Parâmetro do tipo Varchar (200), recebe como entrada o caminho onde o backup será salvo. Aceita entrada com valores nos formatos ‘C:Temp’,’C:Temp’ – Se for passado  NULL, é assumido o caminho default da instância.</span></li>
+</ul>
+&nbsp;
+
+O resultado será a geração de um arquivo no seguinte formato:
+<blockquote>C:tempMASTER_FULL_28_10_2015_22_48_19.bak</blockquote>
+Sendo a composição do nome do arquivo:
+<ul>
+ 	<li><strong><span style="color: #ff0000;">C:temp</span></strong>MASTER_FULL_28_10_2015_22_48_19.bak
+<ul>
+ 	<li>Caminho onde o backup foi salvo</li>
+</ul>
+</li>
+ 	<li>C:temp<strong><span style="color: #ff0000;">MASTER</span></strong>_FULL_28_10_2015_22_48_19.bak
+<ul>
+ 	<li>Banco de dados que foi "<em>Backapeado" (sic)</em></li>
+</ul>
+</li>
+ 	<li>C:tempMASTER_<strong><span style="color: #ff0000;">FULL</span></strong>_28_10_2015_22_48_19.bak
+<ul>
+ 	<li>Tipo de Backup que foi gerado</li>
+</ul>
+</li>
+ 	<li>C:tempMASTER_FULL_<strong><span style="color: #ff0000;">28_10_2015</span></strong>_22_48_19.bak
+<ul>
+ 	<li>Data de geração do backup, no formato <strong>dia_mês_ano</strong></li>
+</ul>
+</li>
+ 	<li>C:tempMASTER_FULL_28_10_2015_<strong><span style="color: #ff0000;">22_48_19</span></strong>.bak
+<ul>
+ 	<li>Horário da geração do backup (início do backup) no formato <strong>hora_minuto_segundo</strong></li>
+</ul>
+</li>
+ 	<li>C:tempMASTER_FULL_28_10_2015_22_48_19<strong><span style="color: #ff0000;">.bak</span></strong>
+<ul>
+ 	<li>Extensão utilizada para gerar o backup (<strong>.bak</strong> para FULL e DIFF, <strong>.trn</strong> para LOG)</li>
+</ul>
+</li>
+</ul>
+&nbsp;
+<h2>Solução para Backup de seu ambiente</h2>
+Abaixo uma breve descrição de um exemplo de implementação para backup de um ambiente com possibilidade de <em>restore point in time </em>bem como execução dos três tipos de <em>backup supracitados.</em>
+<h3>Ambiente fictício:</h3>
+<ul>
+ 	<li>Windows Server 2012 R2</li>
+ 	<li>Instância SQL Server 2012</li>
+ 	<li>3 Bancos de dados de usuário (BD01 - BD02 - BD03)</li>
+</ul>
+<h3></h3>
+<h3>Realização de BACKUP FULL</h3>
+Backup FULL de todas as bases de usuários
+<ol>
+ 	<li>Crie um Job chamado DBA_BACKUP_FULL com o agendamento para execução todos os domingos às 02:00 da manhã.</li>
+ 	<li>Crie um <em>step </em> para o job do tipo <em>Transact SQL</em></li>
+ 	<li>Insira um código semelhante ao mostrado a seguir:
+<ol>
+ 	<li><span style="color: #0000ff;">Exec</span> <span style="color: #0000ff;">master</span>..sp_backup @NomeBanco = <span style="color: #ff0000;">'BD01'</span>, @TipoBackup = <span style="color: #ff0000;">'FULL'</span>, @IsCopyOnly = 0, @Caminho = <span style="color: #ff0000;">'F:SQLSERVERBACKUP'</span></li>
+ 	<li><span style="color: #0000ff;">Exec</span> <span style="color: #0000ff;">master</span>..sp_backup @NomeBanco = <span style="color: #ff0000;">'BD02'</span>, @TipoBackup = <span style="color: #ff0000;">'FULL'</span>, @IsCopyOnly = 0, @Caminho = <span style="color: #ff0000;">'F:SQLSERVERBACKUP'</span></li>
+ 	<li><span style="color: #0000ff;">Exec</span> <span style="color: #0000ff;">master</span>..sp_backup @NomeBanco = <span style="color: #ff0000;">'BD03'</span>, @TipoBackup = <span style="color: #ff0000;">'FULL'</span>, @IsCopyOnly = 0, @Caminho = <span style="color: #ff0000;">'F:SQLSERVERBACKUP'</span></li>
+</ol>
+</li>
+</ol>
+&nbsp;
+<h3>Realização de BACKUP DIFERENCIAL</h3>
+Backup diferencial de todas as bases de usuário
+<ol>
+ 	<li>Crie um Job chamado DBA_BACKUP_DIFF com o agendamento para execução toda quarta feira às 02:00 da manhã.</li>
+ 	<li>Crie um <em>step </em> para o job do tipo <em>Transact SQL</em></li>
+ 	<li>Insira um código semelhante ao mostrado a seguir:
+<ol>
+ 	<li><span style="color: #0000ff;">Exec</span> <span style="color: #0000ff;">master</span>..sp_backup @NomeBanco = <span style="color: #ff0000;">'BD01'</span>, @TipoBackup = <span style="color: #ff0000;">'DIFF'</span>, @IsCopyOnly = 0, @Caminho = <span style="color: #ff0000;">'F:SQLSERVERBACKUP'</span></li>
+ 	<li><span style="color: #0000ff;">Exec</span> <span style="color: #0000ff;">master</span>..sp_backup @NomeBanco = <span style="color: #ff0000;">'BD02'</span>, @TipoBackup = <span style="color: #ff0000;">'DIFF'</span>, @IsCopyOnly = 0, @Caminho = <span style="color: #ff0000;">'F:SQLSERVERBACKUP'</span></li>
+ 	<li><span style="color: #0000ff;">Exec</span> <span style="color: #0000ff;">master</span>..sp_backup @NomeBanco = <span style="color: #ff0000;">'BD03'</span>, @TipoBackup = <span style="color: #ff0000;">'DIFF'</span>, @IsCopyOnly = 0, @Caminho = <span style="color: #ff0000;">'F:SQLSERVERBACKUP'</span></li>
+</ol>
+</li>
+</ol>
+&nbsp;
+<h3>Realização de BACKUP T-LOG</h3>
+Backup diferencial de todas as bases de usuário
+<ol>
+ 	<li>Crie um Job chamado DBA_BACKUP_LOG com o agendamento para execução diária com repetições a cada 2 horas de segunda à sexta feita.</li>
+ 	<li>Crie um <em>step </em> para o job do tipo <em>Transact SQL</em></li>
+ 	<li>Insira um código semelhante ao mostrado a seguir:
+<ol>
+ 	<li><span style="color: #0000ff;">Exec</span> <span style="color: #0000ff;">master</span>..sp_backup @NomeBanco = <span style="color: #ff0000;">'BD01'</span>, @TipoBackup = <span style="color: #ff0000;">'LOG'</span>, @IsCopyOnly = 0, @Caminho = <span style="color: #ff0000;">'F:SQLSERVERBACKUP'</span></li>
+ 	<li><span style="color: #0000ff;">Exec</span> <span style="color: #0000ff;">master</span>..sp_backup @NomeBanco = <span style="color: #ff0000;">'BD02'</span>, @TipoBackup = <span style="color: #ff0000;">'LOG'</span>, @IsCopyOnly = 0, @Caminho = <span style="color: #ff0000;">'F:SQLSERVERBACKUP'</span></li>
+ 	<li><span style="color: #0000ff;">Exec</span> <span style="color: #0000ff;">master</span>..sp_backup @NomeBanco = <span style="color: #ff0000;">'BD03'</span>, @TipoBackup = <span style="color: #ff0000;">'LOG'</span>, @IsCopyOnly = 0, @Caminho = <span style="color: #ff0000;">'F:SQLSERVERBACKUP'</span></li>
+</ol>
+</li>
+</ol>
+&nbsp;
+<h2></h2>
+<p style="text-align: center;"><a href="../../assets/uploads/2015/10/AGENT_BACKUPS.jpg" target="_blank" rel="noopener"><img class="aligncenter wp-image-1820 size-full" src="../../assets/uploads/2015/10/AGENT_BACKUPS.jpg" alt="AGENT_BACKUPS" width="349" height="122" /></a></p>
+
+<h2>Disclaimer:</h2>
+A SITUAÇÃO ACIMA É APENAS A REPRESENTAÇÃO DE UM EXEMPLO DE USO DA SP_BACKUP. O USO INDEVIDO DESTA <em>STORED PROCEDURES </em>PODE INCORRER EM FALHAS E AUSÊNCIA DE BACKUP CASO NÃO SEJA CONFIGURADO CORRETAMENTE. SEMPRE TESTE QUALQUER <em>SCRIPT </em>EM UM AMBIENTE CONTROLADO ANTES DE COLOCÁ-LO EM PRODUÇÃO. <span style="color: #ff0000;">UTILIZE POR SUA CONTA E RISCO.</span>
+<h2></h2>
+<h2>Gostou? Quer testar?</h2>
+&nbsp;
+<h1 style="text-align: center;"><a href="https://github.com/edvaldocastro/Useful_SQLServer_Scripts/blob/master/sp_Backup.sql" target="_blank" rel="noopener">CLIQUE PARA DOWNLOAD DO SCRIPT</a></h1>
+&nbsp;
+
+Se você baixou, testou, aprovou, reprovou, odiou, amou ou fez qualquer coisa com este script, por favor deixe seu feedback, crítica, comentário ou sugestão na sessão de comentários.
+
+&nbsp;
+<h3>OBSERVAÇÃO 1:</h3>
+<ul>
+ 	<li style="text-align: justify;">A <em>stored procedure </em><strong>sp_backup</strong> está disponível gratuitamente para download para quaisquer tipos de uso, seja
+pessoal ou comercial, porém apenas solicito que a mesma não seja alterada, e que sejam mantidos os créditos sempre
+que esta for ser utilizada.</li>
+ 	<li style="text-align: justify;">Compatível com as versões 2008, 2008 R2, 2012 e 2014 do MS SQL Server.</li>
+</ul>
+<h3>OBSERVAÇÃO 2:</h3>
+<ul>
+ 	<li>Qualquer sugestão de melhoria, ou correção de eventuais bugs, por favor envie para meu email: edvaldo.castro@outlook.com</li>
+</ul>
+&nbsp;
+
+&nbsp;
+
+Muito Obrigado.
+
+&nbsp;
+
+Edvaldo Castro
+
+&nbsp;
+
+&nbsp;
+
+&nbsp;
+  </div>
+  <div class="article-footer">
+    <div class="pill-row"><span class="pill">Backup</span><span class="pill">Database Administration</span><span class="pill">Tech</span><span class="pill">Virtual PASS BR</span></div>
+    <div class="pill-row"><span class="pill">Backup</span><span class="pill">banco de dados</span><span class="pill">Comunidade</span><span class="pill">differential backup</span><span class="pill">FoRG</span><span class="pill">Friends of RedGate</span><span class="pill">MTAC</span><span class="pill">Pass</span><span class="pill">Pol&#237;tica de Backup</span><span class="pill">SQL SERVER</span><span class="pill">sqlfriends</span><span class="pill">virtual pass</span><span class="pill">Virtual Pass Br</span><span class="pill">Virtual Pass PT</span><span class="pill">VirtualPass</span><span class="pill">VirtualPassBr</span><span class="pill">VirtualPassPT</span></div>
+    <div class="post-nav">
+      <div><a href="../minha-visao-sobre-carreira/">Newer: [ON TOPIC] - Minha vis&#227;o sobre Carreira</a></div>
+      <div><a href="../indicacao-de-leitura-alta-disponibilidade-na-pratica-com-alwayson-failover-cluster-instances/">Older: [INDICA&#199;&#195;O DE LEITURA] Alta Disponibilidade na Pr&#225;tica com AlwaysOn Failover Cluster Instances</a></div>
+    </div>
+  </div>
+</article>
+    </main>
+    <footer class="site-footer">
+      <p>Conteudo preservado a partir do export WordPress do blog de Edvaldo Castro.</p>
+      <p>Este site foi gerado como um arquivo estatico para consulta publica.</p>
+    </footer>
+  </div>
+</body>
+</html>

@@ -1,0 +1,684 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="If you are not a native Portuguese speaker, or prefer to read it in another language, please scroll down the page and you will find a translator at the very right side. Existem diversas op&#231;&#245;es para que uma determinada em..." />
+  <title>Backup Full Di&#225;rio, sua melhor op&#231;&#227;o?</title>
+  <link rel="stylesheet" href="../../styles.css" />
+</head>
+<body class="single-post">
+  <div class="page-shell">
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark">EC</span>
+        <span class="brand-copy">
+          <strong>Edvaldo Castro</strong>
+          <small>Arquivo estatico do antigo WordPress</small>
+        </span>
+      </a>
+      <nav class="site-nav">
+        <a href="../../">Home</a>
+        <a href="../../posts/">Posts</a>
+        <a href="../../pages/">Pages</a>
+        <a href="../../archive/">Arquivo</a>
+      </nav>
+    </header>
+    <main class="site-main">
+      <article class="article-card">
+  <div class="article-head">
+    <p class="meta-line">Post</p>
+    <h1 class="post-title">Backup Full Di&#225;rio, sua melhor op&#231;&#227;o?</h1>
+    <p class="meta-line">31 Jul 2018 <span class="dot">&middot;</span> Backup, Tech, Virtual PASS BR <span class="dot">&middot;</span> Backup, diff, differential backup, full, mssql, recuperabilidade, rpo, rto, sql, SQL SERVER, tlog</p>
+  </div>
+  <div class="article-content">
+    &nbsp;
+<blockquote>
+<p style="text-align: justify;"><span style="color: #ff0000;"><em>If you are not a native Portuguese speaker, or prefer to read it in another language, please scroll down the page and you will find a translator at the very right side.</em></span></p>
+</blockquote>
+&nbsp;
+<p style="text-align: justify;">Existem diversas opções para que uma determinada empresa independente de seu porte tenha uma polícia de backup bem definida, de conhecimento de todos e que seja seguida à risca, falei sobre isso no post: <span style="font-size: 1rem;"><a href="../..//politicabkp/" target="_blank" rel="noopener">Política de backup – Implante esta ideia</a>.</span></p>
+<p style="text-align: justify;">Para encontrar todos meus artigos sobre Backup, Restore e assuntos relacionados,  <a href="../..//Administração/backup/" target="_blank" rel="noopener">Clique aqui</a>.</p>
+<p style="text-align: justify;">Das diversas opções e combinações possíveis com todos os tipos disponíveis de Backups no SQL Server, acredito que a opção em se fazer um backup full dos bancos todos os dias seja a menos efetiva e ainda pior, a que causa de certa forma, um desperdício de recursos de processamento e armazenamento.</p>
+<p style="text-align: justify;">Para comprovar o que estou afirmando no trecho anterior, vou realizar a seguir testes com as seguintes combinações (que já encontrei em muitas empresas que prestei serviços):</p>
+
+<ul>
+ 	<li><em>Backup Full diário (sem Backup Diferencial e sem Backup de Log)</em></li>
+ 	<li><em>Backup Full diário + Backup Diferencial no meio do dia.</em></li>
+ 	<li><em>Backup Full semanal + Backup Diferencial diário + Backup de Log a cada hora útil</em></li>
+ 	<li><em>Backup Full semanal + Backup de Log a cada hora útil.</em></li>
+</ul>
+Caso queira ir direto aos resultados dos testes, <a href="#resultados">CLIQUE AQUI</a>.
+
+&nbsp;
+<h1 style="text-align: justify;">Sequência de testes realizados:</h1>
+<p style="text-align: justify;">Para os exemplos, utilizarei o banco de dados StackOverflow2010, <a href="https://www.brentozar.com/archive/2015/10/how-to-download-the-stack-overflow-database-via-bittorrent/" target="_blank" rel="noopener">clique aqui</a> para mais informações e download desse banco de dados de exemplo.</p>
+<p style="text-align: justify;"><img class="size-full aligncenter" src="../..//publico/Blog/picture1.PNG" width="477" height="235" /></p>
+&nbsp;
+<h2 style="text-align: justify;">Teste 1:</h2>
+<h6 style="text-align: justify;"><em>Backup Full diário (sem Backup Diferencial e sem Backup de Log).</em></h6>
+<p style="text-align: justify;">O script a seguir simula a criação de um Backup Full por dia, sem qualquer outro tipo de backup (Differential ou TLog) durante uma semana.</p>
+
+<pre class="height-set:true height:300 lang:tsql decode:true">backup database StackOverflow2010 to disk = 'E:\Backup\StackOverflow2010_Segunda.bak' with stats = 1
+backup database StackOverflow2010 to disk = 'E:\Backup\StackOverflow2010_Terca.bak' with stats = 1
+backup database StackOverflow2010 to disk = 'E:\Backup\StackOverflow2010_Quarta.bak' with stats = 1
+backup database StackOverflow2010 to disk = 'E:\Backup\StackOverflow2010_Quinta.bak' with stats = 1
+backup database StackOverflow2010 to disk = 'E:\Backup\StackOverflow2010_Sexta.bak' with stats = 1
+backup database StackOverflow2010 to disk = 'E:\Backup\StackOverflow2010_Sabado.bak' with stats = 1
+backup database StackOverflow2010 to disk = 'E:\Backup\StackOverflow2010_Domingo.bak' with stats = 1</pre>
+<img class="alignnone size-full" src="../..//publico/Blog/picture2.PNG" width="840" height="318" />
+<h3 style="text-align: justify;">Resultado:</h3>
+<ul>
+ 	<li style="text-align: justify;"><strong><span style="text-decoration: underline;">Tamanho total (semana)</span></strong>: 59.9GB</li>
+ 	<li style="text-align: justify;"><strong><span style="text-decoration: underline;">Recuperabilidade</span></strong>: Somente no momento da conclusão do backup (backup_finish_date), sendo assim possível que haja a perda de até 1 dia de dados.</li>
+ 	<li style="text-align: justify;"><strong><span style="text-decoration: underline;">Comentário</span>: </strong>Infelizmente já tive alguns clientes onde o ambiente era considerado altamente crítico, com uma rotina de backup como a supracitada com o argumento de que não poderiam perder dados, e por esse motivo, era realizado o backup full diário, sem qualquer backup adicional. <span style="color: #ff0000;">Muito cuidado nessa estratégia</span>.</li>
+</ul>
+&nbsp;
+<h2 style="text-align: justify;">Teste 2:</h2>
+<h6 style="text-align: justify;"><em>Backup Full diário + Backup Diferencial no meio do dia.</em></h6>
+<p style="text-align: justify;">O script a seguir simula a criação de um Backup Full (D) todos os dias, e adicionalmente um Backup do tipo Differential (I)  que seria executado diariamente com 12h de intervalo para o Full anterior. Para esse e os demais testes, simularemos uma carga de 20.000 registros por dia nesse banco, o que será equivalente a 160MB de dados por dia (lembrando da proporcionalidade, estamos trabalhando aqui com uma base de dados menor que 10GB).</p>
+<p style="text-align: justify;">Atente-se à recuperabilidade explicada após os exemplos dos scripts nesse teste.</p>
+
+<pre class="height-set:true height:300 toolbar:2 lang:tsql decode:true">--Garantindo que seja um banco restaurado do zero, sem nenhuma alteração
+USE master
+GO
+RESTORE DATABASE StackOverflow2010
+FROM disk = 'E:\ToBeRestored\StackOverflow2010.bak'
+WITH STATS
+,MOVE 'StackOverflow2010' TO 'D:\MSSQL\Data\StackOverflow2010.mdf'
+,MOVE 'StackOverflow2010_log' TO 'D:\MSSQL\Log\StackOverflow2010_log.ldf'
+,REPLACE
+GO
+
+--Alterando a durabilidade das transações para que os inserts sejam mais rápidos.
+ALTER DATABASE StackOverflow2010 SET DELAYED_DURABILITY = FORCED
+GO
+
+USE StackOverflow2010
+GO
+-- Criação de uma tabela para exemplos de crescimento da base de dados
+DROP TABLE IF EXISTS dbo.TesteBackup
+CREATE TABLE dbo.TesteBackup
+(
+	id INT IDENTITY
+	,valor CHAR(8000) NOT NULL DEFAULT REPLICATE('A',8000)
+)
+GO
+
+/******************* SEGUNDA FEIRA *******************/ 
+
+--Backup Full Segunda-Feira (Propositalmente, não foi utilizado o Backup Compression)
+BACKUP DATABASE StackOverflow2010 TO DISK = 'E:\Backup\StackOverflow2010_FULL_Segunda.bak' WITH STATS
+GO
+
+--Inserção de 20000 registros para simular carga de dados
+INSERT INTO dbo.TesteBackup DEFAULT VALUES
+GO 20000
+
+EXEC sys.sp_spaceused TesteBackup
+--name			rows	reserved	data		index_size	unused
+--TesteBackup	20000   160072 KB	160000 KB	8 KB		64 KB
+
+--Backup do tipo Differential de Segunda Feira
+BACKUP DATABASE StackOverflow2010 TO DISK = 'E:\Backup\StackOverflow2010_DIFF_Segunda.bak' WITH DIFFERENTIAL, STATS
+GO
+
+
+/******************* TERÇA FEIRA *******************/ 
+--Backup Full Terça-Feira 
+BACKUP DATABASE StackOverflow2010 TO DISK = 'E:\Backup\StackOverflow2010_FULL_Terca.bak' WITH STATS
+GO
+
+--Inserção de 20000 registros para simular carga de dados
+INSERT INTO dbo.TesteBackup DEFAULT VALUES
+GO 20000
+
+EXEC sys.sp_spaceused TesteBackup
+--name			rows	reserved	data		index_size	unused
+--TesteBackup	40000   320200 KB	320000 KB	8 KB		192 KB
+
+--Backup do tipo Differential de Terça-Feira
+BACKUP DATABASE StackOverflow2010 TO DISK = 'E:\Backup\StackOverflow2010_DIFF_Terca.bak' WITH DIFFERENTIAL, STATS
+GO
+
+/******************* QUARTA FEIRA *******************/
+--Backup Full Quarta-Feira (Propositalmente, não foi utilizado o Backup Compression)
+BACKUP DATABASE StackOverflow2010 TO DISK = 'E:\Backup\StackOverflow2010_FULL_Quarta.bak' WITH STATS
+GO
+--Inserção de 20000 registros para simular carga de dados
+INSERT INTO dbo.TesteBackup DEFAULT VALUES
+GO 20000
+
+EXEC sys.sp_spaceused TesteBackup
+--name			rows	reserved	data		index_size	unused
+--TesteBackup	60000   480264 KB	480000 KB	8 KB		256 KB
+
+
+--Backup do tipo Differential de Quarta-Feira
+BACKUP DATABASE StackOverflow2010 TO DISK = 'E:\Backup\StackOverflow2010_DIFF_Quarta.bak' WITH DIFFERENTIAL, STATS
+GO
+
+/******************* QUINTA FEIRA *******************/
+--Backup Full Quinta-Feira (Propositalmente, não foi utilizado o Backup Compression)
+BACKUP DATABASE StackOverflow2010 TO DISK = 'E:\Backup\StackOverflow2010_FULL_Quinta.bak' WITH STATS
+GO
+--Inserção de 20000 registros para simular carga de dados
+INSERT INTO dbo.TesteBackup DEFAULT VALUES
+GO 20000
+
+EXEC sys.sp_spaceused TesteBackup
+--name			rows	reserved	data		index_size	unused
+--TesteBackup	80000	640264 KB	640000 KB	8 KB		256 KB
+
+
+--Backup do tipo Differential de Quinta-Feira
+BACKUP DATABASE StackOverflow2010 TO DISK = 'E:\Backup\StackOverflow2010_DIFF_Quinta.bak' WITH DIFFERENTIAL, STATS
+GO
+
+/******************* SEXTA FEIRA *******************/
+--Backup Full Sexta-Feira (Propositalmente, não foi utilizado o Backup Compression)
+BACKUP DATABASE StackOverflow2010 TO DISK = 'E:\Backup\StackOverflow2010_FULL_Sexta.bak' WITH STATS
+GO
+--Inserção de 20000 registros para simular carga de dados
+INSERT INTO dbo.TesteBackup DEFAULT VALUES
+GO 20000
+
+EXEC sys.sp_spaceused TesteBackup
+--name			rows	reserved	data		index_size	unused
+--TesteBackup	100000  800328 KB	800000 KB	8 KB		320 KB
+
+
+--Backup do tipo Differential de Sexta-Feira
+BACKUP DATABASE StackOverflow2010 TO DISK = 'E:\Backup\StackOverflow2010_DIFF_Sexta.bak' WITH DIFFERENTIAL, STATS
+GO
+
+/******************* SÁBADO *******************/
+--Backup Full Sábado (Propositalmente, não foi utilizado o Backup Compression)
+BACKUP DATABASE StackOverflow2010 TO DISK = 'E:\Backup\StackOverflow2010_FULL_Sabado.bak' WITH STATS
+GO
+--Inserção de 20000 registros para simular carga de dados
+INSERT INTO dbo.TesteBackup DEFAULT VALUES
+GO 20000
+
+EXEC sys.sp_spaceused TesteBackup
+--name			rows	reserved	data		index_size	unused
+--TesteBackup	120000  960328 KB	960000 KB	8 KB		320 KB
+
+--Backup do tipo Differential de Sabado
+BACKUP DATABASE StackOverflow2010 TO DISK = 'E:\Backup\StackOverflow2010_DIFF_Sabado.bak' WITH DIFFERENTIAL, STATS
+GO
+
+/******************* DOMINGO *******************/
+--Backup Full Domingo (Propositalmente, não foi utilizado o Backup Compression)
+BACKUP DATABASE StackOverflow2010 TO DISK = 'E:\Backup\StackOverflow2010_FULL_Domingo.bak' WITH STATS
+GO
+--Inserção de 20000 registros para simular carga de dados
+INSERT INTO dbo.TesteBackup DEFAULT VALUES
+GO 20000
+
+EXEC sys.sp_spaceused TesteBackup
+--name			rows	reserved	data		index_size	unused
+--TesteBackup	140000	1120328 KB	1120000 KB	8 KB		320 KB
+
+--Backup do tipo Differential de Domingo
+BACKUP DATABASE StackOverflow2010 TO DISK = 'E:\Backup\StackOverflow2010_DIFF_Domingo.bak' WITH DIFFERENTIAL, STATS
+GO</pre>
+<img class="alignnone size-full aligncenter" src="../..//publico/Blog/FullEDiffDiario.PNG" width="687" height="405" />
+<h3 style="text-align: justify;">Resultado:</h3>
+<ul>
+ 	<li style="text-align: justify;"><strong><span style="text-decoration: underline;">Tamanho total (semana)</span></strong>: 73.1GB</li>
+ 	<li style="text-align: justify;"><strong><span style="text-decoration: underline;">Recuperabilidade</span></strong>: Somente no ponto exato da conclusão de cada um dos backups (Full ou Differential), havendo dessa maneira a possibilidade real de perda de algumas horas de dados.</li>
+ 	<li style="text-align: justify;"><strong><span style="text-decoration: underline;">Comentário:</span></strong> Apesar de ter melhorado um pouco a recuperabilidade do ambiente (reduzindo a possibilidade de perda de dados de 1 dia para algumas horas), o espaço necessário para armazenar 1 semana de backup aumentou consideravelmente, em troca de pouca possibilidade de recuperação real dos dados, no momento da necessidade de um restore desses backups.</li>
+</ul>
+<h2></h2>
+<h2 style="text-align: justify;">Teste 3:</h2>
+<h6 style="text-align: justify;">Backup Full semanal + Backup Diferencial diário + Backup de Log a cada hora útil.</h6>
+<p style="text-align: justify;">O script simula a execução de um backup Full uma vez por semana (nesse caso será criado o exemplo de 1 semana, logo apenas 1 Backup Full), um backup Differential uma vez ao dia e um backup do Log de Transações uma vez a cada hora durante as horas úteis do dia (consideremos horas úteis o período entre 8:00 e 18:00).</p>
+
+<pre class="height-set:true height:300 lang:tsql decode:true">--Garantindo que seja um banco restaurado do zero, sem nenhuma alteração
+USE master
+GO
+RESTORE DATABASE StackOverflow2010
+FROM disk = 'E:\ToBeRestored\StackOverflow2010.bak'
+WITH STATS
+,MOVE 'StackOverflow2010' TO 'D:\MSSQL\Data\StackOverflow2010.mdf'
+,MOVE 'StackOverflow2010_log' TO 'D:\MSSQL\Log\StackOverflow2010_log.ldf'
+,REPLACE
+GO
+
+--Alterando a durabilidade das transações para que os inserts sejam mais rápidos.
+ALTER DATABASE StackOverflow2010 SET DELAYED_DURABILITY = FORCED
+GO
+
+--Garantindo Recovery Model como Full para que possa ser realizado Backup do Transaction log.
+ALTER DATABASE StackOverflow2010 SET RECOVERY FULL
+GO
+
+USE StackOverflow2010
+GO
+-- Criação de uma tabela para exemplos de crescimento da base de dados
+DROP TABLE IF EXISTS dbo.TesteBackup
+CREATE TABLE dbo.TesteBackup
+(
+	id INT IDENTITY
+	,valor CHAR(8000) NOT NULL DEFAULT REPLICATE('A',8000)
+)
+GO
+
+/******************* DOMINGO (01:00) *******************/ 
+
+--Backup Full Domingo 23:00 (Propositalmente, não foi utilizado o Backup Compression)
+BACKUP DATABASE StackOverflow2010 TO DISK = 'E:\Backup\StackOverflow2010_FULL_Segunda.bak' WITH STATS
+GO
+
+/******************* SEGUNDA *******************/ 
+
+--Inserção de 2000 registros para simular carga de dados e backup de T-Log a cada hora útil
+DECLARE @i TINYINT = 1, @j INT = 1, @backupcmd VARCHAR(200)
+WHILE @i &lt; 19
+BEGIN
+	SET @j = 1
+	WHILE @j &lt; 2001
+		BEGIN
+			INSERT INTO dbo.TesteBackup DEFAULT VALUES
+			SET @j = @j+1
+		END
+		SET @backupcmd = 'BACKUP LOG StackOverflow2010 TO DISK = ''E:\Backup\StackOverflow2010_TLOG_Segunda_'+CAST(@i AS VARCHAR(2))+'.bak'''
+		EXEC(@backupcmd)
+		SET @i = @i+1
+		PRINT @i
+		
+END	
+
+--Backup do tipo Differential de SEGUNDA  23:00
+BACKUP DATABASE StackOverflow2010 TO DISK = 'E:\Backup\StackOverflow2010_DIFF_Segunda.bak' WITH DIFFERENTIAL, STATS
+GO
+
+
+/******************* TERÇA *******************/ 
+
+--Inserção de 2000 registros para simular carga de dados e backup de T-Log a cada hora útil
+DECLARE @i TINYINT = 1, @j INT = 1, @backupcmd VARCHAR(200)
+WHILE @i &lt; 19
+BEGIN
+	SET @j = 1
+	WHILE @j &lt; 2001
+		BEGIN
+			INSERT INTO dbo.TesteBackup DEFAULT VALUES
+			SET @j = @j+1
+		END
+		SET @backupcmd = 'BACKUP LOG StackOverflow2010 TO DISK = ''E:\Backup\StackOverflow2010_TLOG_Terca_'+CAST(@i AS VARCHAR(2))+'.bak'''
+		EXEC(@backupcmd)
+		SET @i = @i+1
+END	
+
+--Backup do tipo Differential de TERÇA 23:00
+BACKUP DATABASE StackOverflow2010 TO DISK = 'E:\Backup\StackOverflow2010_DIFF_Terca.bak' WITH DIFFERENTIAL, STATS
+GO
+
+/******************* QUARTA *******************/
+
+--Inserção de 2000 registros para simular carga de dados e backup de T-Log a cada hora útil
+DECLARE @i TINYINT = 1, @j INT = 1, @backupcmd VARCHAR(200)
+WHILE @i &lt; 19
+BEGIN
+	SET @j = 1
+	WHILE @j &lt; 2001
+		BEGIN
+			INSERT INTO dbo.TesteBackup DEFAULT VALUES
+			SET @j = @j+1
+		END
+		SET @backupcmd = 'BACKUP LOG StackOverflow2010 TO DISK = ''E:\Backup\StackOverflow2010_TLOG_Quarta_'+CAST(@i AS VARCHAR(2))+'.bak'''
+		EXEC(@backupcmd)
+		SET @i = @i+1
+END	
+
+--Backup do tipo Differential de QUARTA 23:00
+BACKUP DATABASE StackOverflow2010 TO DISK = 'E:\Backup\StackOverflow2010_DIFF_Quarta.bak' WITH DIFFERENTIAL, STATS
+GO
+
+
+/******************* QUINTA *******************/
+
+--Inserção de 2000 registros para simular carga de dados e backup de T-Log a cada hora útil
+DECLARE @i TINYINT = 1, @j INT = 1, @backupcmd VARCHAR(200)
+WHILE @i &lt; 19
+BEGIN
+	SET @j = 1
+	WHILE @j &lt; 2001
+		BEGIN
+			INSERT INTO dbo.TesteBackup DEFAULT VALUES
+			SET @j = @j+1
+		END
+		SET @backupcmd = 'BACKUP LOG StackOverflow2010 TO DISK = ''E:\Backup\StackOverflow2010_TLOG_Quinta_'+CAST(@i AS VARCHAR(2))+'.bak'''
+		EXEC(@backupcmd)
+		SET @i = @i+1
+END	
+
+--Backup do tipo Differential de QUINTA 23:00
+BACKUP DATABASE StackOverflow2010 TO DISK = 'E:\Backup\StackOverflow2010_DIFF_Quinta.bak' WITH DIFFERENTIAL, STATS
+GO
+
+
+/******************* SEXTA *******************/
+
+--Inserção de 2000 registros para simular carga de dados e backup de T-Log a cada hora útil
+DECLARE @i TINYINT = 1, @j INT = 1, @backupcmd VARCHAR(200)
+WHILE @i &lt; 19
+BEGIN
+	SET @j = 1
+	WHILE @j &lt; 2001
+		BEGIN
+			INSERT INTO dbo.TesteBackup DEFAULT VALUES
+			SET @j = @j+1
+		END
+		SET @backupcmd = 'BACKUP LOG StackOverflow2010 TO DISK = ''E:\Backup\StackOverflow2010_TLOG_Sexta_'+CAST(@i AS VARCHAR(2))+'.bak'''
+		EXEC(@backupcmd)
+		SET @i = @i+1
+END	
+
+--Backup do tipo Differential de SEXTA 23:00
+BACKUP DATABASE StackOverflow2010 TO DISK = 'E:\Backup\StackOverflow2010_DIFF_Sexta.bak' WITH DIFFERENTIAL, STATS
+GO
+
+
+/******************* SÁBADO *******************/
+
+--Inserção de 2000 registros para simular carga de dados e backup de T-Log a cada hora útil
+DECLARE @i TINYINT = 1, @j INT = 1, @backupcmd VARCHAR(200)
+WHILE @i &lt; 19
+BEGIN	
+	SET @j = 1
+	WHILE @j &lt; 2001
+		BEGIN
+			INSERT INTO dbo.TesteBackup DEFAULT VALUES
+			SET @j = @j+1
+		END
+		SET @backupcmd = 'BACKUP LOG StackOverflow2010 TO DISK = ''E:\Backup\StackOverflow2010_TLOG_Sabado_'+CAST(@i AS VARCHAR(2))+'.bak'''
+		EXEC(@backupcmd)
+		SET @i = @i+1
+END	
+
+--Backup do tipo Differential de SABADO 23:00
+BACKUP DATABASE StackOverflow2010 TO DISK = 'E:\Backup\StackOverflow2010_DIFF_Sabado.bak' WITH DIFFERENTIAL, STATS
+GO
+
+/******************* DOMINGO *******************/
+
+--Inserção de 2000 registros para simular carga de dados e backup de T-Log a cada hora útil
+DECLARE @i TINYINT = 1, @j INT = 1, @backupcmd VARCHAR(200)
+WHILE @i &lt; 19
+BEGIN
+	SET @j = 1
+	WHILE @j &lt; 2001
+		BEGIN
+			INSERT INTO dbo.TesteBackup DEFAULT VALUES
+			SET @j = @j+1
+		END
+		SET @backupcmd = 'BACKUP LOG StackOverflow2010 TO DISK = ''E:\Backup\StackOverflow2010_TLOG_Domingo_'+CAST(@i AS VARCHAR(2))+'.bak'''
+		EXEC(@backupcmd)
+		SET @i = @i+1
+END	
+
+--Nesse caso não teria o backup full no domingo, pois iniciar-se-ia uma um novo ciclo com o backup Full
+
+
+</pre>
+&nbsp;
+
+<img class="aligncenter size-full" src="../..//publico/Blog/FullDiffTLog.PNG" width="892" height="526" />
+<h3 style="text-align: justify;">Resultado:</h3>
+<ul style="text-align: justify;">
+ 	<li><strong><span style="text-decoration: underline;">Tamanho total (semana)</span></strong>: 17.7 GB</li>
+ 	<li><strong><span style="text-decoration: underline;">Recuperabilidade</span></strong>: Como foi realizado uma rotina de backup contemplando Backups do Log de Transações, é possível recuperar o banco em qualquer ponto do tempo a partir de um Backup Full inicial (seja ele qual for), restaurando os backups de TLog na sequência (ou o primeiro backup Differential anterior ao ponto no tempo requerido).</li>
+ 	<li><strong><span style="text-decoration: underline;">Comentário</span>: </strong>É possível afirmar com certeza que essa é uma boa estratégia (salvo exceções) de backup para base de dados críticas que suportam pouco ou zero perda de dados. Obviamente cada empresa tem suas particularidades e isso deve ser levado em conta no momento da implantação das <a href="../..//politicabkp/" target="_blank" rel="noopener">políticas de Backup</a> e Restore.</li>
+</ul>
+<p style="text-align: justify;"></p>
+
+<h2 style="text-align: justify;">Teste 4:</h2>
+<h6 style="text-align: justify;">Backup Full semanal + Backup de Log a cada hora útil.</h6>
+<p style="text-align: justify;">O script a seguir é bem semelhante ao anterior (Teste 3) com a exceção que esse não simulará a execução de um backup Differential diário. Nesse caso teremos a simulação de um backup Full aos Domingos e backups de Transaction Log a cada hora, em horas úteis (considerando horas úteis o período entre 8:00 e 18:00).</p>
+
+<pre class="height-set:true height:350 lang:tsql decode:true ">--Garantindo que seja um banco restaurado do zero, sem nenhuma alteração
+USE master
+GO
+RESTORE DATABASE StackOverflow2010
+FROM disk = 'E:\ToBeRestored\StackOverflow2010.bak'
+WITH STATS
+,MOVE 'StackOverflow2010' TO 'D:\MSSQL\Data\StackOverflow2010.mdf'
+,MOVE 'StackOverflow2010_log' TO 'D:\MSSQL\Log\StackOverflow2010_log.ldf'
+,REPLACE
+GO
+
+--Alterando a durabilidade das transações para que os inserts sejam mais rápidos.
+ALTER DATABASE StackOverflow2010 SET DELAYED_DURABILITY = FORCED
+GO
+
+--Garantindo Recovery Model como Full para que possa ser realizado Backup do Transaction log.
+ALTER DATABASE StackOverflow2010 SET RECOVERY FULL
+GO
+
+USE StackOverflow2010
+GO
+-- Criação de uma tabela para exemplos de crescimento da base de dados
+DROP TABLE IF EXISTS dbo.TesteBackup
+CREATE TABLE dbo.TesteBackup
+(
+	id INT IDENTITY
+	,valor CHAR(8000) NOT NULL DEFAULT REPLICATE('A',8000)
+)
+GO
+
+/******************* DOMINGO (01:00) *******************/ 
+
+--Backup Full Domingo 23:00 (Propositalmente, não foi utilizado o Backup Compression)
+BACKUP DATABASE StackOverflow2010 TO DISK = 'E:\Backup\StackOverflow2010_FULL_Segunda.bak' WITH STATS
+GO
+
+/******************* SEGUNDA *******************/ 
+
+--Inserção de 2000 registros para simular carga de dados e backup de T-Log a cada hora útil
+DECLARE @i TINYINT = 1, @j INT = 1, @backupcmd VARCHAR(200)
+WHILE @i &lt; 19
+BEGIN
+	SET @j = 1
+	WHILE @j &lt; 2001
+		BEGIN
+			INSERT INTO dbo.TesteBackup DEFAULT VALUES
+			SET @j = @j+1
+		END
+		SET @backupcmd = 'BACKUP LOG StackOverflow2010 TO DISK = ''E:\Backup\StackOverflow2010_TLOG_Segunda_'+CAST(@i AS VARCHAR(2))+'.bak'''
+		EXEC(@backupcmd)
+		SET @i = @i+1
+		PRINT @i
+		
+END	
+GO
+
+/******************* TERÇA *******************/ 
+
+--Inserção de 2000 registros para simular carga de dados e backup de T-Log a cada hora útil
+DECLARE @i TINYINT = 1, @j INT = 1, @backupcmd VARCHAR(200)
+WHILE @i &lt; 19
+BEGIN
+	SET @j = 1
+	WHILE @j &lt; 2001
+		BEGIN
+			INSERT INTO dbo.TesteBackup DEFAULT VALUES
+			SET @j = @j+1
+		END
+		SET @backupcmd = 'BACKUP LOG StackOverflow2010 TO DISK = ''E:\Backup\StackOverflow2010_TLOG_Terca_'+CAST(@i AS VARCHAR(2))+'.bak'''
+		EXEC(@backupcmd)
+		SET @i = @i+1
+END	
+GO
+
+/******************* QUARTA *******************/
+
+--Inserção de 2000 registros para simular carga de dados e backup de T-Log a cada hora útil
+DECLARE @i TINYINT = 1, @j INT = 1, @backupcmd VARCHAR(200)
+WHILE @i &lt; 19
+BEGIN
+	SET @j = 1
+	WHILE @j &lt; 2001
+		BEGIN
+			INSERT INTO dbo.TesteBackup DEFAULT VALUES
+			SET @j = @j+1
+		END
+		SET @backupcmd = 'BACKUP LOG StackOverflow2010 TO DISK = ''E:\Backup\StackOverflow2010_TLOG_Quarta_'+CAST(@i AS VARCHAR(2))+'.bak'''
+		EXEC(@backupcmd)
+		SET @i = @i+1
+END	
+GO
+
+/******************* QUINTA *******************/
+
+--Inserção de 2000 registros para simular carga de dados e backup de T-Log a cada hora útil
+DECLARE @i TINYINT = 1, @j INT = 1, @backupcmd VARCHAR(200)
+WHILE @i &lt; 19
+BEGIN
+	SET @j = 1
+	WHILE @j &lt; 2001
+		BEGIN
+			INSERT INTO dbo.TesteBackup DEFAULT VALUES
+			SET @j = @j+1
+		END
+		SET @backupcmd = 'BACKUP LOG StackOverflow2010 TO DISK = ''E:\Backup\StackOverflow2010_TLOG_Quinta_'+CAST(@i AS VARCHAR(2))+'.bak'''
+		EXEC(@backupcmd)
+		SET @i = @i+1
+END	
+GO
+
+/******************* SEXTA *******************/
+
+--Inserção de 2000 registros para simular carga de dados e backup de T-Log a cada hora útil
+DECLARE @i TINYINT = 1, @j INT = 1, @backupcmd VARCHAR(200)
+WHILE @i &lt; 19
+BEGIN
+	SET @j = 1
+	WHILE @j &lt; 2001
+		BEGIN
+			INSERT INTO dbo.TesteBackup DEFAULT VALUES
+			SET @j = @j+1
+		END
+		SET @backupcmd = 'BACKUP LOG StackOverflow2010 TO DISK = ''E:\Backup\StackOverflow2010_TLOG_Sexta_'+CAST(@i AS VARCHAR(2))+'.bak'''
+		EXEC(@backupcmd)
+		SET @i = @i+1
+END	
+GO
+
+/******************* SÁBADO *******************/
+
+--Inserção de 2000 registros para simular carga de dados e backup de T-Log a cada hora útil
+DECLARE @i TINYINT = 1, @j INT = 1, @backupcmd VARCHAR(200)
+WHILE @i &lt; 19
+BEGIN	
+	SET @j = 1
+	WHILE @j &lt; 2001
+		BEGIN
+			INSERT INTO dbo.TesteBackup DEFAULT VALUES
+			SET @j = @j+1
+		END
+		SET @backupcmd = 'BACKUP LOG StackOverflow2010 TO DISK = ''E:\Backup\StackOverflow2010_TLOG_Sabado_'+CAST(@i AS VARCHAR(2))+'.bak'''
+		EXEC(@backupcmd)
+		SET @i = @i+1
+END	
+GO
+
+/******************* DOMINGO *******************/
+
+--Inserção de 2000 registros para simular carga de dados e backup de T-Log a cada hora útil
+DECLARE @i TINYINT = 1, @j INT = 1, @backupcmd VARCHAR(200)
+WHILE @i &lt; 19
+BEGIN
+	SET @j = 1
+	WHILE @j &lt; 2001
+		BEGIN
+			INSERT INTO dbo.TesteBackup DEFAULT VALUES
+			SET @j = @j+1
+		END
+		SET @backupcmd = 'BACKUP LOG StackOverflow2010 TO DISK = ''E:\Backup\StackOverflow2010_TLOG_Domingo_'+CAST(@i AS VARCHAR(2))+'.bak'''
+		EXEC(@backupcmd)
+		SET @i = @i+1
+END	
+GO
+--Nesse caso não teria o backup full no domingo, pois iniciar-se-ia uma um novo ciclo com o backup Full
+
+
+</pre>
+<img class="aligncenter size-full" src="../..//publico/Blog/FullTlog.PNG" width="896" height="517" />
+<h3 style="text-align: justify;">Resultado:</h3>
+<ul>
+ 	<li style="text-align: justify;"><strong><span style="text-decoration: underline;">Tamanho total (semana)</span></strong>: 11.9GB</li>
+ 	<li style="text-align: justify;"><strong><span style="text-decoration: underline;">Recuperabilidade</span></strong>: Assim como na opção anterior, a geração dos backups do log de transações possibilita a restauração de backups em qualquer ponto do tempo, desde que iniciado com um backup Full e dando sequência aos demais backups de log até o ponto desejado.</li>
+ 	<li style="text-align: justify;"><strong><span style="text-decoration: underline;">Comentários</span></strong>: Esse é o backup com menor custo de armazenamento que também oferece uma recuperabilidade em qualquer ponto no tempo, uma possível desvantagem é que caso ocorra a perda ou corrupção de algum arquivo de backup do log de transações, não é possível prosseguir um restore após aquele ponto, caso não haja um backup Differential subsequente.</li>
+</ul>
+&nbsp;
+<h2 style="text-align: justify;">Resultados e Considerações Finais:</h2>
+<p style="text-align: justify;">Cada um dos diversos tipos de backup disponíveis no SQL Server tem sua importância e função dentro de uma política / rotina de backup bem definida que funcione de acordo com as necessidades e criticidade das aplicações e do negócio suportado pelas bases de dados presentes nas instâncias do SQL Server.</p>
+<p style="text-align: justify;">Uma política / rotina de backup com um alto nível de excelência deve compreender a utilização conjunta desses diferentes tipos de backup para fornecer de forma mais barata, rápida e correta os requisitos supracitados (cabe aqui a menção a RTO (Tempo total para recuperação) e RPO (Suportabilidade para possíveis perdas de dados)).</p>
+
+<h4 style="text-align: justify;"><a name="resultados"></a>Veja abaixo os números dos testes:</h4>
+<p style="text-align: justify;">Para dar uma noção de grandeza, farei a alteração da medida em GB para TB.</p>
+
+<ul style="text-align: justify;">
+ 	<li><em><span style="text-decoration: underline;"><strong>Teste 1</strong></span><strong>:</strong> Backup Full diário (sem Backup Diferencial e sem Backup de Log)</em>
+<ul>
+ 	<li><span style="color: #808080;"><em><strong>Tamanho total em uma semana....: </strong><span style="color: #000000;">59.9 TB</span></em></span></li>
+ 	<li><span style="color: #808080;"><em><strong>Possibilidade de perda de dados..: </strong><span style="color: #ff0000;">Até 24 horas</span></em></span></li>
+ 	<li><span style="color: #808080;"><em><strong>Indicado para (Opinião pessoal)...: </strong><span style="color: #ff0000;">NÃO INDICADO</span></em></span></li>
+</ul>
+</li>
+ 	<li></li>
+ 	<li><em><strong><span style="text-decoration: underline;">Teste 2</span></strong>: Backup Full diário + Backup Diferencial no meio do dia.</em>
+<ul>
+ 	<li><span style="color: #808080;"><em><strong>Tamanho total em uma semana: </strong><span style="color: #000000;">73.1 TB</span></em></span></li>
+ 	<li><span style="color: #808080;"><em><strong>Possibilidade de perda de dados: </strong><span style="color: #ff0000;">12 horas (dependendo do horário do backup)</span></em></span></li>
+ 	<li><span style="color: #808080;"><em><strong>Indicado para (Opinião pessoal): </strong><span style="color: #ff0000;">NÃO INDICADO</span></em></span></li>
+</ul>
+</li>
+ 	<li></li>
+ 	<li><em><strong><span style="text-decoration: underline;">Teste 3</span></strong>: Backup Full semanal + Backup Diferencial diário + Backup de Log a cada hora útil</em>
+<ul>
+ 	<li><span style="color: #808080;"><em><strong>Tamanho total em uma semana: </strong><span style="color: #000000;">17.7 TB</span></em></span></li>
+ 	<li><span style="color: #808080;"><em><strong>Possibilidade de perda de dados: </strong><span style="color: #000000;">Sem perda de Dados (nas <a href="https://pt.wikipedia.org/wiki/Condições_normais_de_temperatura_e_pressão" target="_blank" rel="noopener">CNTP</a>)</span></em></span></li>
+ 	<li><span style="color: #808080;"><em><strong>Indicado para (Opinião pessoal): </strong><span style="color: #0000ff;"><strong>Ambientes de Produção</strong>, mesmo com consumo um pouco maior com relação ao Teste 4.</span></em></span></li>
+</ul>
+</li>
+ 	<li></li>
+ 	<li><em><strong><span style="text-decoration: underline;">Teste 4</span></strong>: Backup Full semanal + Backup de Log a cada hora útil.</em>
+<ul>
+ 	<li><span style="color: #808080;"><em><strong>Tamanho total em uma semana: </strong><span style="color: #000000;">11.9 TB</span></em></span></li>
+ 	<li><span style="color: #808080;"><em><strong>Possibilidade de perda de dados: </strong><span style="color: #000000;">Sem perda de Dados (nas <a href="https://pt.wikipedia.org/wiki/Condições_normais_de_temperatura_e_pressão" target="_blank" rel="noopener">CNTP</a>)</span></em></span></li>
+ 	<li><span style="color: #808080;"><em><strong>Indicado para (Opinião pessoal): </strong><span style="color: #0000ff;"><strong>Ambientes de Produção</strong>, melhor utilização custo benefício da área de armazenamento do backup, desde que se tenha ciência da criticidade de manter a integridade dos arquivos de backup do log de transações.</span></em></span></li>
+</ul>
+</li>
+</ul>
+<p style="text-align: justify;">Para concluir, em minha humilde opinião, o <span style="color: #ff0000;">Backup Full Diário torna-se uma opção inadequada na grande maioria das situações</span> (para ser sincero, eu não sei listar uma onde seria a melhor opção), visto que demanda um consumo maior de armazenamento e não garante a possibilidade de restauração no ponto do tempo, caso seja necessário.</p>
+<p style="text-align: justify;"></p>
+<p style="text-align: justify;">Obrigado por chegar até aqui,</p>
+<p style="text-align: justify;"></p>
+<p style="text-align: justify;">Caso discorde, concorde ou queira argumentar / perguntar, fique à vontade para compartilhar suas ideias nos comentários.</p>
+<p style="text-align: justify;"></p>
+<p style="text-align: justify;">Abraço,</p>
+<p style="text-align: justify;"></p>
+<p style="text-align: justify;">Edvaldo Castro</p>
+&nbsp;
+  </div>
+  <div class="article-footer">
+    <div class="pill-row"><span class="pill">Backup</span><span class="pill">Tech</span><span class="pill">Virtual PASS BR</span></div>
+    <div class="pill-row"><span class="pill">Backup</span><span class="pill">diff</span><span class="pill">differential backup</span><span class="pill">full</span><span class="pill">mssql</span><span class="pill">recuperabilidade</span><span class="pill">rpo</span><span class="pill">rto</span><span class="pill">sql</span><span class="pill">SQL SERVER</span><span class="pill">tlog</span></div>
+    <div class="post-nav">
+      <div><a href="../vlfs_vldbs/">Newer: Controle manual de VLFs para VLDBs</a></div>
+      <div><a href="../um-ano-irlanda/">Older: Primeiro ano como DBA Expat na Irlanda</a></div>
+    </div>
+  </div>
+</article>
+    </main>
+    <footer class="site-footer">
+      <p>Conteudo preservado a partir do export WordPress do blog de Edvaldo Castro.</p>
+      <p>Este site foi gerado como um arquivo estatico para consulta publica.</p>
+    </footer>
+  </div>
+</body>
+</html>

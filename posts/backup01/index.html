@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Vejo um grande problema em blogs e posts em geral (incluo-me neste grupo), que por achar que meus posts ficar&#227;o muito b&#225;sicos, ningu&#233;m ter&#225; interesse ou at&#233; mesmo serei julgado por postar coisas banais, acaba-se por n&#227;o..." />
+  <title>BACKUP - Voc&#234; est&#225; fazendo corretamente?</title>
+  <link rel="stylesheet" href="../../styles.css" />
+</head>
+<body class="single-post">
+  <div class="page-shell">
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark">EC</span>
+        <span class="brand-copy">
+          <strong>Edvaldo Castro</strong>
+          <small>Arquivo estatico do antigo WordPress</small>
+        </span>
+      </a>
+      <nav class="site-nav">
+        <a href="../../">Home</a>
+        <a href="../../posts/">Posts</a>
+        <a href="../../pages/">Pages</a>
+        <a href="../../archive/">Arquivo</a>
+      </nav>
+    </header>
+    <main class="site-main">
+      <article class="article-card">
+  <div class="article-head">
+    <p class="meta-line">Post</p>
+    <h1 class="post-title">BACKUP - Voc&#234; est&#225; fazendo corretamente?</h1>
+    <p class="meta-line">05 Jan 2012 <span class="dot">&middot;</span> Backup, Tech, Virtual PASS BR <span class="dot">&middot;</span> Backup, banco de dados, Seguran&#231;a, SQL SERVER, Virtual Pass Br</p>
+  </div>
+  <div class="article-content">
+    <p style="text-align:justify;">Vejo um grande problema em blogs e posts em geral (incluo-me neste grupo), que por achar que meus posts ficarão muito básicos, ninguém terá interesse ou até mesmo serei julgado por postar coisas banais, acaba-se por não escrever muito, ou querer sempre escrever artigos de alto nível de complexidade. Porém estive pensando que a vida profissional e de aprendizado é um ciclo, onde sempre existem pessoas começando, outros já em um nível profissional e aqueles fora do padrão, que sobressaem-se por esforço próprio, dedicação e estudo constante. Por este motivo, resolvi criar estes e os posteriores posts sobre este assunto de extrema importância e que à primeira vista, pode parecer simples e banal.</p>
+<p style="text-align:justify;">A definição de Backup segundo o site <a title="Wikipedia" href="http://en.wikipedia.org/wiki/Backup" target="_blank">Wikipedia</a>, "backup é a criação de cópias de dados que podem ser utilizadas para restaurar a um estado original em um evento de perda destes dados."</p>
+<p style="text-align:justify;">O Backup é um dos principais pilares da Administração de Banco de dados, uma das principais responsabilidades de um DBA, uma vez que, caso não haja um planejamento de recuperação em caso de falhas, de nada adianta ter uma excelente performance, segurança de acesso, etc... visto que tudo isto simplesmente desaparecerá no evento de uma falha onde não haja um bom desenho e implementação de Backup.</p>
+<p style="text-align:justify;">Um Backup bem feito, é o que garante que seus dados estão preservados e podem ser restaurados posteriormente em caso de falha em seus subsistemas de Armazenamento, Sistema Operacional, Software dentre outros. Caso não haja uma política de Backup bem definida, implementada e regularmente testada, corre-se o risco de ver seus dados simplesmente desaparecerem frente a um evento catastrófico (Crash de disco, Servidor, Eventos da Natureza, etc), para isto é importante deixar bem definidos alguns pontos:</p>
+
+<ul style="text-align:justify;">
+	<li><span style="text-decoration:underline;"><strong>Porque faze</strong></span>r: Conforme já mencionado previamente, é com base na política de Backup, e Recovery que fazer-se-á a restauração ao ponto original, com pequena ou nenhuma perda de dados, dependendo da política de backup adotada.</li>
+	<li><strong><span style="text-decoration:underline;">Quando fazer</span></strong>: Para responder a esta pergunta, é de extrema importância a criação e implantação de uma política de backup eficiente e que atenda aos anseios e tolerâncias a perda de dados por parte do proprietário das informações.</li>
+	<li><span style="text-decoration:underline;"><strong>Como fazer</strong></span>: No caso de Banco de Dados, os SGDB's (Sistema Gerenciador de Banco de Dados) possuem ferramentas internas para criação e automatização destas rotinas de Backup, porém existem infinitas ferramentas de terceiros totalmente independentes do fabricante que também permitem a realização e implantação da política de backup definida.</li>
+</ul>
+<p style="text-align:justify;">Existem diferentes tipos de backups, para diferentes tipos necessidades, no caso do backup de bancos de dados especificamente pelo SGDB SQL SERVER existem alguns tipos principais e mais utilizados, além de outros. Dentre os principais e mais utilizado podem ser citados:</p>
+
+<ul style="text-align:justify;">
+	<li><span style="text-decoration:underline;"><strong>Backup Full</strong></span>: Gera cópia total e integral de todo o banco.</li>
+	<li><span style="text-decoration:underline;"><strong>Backup Diferencial</strong></span>: Gera cópia apenas da "diferença" entre as alterações atuais e as realizadas após o último Backup Full, sendo que este é cumulativo, ou seja, um backup diferencial feito após outro backup diferencial, contém todas alterações realizadas após o backup Full, inclusive as constantes no Diferencial anterior.</li>
+	<li><span style="text-decoration:underline;"><strong>Backup de T-Log</strong></span>: Ou Backup do Log de Transações, gera cópia apenas das alterações realizadas. Diferente do backup Diferencial, o backup de T-Log NÃO armazena todas informações dos backups de Log anteriores, mas somente as alterações feitas após este backup.</li>
+</ul>
+<p style="text-align:justify;">Além destes principais, existem outros tipos de Backup como: Backup de FileGroup (Grupo de Arquivos), Backup de Arquivo, Backups parciais entre outros, que citarei em posts futuros, com cunho mais técnico.</p>
+<p style="text-align:justify;">É impossível encontrar pronto um modelo de política de backup. A política de backup ideal é aquela que satisfaz e atende às necessidades de cada organização, com isto, é preciso organizar e desenhar esta política distribuindo os tipos (Full, Diferencial, Log) e horários dos backups de modo que haja coerência entre custo de armazenamento / implantação com a tolerância à perda de dados por parte da Organização...</p>
+<p style="text-align:justify;">Existem diversas formas de armazenar seus backups com segurança, e mais uma vez é necessário análise do custo / risco que pretende-se correr com isto, seguem exemplos:</p>
+
+<ul style="text-align:justify;">
+	<li><span style="text-decoration:underline;"><strong>Backup On-Server</strong></span>: Costumo dizer que, "<em>Se o backup está no mesmo servidor, então não existe backup".</em> Isto não é 100% verdade, pois o backup está ali e você tem acesso a ele, mas a garantia que este backup te dá é quase nula, uma vez que uma falha do servidor ou do disco, comprometerá tanto os dados originais quanto o(s) arquivo(s) de backup. Portanto, jamais faça este tipo de Backup. (Infelizmente já o encontrei em alguns cenários em ambientes de produção)</li>
+	<li><span style="text-decoration:underline;"><strong>Backup On-Site</strong></span>: O backup é gravado em uma mídia (Servidor, Fitas Magnéticas, HDs Externos) separada, porém ficam armazenados no mesmo ambiente físico (Na empresa). Este tipo de Backup é seguro, porém não suporta por exemplo catástrofes naturais como furacões ou incêndios.</li>
+	<li><span style="text-decoration:underline;"><strong>Backup Remoto</strong></span>: O mais seguro, porém mais caro, o Backup é gerado e fica fisicamente separado dos dados originais, em outro prédio, outra empresa, outra cidade, ou até mesmo em outro país. Quanto maior a distância entre o local onde o backup é armazenado e o servidor original, maior a segurança da possibilidade de restauração dos dados ao seu estado original.</li>
+</ul>
+<p style="text-align:justify;">Um exemplo que é muito citado (está sendo mais uma vez), foi o<a href="http://pt.wikipedia.org/wiki/World_Trade_Center"> atentado terrorista</a> às Torres Gêmeas do World Trade Center nos Estadus Unidos, muitas empresas simplesmente desapareceram, evaporaram, deixaram de existir em minutos, pois seus backups eram armazenados na torre ao lado, e nem o mais pessimista dos DBA's poderia um dia imaginar que uma situação semelhante à ocorrida, pudesse acontecer algum dia, mas aconteceu...</p>
+<p style="text-align:justify;">Portando, 100% de segurança e garantia, é praticamente impossível, mas é necessário ser pessimista, pensar que o pior pode acontecer e estar SEMPRE precavido para as mais diversas situações...</p>
+<p style="text-align:justify;">Enfim, este não foi um post técnico, mas sim tentando demonstrar a importância e o porque deve-se preocupar cada vez um pouco mais com seus backups. Em publicações posteriores, tentarei demonstrar os tipos de backup do SQL SERVER e suas funcionalidades técnicas passo a passo, tentando alcançar todas elas...</p>
+<p style="text-align:justify;">Algo extremamente importante, que não foi mencionado, é que, nosso querido <a href="http://pt.wikipedia.org/wiki/Lei_de_Murphy">Murphy</a> criou uma tal de uma lei, que diz que no que se refere a backup, ele vai estar em perfeito estado de funcionamento, até que você precise dele... Sendo assim, testes periódicos de restore e recovery com os backups nunca são demais...</p>
+<p style="text-align:justify;">Vou ficando por aqui...</p>
+<p style="text-align:justify;">Se você chegou até o final do artigo, por favor comente, com elogio, sugestão, crítica ou qualquer outra coisa que quiser escrever.... Pretendo falar mais sobre o assunto em breve...</p>
+<p style="text-align:justify;">Agradecimento especial aos amigos: Fernanda Sallai (<a href="http://www.fernandasallai.com.br/">Blog </a>| <a href="http://twitter.com/fernandasallai">Twitter</a>)  e William de Paula (<a href="http://twitter.com/dinowilliam">Twitter</a>), pelo apoio moral e insistência, para que este artigo fosse publicado... o/</p>
+<p style="text-align:justify;">Forte Abraço</p>
+<p style="text-align:justify;">Edvaldo Castro</p>
+<p style="text-align:justify;">Administrador de Banco de Dados</p>
+  </div>
+  <div class="article-footer">
+    <div class="pill-row"><span class="pill">Backup</span><span class="pill">Tech</span><span class="pill">Virtual PASS BR</span></div>
+    <div class="pill-row"><span class="pill">Backup</span><span class="pill">banco de dados</span><span class="pill">Seguran&#231;a</span><span class="pill">SQL SERVER</span><span class="pill">Virtual Pass Br</span></div>
+    <div class="post-nav">
+      <div><a href="../politicabkp/">Newer: Pol&#237;tica de backup - Implante esta ideia.</a></div>
+      <div><a href="../sqlsat100minhaagenda/">Older: SQL SATURDAY 100  -  Minha Agenda</a></div>
+    </div>
+  </div>
+</article>
+    </main>
+    <footer class="site-footer">
+      <p>Conteudo preservado a partir do export WordPress do blog de Edvaldo Castro.</p>
+      <p>Este site foi gerado como um arquivo estatico para consulta publica.</p>
+    </footer>
+  </div>
+</body>
+</html>

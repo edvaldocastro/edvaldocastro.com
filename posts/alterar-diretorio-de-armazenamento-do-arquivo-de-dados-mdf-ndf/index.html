@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="As vezes, por falha no momento da cria&#231;&#227;o de um database, por n&#227;o ter seguido os padr&#245;es definidos ou mesmo por necessidade de realoca&#231;&#227;o de arquivos por conta de problemas com espa&#231;o em disco, somos obrigados a fazer a..." />
+  <title>Alterando diret&#243;rio de armazenamento do arquivo de dados (.mdf / .ndf)</title>
+  <link rel="stylesheet" href="../../styles.css" />
+</head>
+<body class="single-post">
+  <div class="page-shell">
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark">EC</span>
+        <span class="brand-copy">
+          <strong>Edvaldo Castro</strong>
+          <small>Arquivo estatico do antigo WordPress</small>
+        </span>
+      </a>
+      <nav class="site-nav">
+        <a href="../../">Home</a>
+        <a href="../../posts/">Posts</a>
+        <a href="../../pages/">Pages</a>
+        <a href="../../archive/">Arquivo</a>
+      </nav>
+    </header>
+    <main class="site-main">
+      <article class="article-card">
+  <div class="article-head">
+    <p class="meta-line">Post</p>
+    <h1 class="post-title">Alterando diret&#243;rio de armazenamento do arquivo de dados (.mdf / .ndf)</h1>
+    <p class="meta-line">23 May 2011 <span class="dot">&middot;</span> Database Administration, Tech <span class="dot">&middot;</span> datafile, mdf, ndf</p>
+  </div>
+  <div class="article-content">
+    As vezes, por falha no momento da criação de um database, por não ter seguido os padrões definidos ou mesmo por necessidade de realocação de arquivos por conta de problemas com espaço em disco, somos obrigados a fazer a movimentação do(s) arquivo(s) de dados fisicamente entre diretórios nos quais estes estão armazenados.
+
+Para executar a movimentação física e apontamento lógico dos datafiles (.mdf / .ndf), existem 2 premissas básicas e necessárias devem ser satisfeitas:
+
+- Possuir permissões para gravar na pasta de destino.
+- Estar associado à fixed server role “sysadmin” na inst
+
+<strong>Procedimentos</strong>:
+
+1 – Abra o SSMS e execute o comando abaixo, para verificar a localização atual dos arquivos de dados e log:
+Use Teste -- Nome do banco
+GO
+EXEC sp_helpfile
+GO
+
+<a href="../../assets/uploads/2011/05/023.jpg"><img class="alignnone size-full wp-image-45" title="0l" src="../../assets/uploads/2011/05/023.jpg" alt="" width="760" height="355" /></a>
+
+2 – Feche a aba da Query aberta para executar o comando acima e em seguida, coloque o banco com status “Offline”.
+2.1 – Clique com o botão direito sobre o banco que deseja colocar Offline.
+2.2 – Selecione a opção “Tasks” =&gt; “Take Offline”
+
+3 – Faça a cópia física do arquivo de dados “datafile.mdf”, para o local de destino.
+
+4 – Abra uma nova query clicando no botão “New Query” e digite a instrução SQL seguir:
+
+ALTER DATABASE Teste --Nome do banco
+MODIFY FILE(NAME=Teste, -- Nome lógico do arquivo de dados
+FILENAME = 'E:MSSQL2005Teste.mdf')-- Novo caminho do datafile. (Caminho somente de exemplo)
+
+5 – Feche a aba da Query aberta para executar o comando acima e em seguida, coloque o banco com status “Online”.
+5.1 – Clique com o botão direito sobre o banco que deseja colocar Online.
+5.2 – Selecione a opção “Tasks” =&gt; “Bring Online”
+
+6 – Novamente, execute a instrução abaixo, para certificar-se da alteração.
+Use Teste -- Nome do banco
+GO
+EXEC sp_helpfile
+GO
+
+<a href="../../assets/uploads/2011/05/123.jpg"><img class="alignnone size-full wp-image-39" title="1" src="../../assets/uploads/2011/05/123.jpg" alt="" width="745" height="523" /></a>
+
+<strong>Checklist pós execução</strong>
+
+É interessante e necessário checar sempre a efetividade de qualquer atividade executada em um ambiente de banco de dados (como em qualquer atividade, independente da área).
+
+- Verificar se a alteração foi executada com sucesso e se o banco está com o Status “Online”.
+
+- Se possível, realizar teste com a aplicação que acessa o database em questão, para validar o funcionamento.
+
+<strong>Plano de retorno</strong>
+
+- Se independente do sucesso ou não da atividade, houver a necessidade de retornar o ambiente como estava no momento anterior à movimentação do datafile, basta seguir exatamente os mesmos passos, alterando o caminho para o mesmo caminho que estava antes da mudança.
+
+Espero que seja útil e possa ajudar...
+
+Att.:
+
+Edvaldo Castro
+
+MCITP Database Administrator on SQL SERVER 2005
+
+MCTS SQL SERVER 2005
+  </div>
+  <div class="article-footer">
+    <div class="pill-row"><span class="pill">Database Administration</span><span class="pill">Tech</span></div>
+    <div class="pill-row"><span class="pill">datafile</span><span class="pill">mdf</span><span class="pill">ndf</span></div>
+    <div class="post-nav">
+      <div><a href="../sp_msforeachdb/">Newer: Utilizando e personalizando o uso da &quot;sp_msforeachdb&quot;.</a></div>
+      <div><a href="../mais-um-contribuinte-casos-do-dia-a-dia-sql-server/">Older: Mais um contribuinte  -  Casos do dia a dia - SQL SERVER</a></div>
+    </div>
+  </div>
+</article>
+    </main>
+    <footer class="site-footer">
+      <p>Conteudo preservado a partir do export WordPress do blog de Edvaldo Castro.</p>
+      <p>Este site foi gerado como um arquivo estatico para consulta publica.</p>
+    </footer>
+  </div>
+</body>
+</html>

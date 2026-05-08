@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Introdu&#231;&#227;o: d No SQL Server existem diversos tipos de backups que possuem finalidades e possibilidades diferentes entre si. Os principais s&#227;o &quot;Backup Full&quot;, &quot;Backup Diferencial&quot; e &quot;Transaction Log Backup&quot; . Neste artigo,..." />
+  <title>[SQL Server Backup Internals] - Backup Full</title>
+  <link rel="stylesheet" href="../../styles.css" />
+</head>
+<body class="single-post">
+  <div class="page-shell">
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark">EC</span>
+        <span class="brand-copy">
+          <strong>Edvaldo Castro</strong>
+          <small>Arquivo estatico do antigo WordPress</small>
+        </span>
+      </a>
+      <nav class="site-nav">
+        <a href="../../">Home</a>
+        <a href="../../posts/">Posts</a>
+        <a href="../../pages/">Pages</a>
+        <a href="../../archive/">Arquivo</a>
+      </nav>
+    </header>
+    <main class="site-main">
+      <article class="article-card">
+  <div class="article-head">
+    <p class="meta-line">Post</p>
+    <h1 class="post-title">[SQL Server Backup Internals] - Backup Full</h1>
+    <p class="meta-line">29 Oct 2014 <span class="dot">&middot;</span> Backup, Tech, Virtual PASS BR <span class="dot">&middot;</span> Backup, dump, internals, memoryclerk_sqlutilities, sqlserver, sqlserver2014, sys.dm_os_memory_clerks, Virtual Pass Br, VirtualPass, VirtualPassPT</p>
+  </div>
+  <div class="article-content">
+    <h1>Introdução:</h1>
+<span style="color: #ffffff;">d</span>
+<p style="text-align: justify;">No SQL Server existem diversos tipos de <i>backups </i>que possuem finalidades e possibilidades diferentes entre si. Os principais são <i>"Backup Full", "Backup Diferencial" e "Transaction Log Backup"</i>.</p>
+<p style="text-align: justify;">Neste artigo, será tratado basicamente e detalhadamente o funcionamento do "Backup Full", para fins de conhecimento das operações que a <i>engine</i> do SQL Server  executa durante todo o tempo de execução deste tipo de backup.</p>
+<p style="text-align: justify;">Como exemplo, foi utilizado o banco de dados nativo de testes do SQL Server (AdventureWorks).</p>
+<p style="text-align: justify;"><span style="color: #ffffff;">d</span></p>
+
+<h4 style="text-align: justify;">O Backup Full</h4>
+<span style="color: #ffffff;">d</span>
+<p style="text-align: justify;">O backup full consiste em uma cópia exata e completa de tudo o que está no banco de dados em um determinado momento acrescido da porção ativa do log de transações (transações que ocorreram durante a execução do procedimento de backup).</p>
+<p style="text-align: justify;">O único momento no tempo possível para restauração deste tipo de backup, é o momento da conclusão do mesmo, sendo assim o <i>backup full </i> por si só não garante a possibilidade de que não haja perda de dados.</p>
+<p style="text-align: justify;"><span style="color: #ffffff;">d</span></p>
+
+<h4 style="text-align: justify;">Qual o tamanho do backup?</h4>
+<span style="color: #ffffff;">d</span>
+<p style="text-align: justify;">Existem algumas confusões quando se fala em espaço ocupado e <i>sizing, </i>tanto do banco de dados quanto relacionado aos backups. O SQL Server armazena os dados em páginas de 8 KB agrupados de oito em oito, formando os <i>"EXTENTS", </i>cada <i>EXTENT </i> tem o tamanho de 64KB. O SQL Server armazena estes Extents no arquivo de dados de cada banco, que normalmente possui as extensões .MDF  (arquivo de dados primário) ou .NDF (arquivo(s) de dados secundário(s)).</p>
+<p style="text-align: justify;">Ao ser criado o banco de dados, ou quando não há mais espaço suficiente, o arquivo é alocado em disco, de acordo com o tamanho previamente informado. Este arquivo não está necessariamente, completamente utilizado, pois o SQL Server vai alocando os <i>EXTENTS </i>à medida que o banco vai sendo utilizado. O tamanho do backup será basicamente a soma dos extents que tem pelo menos uma página de dados alocada.</p>
+
+<h6 style="text-align: justify;"><strong>Exemplo:</strong></h6>
+<span style="color: #ffffff;">y</span>
+
+<a href="../..//publico/Blog/Arquivo_de_dados3.jpg"><img class="aligncenter size-medium" src="../..//publico/Blog/Arquivo_de_dados3.jpg" width="518" height="791" /></a>
+
+<span style="color: #ffffff;">y</span>
+<p style="text-align: justify;"></p>
+<p style="text-align: justify;"><strong>Detalhes da imagem:</strong></p>
+<p style="text-align: justify;"><span style="color: #ffffff;"><strong>d</strong></span></p>
+
+<ul style="text-align: justify;">
+ 	<li>9 <i>extents</i> * 64 KB = 576 KB</li>
+ 	<li>5 <i>extents (utilizados) </i>* 64 KB = 320 KB</li>
+ 	<li>4 <i>extents </i>(livres) * 64 KB = 256 KB</li>
+</ul>
+<span style="color: #ffffff;"><strong>d</strong></span>
+<p style="text-align: justify;">A imagem acima mostra um exemplo de arquivo de dados com um tamanho de 576 KB, sendo que 5 <i>extents</i> tem pelo menos uma página alocada e 4 estão vazios.</p>
+
+<address style="text-align: left;"><span style="color: #0000ff;">BACKUP DATABASE</span> <span style="color: #000000;">AdventureWorks2014</span></address><address style="text-align: left;"><span style="line-height: 1.6em;"><span style="color: #0000ff;">TO DISK</span> = <span style="color: #ff0000;">'C:TEMPBackup_AdventureWorks2014_FULL.bak'</span></span></address>
+<p style="text-align: justify;">Ao submeter o comando ou clicar no botão "<i>ok</i>" na interface gráfica para executar um backup, TODOS os <i>extents</i> que tenham pelo menos uma página de dados alocadas serão copiados para o arquivo de backup, usualmente com a extensão ".BAK".  Sendo assim o tamanho final do backup será a soma do total de <i>extents</i> com pelo menos uma página alocada (neste caso 320 KB) + o tamanho do backup da porção ativa do log de transações.</p>
+<p style="text-align: justify;"><span style="color: #ffffff;">d</span></p>
+
+<h4 style="text-align: justify;">Área de memória utilizada</h4>
+<span style="color: #ffffff;">d</span>
+<p style="text-align: justify;">O SQL Server possui diversas áreas de memória para alocação temporária de páginas de dados, <i>plan cache</i>, <i>procedures</i> e outros... A principal destas áreas de memória é o <i>data cache</i>, que é a área de memória utilizadas quando há a submissão de um <i>select</i> em que as páginas com os dados solicitados está em disco e não em memória.</p>
+<p style="text-align: justify;">O processo de backup acontece de forma diferente, pois apesar de ter que ler TODAS as páginas <i>(extents)</i> de dados da base que está sendo copiada, ele utiliza-se de uma área de memória específica para este fim, não impactando diretamente o processamento natural do DATA CACHE na utilização do banco de dados durante o processo de backup.</p>
+<p style="text-align: justify;">O SQL Server utiliza-se do <i>MEMORY MANAGER</i>, que através do <i>MEMORY</i>_<i>CLERK</i>  <span style="color: #ff0000;">"<i>MEMORYCLERK_SQLUTILITIES</i>"</span> faz a alocação de memória necessária para a execução do <i>Backup</i>, e esta porção de memória permanece alocada somente durante esta execução.</p>
+<p style="text-align: justify;">Para consultar os memory clerks, basta executar a consulta abaixo:</p>
+<p style="text-align: justify;"><span style="color: #ffffff;">d</span></p>
+<p style="text-align: justify;"><span style="color: #0000ff;">SELECT</span> <span style="color: #000000;">*</span> <span style="color: #0000ff;">FROM</span> <span style="color: #008000;">sys.dm_os_memory_clerks</span></p>
+<p style="text-align: justify;"><span style="color: #ffffff;">d</span></p>
+<p style="text-align: justify;">É possível também verificar em tempo de execução do backup, quanto de memória está sendo utilizado pelo mesmo, consultando a mesma <span style="color: #008000;">sys.dm_os_memory_clerks</span> .</p>
+<p style="text-align: justify;">Abaixo uma query que pode ajudar e tornar as coisas um pouco mais claras...</p>
+<p style="text-align: justify;"><span style="color: #ffffff;">y</span></p>
+<span style="color: #0000ff;">SELECT</span>
+<p style="padding-left: 30px;"><span style="color: #0000ff;">type</span>
+,pages_kb
+,virtual_memory_reserved_kb
+,virtual_memory_committed_kb</p>
+<span style="color: #0000ff;">FROM</span> <span style="color: #008000;">sys.dm_os_memory_clerks</span>
+
+<span style="color: #0000ff;">WHERE type</span> = <span style="color: #ff0000;">'MEMORYCLERK_SQLUTILITIES'</span>
+
+<span style="color: #ffffff;">y</span>
+<p style="text-align: justify;"><img class="alignnone size-medium" src="../..//publico/Blog/imagem-13.png" width="830" height="301" /></p>
+<p style="text-align: justify;"><span style="color: #ffffff;">y</span></p>
+<p style="text-align: justify;">A imagem acima, exibe a execução de um "<i>backup full"</i> da base de dados [AdventureWorks2014]</p>
+<p style="text-align: justify;"><span style="color: #ffffff;">y</span></p>
+<p style="text-align: justify;"><img class="alignnone size-medium" src="../..//publico/Blog/imagem-23.jpg" width="827" height="256" /></p>
+<p style="text-align: justify;"><span style="color: #ffffff;">y</span></p>
+<p style="text-align: justify;">A imagem acima, mostra que a execução do <i>backup</i> da base de dados [AdventureWorks2014] gerou um espaço de memória alocado de 7360KB ou aproximadamente 7MB de memória utilizado para a execução deste <i>backup</i>. O tamanho utilizado por este<i> MEMORY_CLERK</i> durante a execução do <i>backup</i>, influencia diretamente na duração do <i>backup</i>, pois quanto menor o <i>virtual_memory_reserved_kb </i>e <i>virtual_memory_commited_kb, </i>mais vezes o SQL Server terá que escrever em disco com porções menores.</p>
+<p style="text-align: justify;">A performance do backup pode ser consideravelmente melhorada com a alteração de alguns parâmetros no comando de backup (<span style="color: #0000ff;">BUFFERCOUNT</span> e <span style="color: #0000ff;">MAXTRANSFERSIZE</span> ), fazendo com que o espaço utilizado por este CLERK seja maior e consequentemente o SQL Server escreverá menos vezes em disco, com uma porção maior de dados.</p>
+<p style="text-align: justify;"><span style="color: #ffffff;">y</span></p>
+
+<h6 style="text-align: justify;"><strong>BufferCount:</strong></h6>
+<p style="text-align: justify;">Especifica o número total de buffers de I/O que serão utilizados em operações deste backup que está sendo executado. Para este parâmetro, pode ser especificado qualquer número inteiro positivo.</p>
+<p style="text-align: justify;"><span style="color: #ffffff;">y</span></p>
+<p style="text-align: center;"><em><span style="color: #ff0000;"><strong>C U I D A D O</strong></span></em></p>
+<p style="text-align: center;">Uma configuração incorreta com um número muito alto de buffers, pode resultar em erro de</p>
+<p style="text-align: center;"><span style="color: #ff0000;">"Out of Memory"</span></p>
+<p style="text-align: left;"><span style="color: #ffffff;">y</span></p>
+
+<h6 style="text-align: justify;"><strong>MaxTransferSize:</strong></h6>
+<p style="text-align: justify;">Especifica a maior unidade de transferência (em bytes) que será utilizada entre o SQL Server e a mídia de backup (o disco, por exemplo). Os valores devem ser múltiplos de 64KB (65536 Bytes) até o limite de 4MB (4194304 Bytes).</p>
+<p style="text-align: justify;"> O espaço total utilizado pelos buffers é determinado pelo cálculo:</p>
+<p style="text-align: justify;"><span style="color: #ffffff;">y</span></p>
+<p style="text-align: justify;"><span style="color: #008000;">Total_Espace</span> =  <i><span style="color: #0000ff;">BufferCount</span> <span style="color: #000000;">*</span> <span style="color: #0000ff;">MaxTransferSize</span></i></p>
+<p style="text-align: justify;"><span style="color: #ffffff;">y</span></p>
+
+<h4 style="text-align: justify;">Trace Flags (TF)</h4>
+<span style="color: #ffffff;">y</span>
+<p style="text-align: justify;"><strong>Lembrete:</strong> Utilize os Trace Flags por sua conta e risco.</p>
+<p style="text-align: justify;">Existem alguns traceflags que podem ser muito úteis para obtenção de informações sobre as operações de Backup / Restore.</p>
+<strong>Abaixo uma pequena lista dos principais e suas principais funções:</strong>
+
+<span style="color: #ffffff;">y</span>
+<ul style="text-align: justify;">
+ 	<li><strong>3604</strong>
+<ul>
+ 	<li>Este Trace Flag é necessário para exibição do resultado de alguns outros TF.</li>
+</ul>
+</li>
+ 	<li><strong>3014</strong>
+<ul>
+ 	<li>Utilizado para fornecer maiores informações detalhadas sobre as operações de Backup / Restore</li>
+</ul>
+</li>
+</ul>
+<ul style="text-align: justify;">
+ 	<li><strong>3226</strong>
+<ul>
+ 	<li>Omite do Error Log do SQL Server, as entradas contendo informações de sucesso de backups realizados. Vale lembrar que operações de backup com falha ainda continuam sendo escritas no Error Log.</li>
+</ul>
+</li>
+</ul>
+<ul style="text-align: justify;">
+ 	<li><strong>3004</strong>
+<ul>
+ 	<li>Exibe informações detalhadas sobre o que está acontecendo entre o SQL Server e a mídia de backup. Este TraceFlag também mostra informações sobre o processos que escrevem em disco, como por exemplo o <a href="http://msdn.microsoft.com/en-us/library/ms175935.aspx" target="_blank">"Instant File Inicialization"</a></li>
+ 	<li><a href="../../assets/uploads/2014/10/imagem-33.png"><img class="aligncenter wp-image-955 size-full" src="../../assets/uploads/2014/10/imagem-33.png" alt="imagem 3" width="878" height="926" /></a></li>
+</ul>
+</li>
+</ul>
+<ul style="text-align: justify;">
+ 	<li><strong>3213</strong>
+<ul>
+ 	<li>Exibe informações referentes ao Backup que está sendo executado executado. Útil para exibição das configurações dos parâmetros supracitados.</li>
+ 	<li><a href="../../assets/uploads/2014/10/imagem-43.png"><img class="aligncenter size-full wp-image-956" src="../../assets/uploads/2014/10/imagem-43.png" alt="imagem 4" width="882" height="926" /></a></li>
+</ul>
+</li>
+</ul>
+<h4 style="text-align: justify;"><span style="color: #ffffff;"> y</span></h4>
+<h4 style="text-align: justify;">Análise da execução de um Backup Full</h4>
+<span style="color: #ffffff;">y</span>
+<p style="text-align: justify;">No trecho abaixo, será explicado detalhadamente os pontos mais importantes que ocorrem durante a exeução de um Backup Full.</p>
+
+<address style="text-align: justify;"><span style="color: #008000;">/*------------------------</span></address><address style="text-align: justify;"><span style="color: #0000ff;">DBCC</span> <span style="color: #000000;">TRACEON (3604,3014)</span></address><address style="text-align: left;"><span style="color: #0000ff;">BACKUP DATABASE</span> <span style="color: #000000;">AdventureWorks2014</span> <span style="color: #0000ff;">TO DISK</span> <span style="color: #000000;">=</span> <span style="color: #ff0000;">'C:tempAdventureWorks2014.bak'</span></address><address style="text-align: justify;"><span style="color: #008000;">------------------------*/</span></address><address style="text-align: justify;"><span style="color: #008000;">-- Comando de Backup submetido ao SQL Server.</span></address><address style="text-align: justify;"><span style="color: #000000;">DBCC execution completed. If DBCC printed error messages, contact your system administrator.</span></address><address style="text-align: justify;"> </address><address style="text-align: justify;"><span style="color: #008000;">-- Primeira parte - Coleta de Informações acerca dos parâmetros e da operação a ser executada.</span></address><address style="text-align: justify;"> </address><address style="text-align: justify;">BackupDatabase: Database AdventureWorks2014</address><address style="text-align: justify;"><span style="color: #008000;">--Nome do banco de dados a ser copiado</span></address><address style="text-align: justify;"> </address><address style="text-align: justify;">Backup: Media open</address><address style="text-align: justify;"><span style="color: #008000;">--estado da mídia (neste momento é feito a validação de acesso ao caminho onde o backup será salvo, e caso de falha, é exibido o erro de "access denied" no destino)</span></address><address style="text-align: justify;"> </address><address style="text-align: justify;">Backup/Restore buffer configuration parameters</address><address style="text-align: justify;">Memory limit: 377MB</address><address style="text-align: justify;">BufferCount:                7</address><address style="text-align: justify;"><span style="color: #008000;">--Quantidade de buffers a serem utilizados para esta operação de Backup. (Valor default = 7)</span></address><address style="text-align: justify;"> </address><address style="text-align: justify;">Sets Of Buffers:            1</address><address style="text-align: justify;">MaxTransferSize:            1024 KB</address><address style="text-align: justify;"><span style="color: #008000;">-- Tamanho máximo de cada transferência durante o flush do buffer para o disco.</span></address><address style="text-align: justify;">Min MaxTransferSize:        64 KB</address><address style="text-align: justify;"><span style="color: #008000;">-- Tamanho mínimo a ser transferido durante o flush de dados do buffer para o disco.</span></address><address style="text-align: justify;"> </address><address style="text-align: justify;">Total buffer space:         7 MB</address><address style="text-align: justify;">-- Tamanho total utilizado por esta operação de backup no MEMORYCLERK_SQLUTILITIES. Conforme já mencionado, este valor é o resultado da operação:</address><address style="text-align: justify;"><span style="color: #008000;">-- BufferCount (7) * MaxTransferSize(1024KB) = 7MB</span></address><address style="text-align: justify;"> </address><address style="text-align: justify;">Tabular data device count:  1</address><address style="text-align: justify;">Fulltext data device count: 0</address><address style="text-align: justify;">Filestream device count:    0</address><address style="text-align: justify;">TXF device count:           0</address><address style="text-align: justify;">Filesystem i/o alignment:   512</address><address style="text-align: justify;">Media Buffer count:            7</address><address style="text-align: justify;">Media Buffer size:          1024KB</address><address style="text-align: justify;">Backup: Media ready to backup</address><address style="text-align: justify;"><span style="color: #008000;">-- A <em>"media"</em> de backup está pronta para ser utilizada (neste caso o disco)</span></address><address style="text-align: justify;"> </address><address style="text-align: justify;">Backup: Clearing differential bitmaps</address><address style="text-align: justify;"><span style="color: #008000;">-- Neste ponto realizando a limpeza da DCM (Differential Change Map), que armazena informações das páginas alteradas deste o último Backup Full, para fins de controle do backup Differential.</span></address><address style="text-align: justify;"> </address><address style="text-align: justify;">Backup: Bitmaps cleared</address><address style="text-align: justify;">BackupDatabase: Checkpoint done</address><address style="text-align: justify;"><span style="color: #008000;">-- Realização de Checkpoint para iniciar o processo de backup .</span></address><address style="text-align: justify;"> </address><address style="text-align: justify;">BackupManager::SyncWithLog: SEReplLSN : 0 (0x00000000:00000000:0000)</address><address style="text-align: justify;">BackupManager::SyncWithLog: Start LSN : 1070000000040800024 (0x0000042e:00000198:0018)--Marca do LSN que será o início deste backlup.</address><address style="text-align: justify;">Backup: Scanning allocation bitmaps</address><address style="text-align: justify;">Backup: Done with allocation bitmaps</address><address style="text-align: justify;"><span style="color: #008000;">-- Neste ponto está sendo feito um scan para validar quais extents possuem páginas alocadas para serem copiados para o arquivo de backup. Conforme previamente mencionado, a estrutura alocada porém não utilizada, não será copiada, apenas os extents que possuam pelo menos uma página de dados alocada.</span></address><address style="text-align: justify;"> </address><address style="text-align: justify;">Calculating expected total data to write</address><address style="text-align: justify;">Fid(1) ExpectedExt(3028) DiffMapAccurate(0)</address><address style="text-align: justify;">Total (198443008)</address><address style="text-align: justify;">BackupDatabase: Work estimates done</address><address style="text-align: justify;"><span style="color: #008000;">-- Neste ponto o SQL Server já fez o scan e localizou 3028 extents a serem copiados. Multiplicando-os por 64KB (que é o tamanho de 1 extent) chegou ao valor total esperado de 198443008 Bytes (Aprox. 194 MB) a serem escritos em disco.</span></address><address style="text-align: justify;"> </address><address style="text-align: justify;">Backup: Leading metadata section done</address><address style="text-align: justify;">Calculating expected total data to write</address><address style="text-align: justify;">Fid(1) ExpectedExt(3028) DiffMapAccurate(0)</address><address style="text-align: justify;">Total (198443008)</address><address style="text-align: justify;"><span style="color: #008000;">-- Neste ponto o SQL Server já fez o scan e localizou 3028 extents a serem copiados. Multiplicando-os por 64KB (que é o tamanho de 1 extent) chegou ao valor total esperado de 198443008 Bytes (Aprox. 194 MB) a serem escritos em disco.</span></address><address style="text-align: justify;"> </address><address class="" style="text-align: justify;">Backup:Copying data</address><address style="text-align: justify;"><span style="color: #008000;">--Neste ponto o SQL Server já começou a copiar os dados, fazendo leitura dos extents que estão no arquivo .MDF (em disco), salvando em buffer (MEMORYCLERK_SQLUTILITIES) e em seguida escrevendo no destino (geralmente disco, arquivo .BAK)</span></address><address style="text-align: justify;"> </address><address style="text-align: justify;">Backup: DBReaderCount = 1</address><address style="text-align: justify;">Backup data streams: Initial=198443008 Final=198443008 ExcessMode=0</address><address style="text-align: justify;">Calculating expected total data to write</address><address style="text-align: justify;">Fid(1) ExpectedExt(3028) DiffMapAccurate(0)</address><address style="text-align: justify;">Total (198443008)</address><address style="text-align: justify;">BackupDatabase: Database files done</address><address style="text-align: justify;"><span style="color: #008000;">-- Término do processo de cópia dos extents do arquivo de dados.</span></address><address style="text-align: justify;"> </address><address style="text-align: justify;">Processed 24224 pages for database 'AdventureWorks2014', file 'AdventureWorks2014_Data' on file 12.</address><address style="text-align: justify;"><span style="color: #008000;">-- Informações sobre a quantidade de páginas e o banco de dados que foi copiado para o arquivo de destino (geralmente .BAK)</span></address><address style="text-align: justify;"> </address><address style="text-align: justify;">Backup:Copying log</address><address style="text-align: justify;"><span style="color: #008000;">-- Informação que o SQL Server está copiando a porção ativa do log de transações. Esta porção ativa, trata-se de uma cópia "copy_only" do log das transações que ocorreram após o <em>"checkpoint"</em> inicial do backup, e que é necessária para garantir a consistência do backup no ponto do término do mesmo.</span></address><address style="text-align: justify;"> </address><address style="text-align: justify;">BackupLog: Family(0) StreamSize=0x10000</address><address style="text-align: justify;">BackupLog: Family(0) StreamSize=0x0</address><address style="text-align: justify;">Processed 1 pages for database 'AdventureWorks2014', file 'AdventureWorks2014_Log' on file 12.</address><address style="text-align: justify;">BackupDatabase : Log files done</address><address style="text-align: justify;"><span style="color: #008000;">-- Informação sobre a porção de log que foi copiada, informando inclusive que foi copiada do arquivo de log de transações do banco em questão "file 'AdventureWorks2014_Log' "</span></address><address style="text-align: justify;"> </address><address style="text-align: justify;">Backup: Trailing config done</address><address style="text-align: justify;">Backup: MBC done</address><address style="text-align: justify;">BackupDatabase: Writing history records</address><address style="text-align: justify;">Writing backup history records</address><address style="text-align: justify;"><span style="color: #008000;">-- Neste ponto o SQL Server faz o registro da execução deste backup nas tabelas de sistemas e metadados no banco MSDB, para fins de histórico e informações das operações de BACKUP / RESTORE realizados.</span></address><address style="text-align: justify;"> </address><address style="text-align: justify;">BACKUP DATABASE successfully processed 24225 pages in 1.999 seconds (94.675 MB/sec).</address><address style="text-align: justify;"><span style="color: #008000;">-- Informação de sucesso da execução do backup, informando a quantidade de páginas copiadas, tempo total gasto neste processo e o throughput (94.675 MB/sec).</span></address><address style="text-align: justify;"> </address><address style="text-align: justify;">BackupDatabase: Finished</address><address style="text-align: justify;"><span style="color: #008000;">-- Backup concluido com sucesso!</span></address><address style="text-align: justify;"> </address>
+<p style="text-align: justify;">Basicamente estas são as ações realizadas pelo SQL Server durante a execução de um Backup Full.</p>
+<p style="text-align: justify;"><span style="color: #ffffff;">y</span></p>
+<p style="text-align: justify;">Grande Abraço,</p>
+<p style="text-align: justify;">Edvaldo Castro</p>
+<p style="text-align: justify;"><span style="color: #ffffff;">y</span></p>
+
+<h4 style="text-align: justify;">Referências:</h4>
+<p style="text-align: justify;"><strong>Create a Full Database Backup (SQL Server)</strong></p>
+<p style="text-align: justify;"><a href="http://msdn.microsoft.com/en-us/library/ms187510.aspx">http://msdn.microsoft.com/en-us/library/ms187510.aspx</a></p>
+<p style="text-align: justify;"><strong>Backup (Transact-SQL)</strong></p>
+<p style="text-align: justify;"><a href="http://technet.microsoft.com/en-us/library/ms186865(v=sql.120).aspx">http://technet.microsoft.com/en-us/library/ms186865(v=sql.120).aspx</a></p>
+<p style="text-align: justify;"><strong>Trace Flags</strong></p>
+<p style="text-align: justify;"><a href="http://social.technet.microsoft.com/wiki/contents/articles/13105.trace-flags-in-sql-server.aspx">http://social.technet.microsoft.com/wiki/contents/articles/13105.trace-flags-in-sql-server.aspx</a></p>
+<p style="text-align: justify;"><strong>Entendendo e melhorando a performance de seus backups</strong></p>
+<p style="text-align: justify;"><a href="http://magalhaesv.wordpress.com/2011/05/24/entendendo-e-melhorando-a-performance-de-seus-backups/">http://magalhaesv.wordpress.com/2011/05/24/entendendo-e-melhorando-a-performance-de-seus-backups/</a></p>
+  </div>
+  <div class="article-footer">
+    <div class="pill-row"><span class="pill">Backup</span><span class="pill">Tech</span><span class="pill">Virtual PASS BR</span></div>
+    <div class="pill-row"><span class="pill">Backup</span><span class="pill">dump</span><span class="pill">internals</span><span class="pill">memoryclerk_sqlutilities</span><span class="pill">sqlserver</span><span class="pill">sqlserver2014</span><span class="pill">sys.dm_os_memory_clerks</span><span class="pill">Virtual Pass Br</span><span class="pill">VirtualPass</span><span class="pill">VirtualPassPT</span></div>
+    <div class="post-nav">
+      <div><a href="../error-netfx3/">Newer: [Troubleshooting] - Erro ao habilitar .Net Framework 3.5 no Windows Server 2012 R2</a></div>
+      <div><a href="../24-hours-of-pass-convite/">Older: 24 Hours of PASS - Convite</a></div>
+    </div>
+  </div>
+</article>
+    </main>
+    <footer class="site-footer">
+      <p>Conteudo preservado a partir do export WordPress do blog de Edvaldo Castro.</p>
+      <p>Este site foi gerado como um arquivo estatico para consulta publica.</p>
+    </footer>
+  </div>
+</body>
+</html>
