@@ -585,7 +585,8 @@ td {
   display: none;
 }
 
-.brand-copy strong {
+.brand-copy strong,
+.site-title {
   display: block;
   padding: 58px 0 10px;
   font-family: "Bitter", Georgia, serif;
@@ -594,7 +595,8 @@ td {
   color: #141412;
 }
 
-.brand-copy small {
+.brand-copy small,
+.site-description {
   display: block;
   margin: 0;
   font: 300 italic clamp(1.15rem, 2vw, 1.5rem) "Source Sans 3", "Source Sans Pro", Helvetica, Arial, sans-serif;
@@ -610,7 +612,18 @@ td {
   border-top: 1px solid #f7f5e7;
 }
 
-.site-nav a {
+.site-nav .nav-menu {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.site-nav .nav-menu li {
+  display: inline-block;
+  position: relative;
+}
+
+.site-nav .nav-menu a {
   display: inline-block;
   padding: 15px 20px;
   color: #141412;
@@ -619,11 +632,21 @@ td {
   font-weight: 400;
 }
 
-.site-nav a:hover,
-.site-nav a:focus {
+.site-nav .nav-menu li:hover > a,
+.site-nav .nav-menu li a:hover,
+.site-nav .nav-menu li:focus > a,
+.site-nav .nav-menu li a:focus {
   background: #220e10;
   color: #ffffff;
   text-decoration: none;
+}
+
+.site-nav .nav-menu .current-menu-item > a,
+.site-nav .nav-menu .current_page_item > a,
+.site-nav .nav-menu .current-menu-ancestor > a,
+.site-nav .nav-menu .current_page_ancestor > a {
+  color: #bc360a;
+  font-style: italic;
 }
 
 .site-main {
@@ -700,14 +723,21 @@ td {
 
 .widget-title {
   margin: 0 0 10px;
-  font-size: 1.4rem;
-  line-height: 1.3;
+  padding-bottom: 7px;
+  border-bottom: 1px solid #ededed;
+  color: #636363;
+  font-family: "Source Sans 3", "Source Sans Pro", Helvetica, Arial, sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 2.18;
+  text-transform: uppercase;
 }
 
 .widget-content {
   color: #444444;
-  font-size: 0.95rem;
-  line-height: 1.6;
+  font-size: 14px;
+  line-height: 2;
 }
 
 .widget-content p {
@@ -724,7 +754,7 @@ td {
   display: flex;
   justify-content: space-between;
   gap: 10px;
-  padding: 6px 0;
+  padding: 4px 0;
   border-top: 1px solid #f0f0f0;
 }
 
@@ -734,6 +764,7 @@ td {
 
 .widget-list a {
   color: #21759b;
+  font-size: 15px;
 }
 
 .widget-list a:hover,
@@ -743,7 +774,7 @@ td {
 
 .widget-meta {
   color: #7d7b6d;
-  font-size: 0.9rem;
+  font-size: 13px;
   white-space: nowrap;
 }
 
