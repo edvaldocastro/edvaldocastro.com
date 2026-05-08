@@ -29,13 +29,12 @@
     <main class="site-main">
       <div class="content-layout single-layout">
   <main class="content-area">
-    <article class="article-card">
-      <div class="article-head">
-        <p class="meta-line">Post</p>
-        <h1 class="post-title">AntiAffinityClassNames - Separac&#227;o autom&#225;tica de workloads cr&#237;ticos no mesmo cluster</h1>
-        <p class="meta-line">09 Dec 2016 <span class="dot">&middot;</span> Database Administration, HADR, Tech, Virtual PASS BR <span class="dot">&middot;</span> AlwaysOn, bts, CLUSTER, FoRG, Friends of RedGate, MTAC, Pass, sqlserver, wsfc</p>
-      </div>
-      <div class="article-content">
+    <article class="article-card hentry">
+      <header class="article-head entry-header">
+        <h1 class="post-title entry-title">AntiAffinityClassNames - Separac&#227;o autom&#225;tica de workloads cr&#237;ticos no mesmo cluster</h1>
+        <p class="meta-line entry-meta">09 Dec 2016 <span class="dot">&middot;</span> Database Administration, HADR, Tech, Virtual PASS BR <span class="dot">&middot;</span> AlwaysOn, bts, CLUSTER, FoRG, Friends of RedGate, MTAC, Pass, sqlserver, wsfc</p>
+      </header>
+      <div class="article-content entry-content">
         <p style="text-align: justify;">Tradicionalmente diretores, presidentes e os "donos" do negócio querem (e estão muito certos nesse ponto) otimizar os investimentos realizados para terem garantia de disponibilidade, segurança, alta performance e outros, evitando que equipamentos fiquem ociosos ou subutilizados. Quando o investimento em questão é realizado em uma solução para alta disponibilidade do SQL Server, uma das opções é a utilização do Windows server Failover Cluster (WSFC), rodando instalações <em>clusterizadas </em>do SQL Server (Failover Cluster Instances).</p>
 <p style="text-align: justify;">Originalmente o SQL Server Failover Cluster Instances, trabalha de forma a agrupar um conjunto de recursos (disco, nome virtual, serviços, MSDTC, etc) e trabalhar de forma "ativa" em um servidor (NODE) por vez, deixando os demais servidores do WSFC em estado "passivo", aguardando por uma falha para que seguindo regras de configurações de propriedades como "<em>preferred owner" </em>e "<em>possible owner" </em>possam assumir automaticamente uma "ROLE" onde o SQL Server FCI passe a estar em execução.</p>
 <p style="text-align: justify;">Uma das formas de se evitar que um ou mais servidores fiquem ociosos simplesmente aguardando a falha do servidor onde o SQL Server está ativo, é realizar a configuração cruzada do cluster, onde uma instância clusterizada (<strong><span style="color: #0000ff;">SQL1</span></strong>) ativa em um<strong><span style="color: #0000ff;"> servidor A</span></strong> tenha o <span style="color: #0000ff;">servidor B</span> como <span style="color: #0000ff;">passivo</span>, e uma outra instância clusterizada (<strong><span style="color: #008000;">SQL2</span></strong>) ativa no <span style="color: #008000;"><strong>Servidor B</strong></span> tenha o <span style="color: #008000;">servidor A</span> como <span style="color: #008000;">passivo</span>.</p>

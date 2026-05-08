@@ -29,13 +29,12 @@
     <main class="site-main">
       <div class="content-layout single-layout">
   <main class="content-area">
-    <article class="article-card">
-      <div class="article-head">
-        <p class="meta-line">Post</p>
-        <h1 class="post-title">[AlwaysOn AG] Configurando o AlwaysOn AG com m&#250;ltiplas inst&#226;ncias</h1>
-        <p class="meta-line">06 Jan 2016 <span class="dot">&middot;</span> HADR, Tech, Virtual PASS BR <span class="dot">&middot;</span> AlwaysOn, Availability Groups, Comunidade, hadr, high availability, MTAC, Virtual Pass PT, VirtualPassBr</p>
-      </div>
-      <div class="article-content">
+    <article class="article-card hentry">
+      <header class="article-head entry-header">
+        <h1 class="post-title entry-title">[AlwaysOn AG] Configurando o AlwaysOn AG com m&#250;ltiplas inst&#226;ncias</h1>
+        <p class="meta-line entry-meta">06 Jan 2016 <span class="dot">&middot;</span> HADR, Tech, Virtual PASS BR <span class="dot">&middot;</span> AlwaysOn, Availability Groups, Comunidade, hadr, high availability, MTAC, Virtual Pass PT, VirtualPassBr</p>
+      </header>
+      <div class="article-content entry-content">
         <p style="text-align: justify;">É muito comum entre membros da comunidade técnica a ocorrência de discussões técnicas e troca de informações e conhecimentos, basicamente este é o real propósito de uma comunidade, trocar experiências, conhecimento e informações.</p>
 <p style="text-align: justify;">Estávamos Fabrício Lima (<a href="http://www.fabriciolima.net/" target="_blank">Site</a> | <a href="https://twitter.com/Fabriciodba" target="_blank">Twitter</a>) e Eu (<a href="../../" target="_blank">Site</a> | <a href="https://twitter.com/edvaldocastro02" target="_blank">Twitter</a>) em uma discussão muito interessante sobre o AlwaysOn Availability Groups (AG), discutindo algumas possibilidades e limitações para um cenário bastante específico que será descrito no decorrer deste blog post. Em resumo, queríamos ter a certeza da possibilidade (ou não) da configuração e perfeito funcionamento de um ambiente onde duas instâncias SQL Server com versões diferentes (2012 e 2014), instaladas no mesmo servidor fariam parte de dois AGs diferentes, tendo suas réplicas secundárias em outras duas instâncias instaladas em outro servidor, ambos obviamente no mesmo cluster.</p>
 <p style="text-align: justify;">O teste e o resultado estão detalhados a seguir:</p>
